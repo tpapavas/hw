@@ -21,7 +21,7 @@
 #include "tlm_utils/simple_initiator_socket.h" 
 #include "tlm_utils/simple_target_socket.h" 
 #include "tlm_utils/peq_with_get.h"
-#include "systemc.h"
+//#include "systemc.h"
 
 #define NVDLA_AXI_ADAPTOR_OUT_STANDING_REQUEST_NUM 1024
 

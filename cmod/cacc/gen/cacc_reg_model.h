@@ -11,7 +11,8 @@
 #ifndef _CACC_REG_MODEL_H_
 #define _CACC_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"

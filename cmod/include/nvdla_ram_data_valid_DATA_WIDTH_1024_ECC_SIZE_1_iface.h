@@ -11,7 +11,8 @@
 #if !defined(_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_iface_H_)
 #define _nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_iface_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <stdint.h>
 
 // CBUF composed by sc_uint<64>

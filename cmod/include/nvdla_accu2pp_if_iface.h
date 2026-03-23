@@ -11,7 +11,8 @@
 #if !defined(_nvdla_accu2pp_if_iface_H_)
 #define _nvdla_accu2pp_if_iface_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <stdint.h>
 #ifndef _nvdla_cc2pp_pkg_struct_H_
 #define _nvdla_cc2pp_pkg_struct_H_

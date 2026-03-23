@@ -13,7 +13,8 @@
 #include "log.h"
 #include "cdma_cvt.h"
 #include "vlibs.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

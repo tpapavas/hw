@@ -20,7 +20,8 @@
 #include "nvdla_dma_wr_req_iface.h"
 #include "nvdla_sdp2pdp_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>

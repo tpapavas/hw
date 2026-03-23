@@ -16,7 +16,8 @@
 #include "NV_MSDEC_xx2csb_erpt_iface.h"
 
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>

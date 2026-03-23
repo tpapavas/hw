@@ -17,7 +17,8 @@
 #include "nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_iface.h"
 #include "nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 

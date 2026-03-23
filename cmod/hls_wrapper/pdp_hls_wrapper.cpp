@@ -8,7 +8,8 @@
 
 // File Name: pdp_hls_wrapper.cpp
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include "arnvdla.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
