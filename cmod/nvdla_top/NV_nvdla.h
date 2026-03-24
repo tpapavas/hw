@@ -13,7 +13,8 @@
 
 #include "NV_nvdla_top_base.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 
 SCSIM_NAMESPACE_START(cmod)
 
