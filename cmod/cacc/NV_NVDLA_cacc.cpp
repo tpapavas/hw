@@ -63,6 +63,7 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     reshape_first_layer  = true;
     input_first_layer    = true;
     input_first_channel  = true;
+    is_assembly_working_ = false;
     deliver_prev_conv_mode_      = -1;
     reshape_prev_conv_mode_      = -1;
     deliver_prev_precision_      = -1;
@@ -162,10 +163,10 @@ void NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger () {
             delivery_sram_group_idx_fetched_    = -1 * atom_per_mac_cell;
         }
     }
-
+    cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (!is_assembly_working_) {
         is_assembly_working_ = true;
-
+        cslDebug((50, "after is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
 #pragma CTC SKIP
         if (cacc_clip_truncate_+ACCU_DELIVERY_BIT_WIDTH_INT16 > ACCU_ASSEMBLY_BIT_WIDTH_INT16) {
             FAIL(("NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger, cacc_clip_truncate_ shall not be greater than %d, it's value is %d\n", ACCU_ASSEMBLY_BIT_WIDTH_INT16 - ACCU_DELIVERY_BIT_WIDTH_INT16, cacc_clip_truncate_));
@@ -957,12 +958,14 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((70, "    mac2cacc payload[%d]: 0x%08x\n", i, (uint32_t)payload_data_ptr[i].to_int()));
 #endif
 
+    cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (is_assembly_working_ == false) {
         wait(cacc_kickoff_);
         // cacc should be kicked off before other cc sub-units
         // FAIL(("NV_NVDLA_cacc::mac2accu_b_transport, CACCU is not in working status."));
     }
-    
+
+    cslDebug((50, "after is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     // Copy from register value to local config variables, similar with RTL connection
     precision = cacc_proc_precision_;
     conv_mode = cacc_conv_mode_;
@@ -1202,6 +1205,7 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((50, "NV_NVDLA_cacc::mac2accu_b_transport, end of layer, assembly_sram_group_idx_working_=0x%x\n", assembly_sram_group_idx_working_));
 
         is_assembly_working_ = false;
+        cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
         input_first_channel  = true;    // For next layer
         input_first_layer    = false;
         // save assembly_sram_group_idx_working_ for next layer. it's assigned when channel_end
