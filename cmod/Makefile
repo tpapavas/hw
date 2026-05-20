@@ -14,9 +14,16 @@ SRC_DIR ?= $(DEPTH)/cmod
 
 PREFIX ?=$(BUILD_DIR)/release
 
-SYSTEMC_INC_DIR ?= $(SYSTEMC)/include
-SYSTEMC_LIB_DIR ?= $(SYSTEMC)/lib-linux64
-SYSTEMC_LIBRARIES ?= libsystemc-2.3.0.so
+# original
+#SYSTEMC_INC_DIR ?= $(SYSTEMC)/include
+#SYSTEMC_LIB_DIR ?= $(SYSTEMC)/lib-linux64
+#SYSTEMC_LIBRARIES ?= libsystemc-2.3.3.so
+
+# define SYSTEMC env variable before building
+# e.g. export SYSTEMC=/home/youruser/systemc/build
+SYSTEMC = $(SYSTEMC)
+SYSTEMC_INC_DIR = $(SYSTEMC)/include
+SYSTEMC_LIB_DIR = $(SYSTEMC)/lib
 
 SRCS := \
 	$(SRC_DIR)/nvdla_payload/dla_b_transport_payload.cpp \
@@ -150,8 +157,24 @@ LD_DIRS := \
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LD_FLAGS  := $(addprefix -L,$(LD_DIRS))
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=c++11
-LDFLAGS ?= -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)
+# original
+#CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=c++11
+#LDFLAGS ?= -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)
+
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=gnu++14 -O3 -Ofast
+LDFLAGS ?= -O3 -shared
+
+#LDFLAGS ?= -O3 -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)
+#CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror \
+#            -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w \
+#            -std=c++14 \
+#            -D_GLIBCXX_USE_CXX11_ABI=1 \
+#            -O3 -Ofast
+#
+#SYSTEMC_LIB_NAME = $(patsubst lib%.so,%,$(notdir $(SYSTEMC_LIBRARIES)))
+#LDFLAGS ?= -O3 -shared -l$(SYSTEMC_LIB_NAME) -lpthread \
+#           -L$(SYSTEMC_LIB_DIR) \
+#           -Wl,-rpath,$(SYSTEMC_LIB_DIR)
 
 $(BUILD_DIR)/$(TARGET): $(OBJS) 
 	$(GCC) $(OBJS) -o $@ $(LDFLAGS) -L$(BUILD_DIR)

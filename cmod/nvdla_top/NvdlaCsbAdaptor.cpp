@@ -33,6 +33,11 @@ NvdlaCsbAdaptor::~NvdlaCsbAdaptor() {
 }
 
 void NvdlaCsbAdaptor::csb_nvdla_bus_cb(int ID, tlm_generic_payload& gp, sc_time& delay) {
+    std::cout<<"[NvdlaCsbAdaptor] csb_nvdla_bus_cb called\n";
+    std::cout << "[NvdlaCsbAdaptor] Address: 0x" << std::hex << gp.get_address()
+              << " , Data Length: " << std::dec << gp.get_data_length()
+              << " , Is Write: " << gp.is_write()
+              << " , Delay: " << delay.to_string() << std::endl;
 	uint32_t   address  = gp.get_address();
     uint8_t*  data_ptr = gp.get_data_ptr();
     // Only support 4bytes read/write with aligned address

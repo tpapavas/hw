@@ -10,3 +10,7 @@ vmod/dw_components/
 outdir/
 .nvprojectname
 tree.make
+*.o
+*.do
+*.fo
+*.os
