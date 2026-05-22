@@ -11,12 +11,13 @@
 #if !defined(_nvdla_container_number_8_bit_width_32_iface_H_)
 #define _nvdla_container_number_8_bit_width_32_iface_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <stdint.h>
 
 typedef struct nvdla_container_number_8_bit_width_32_s {
     uint8_t mask ; 
-    sc_uint<32> data [8];
+    sc_dt::sc_uint<32> data [8];
     uint8_t last ; 
 } nvdla_container_number_8_bit_width_32_t;
 

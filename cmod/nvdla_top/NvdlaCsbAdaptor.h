@@ -12,7 +12,8 @@
 #define _NVDLACSBADAPTOR_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -25,18 +26,18 @@
 
 SCSIM_NAMESPACE_START(cmod)
 
-class NvdlaCsbAdaptor : public sc_module {
+class NvdlaCsbAdaptor : public sc_core::sc_module {
     public:
         SC_HAS_PROCESS(NvdlaCsbAdaptor);
-        NvdlaCsbAdaptor( sc_module_name module_name );
+        NvdlaCsbAdaptor( sc_core::sc_module_name module_name );
         ~NvdlaCsbAdaptor();
 
         tlm_utils::multi_passthrough_target_socket<NvdlaCsbAdaptor> csb_nvdla_bus;
-        void csb_nvdla_bus_cb(int ID, tlm::tlm_generic_payload& gp, sc_time& delay);
+        void csb_nvdla_bus_cb(int ID, tlm::tlm_generic_payload& gp, sc_core::sc_time& delay);
 
         tlm_utils::multi_passthrough_target_socket<NvdlaCsbAdaptor> csb2adaptor;
-        void csb2adaptor_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-        void csb2adaptor_b_transport(int ID, NV_MSDEC_xx2csb_erpt_t* payload, sc_time& delay);
+        void csb2adaptor_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+        void csb2adaptor_b_transport(int ID, NV_MSDEC_xx2csb_erpt_t* payload, sc_core::sc_time& delay);
 
 		// Socket for csb_master side
         tlm_utils::multi_passthrough_initiator_socket<NvdlaCsbAdaptor> adaptor2csb;

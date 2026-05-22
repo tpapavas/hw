@@ -16,31 +16,33 @@
 #include "NV_MSDEC_xx2csb_erpt_iface.h"
 
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 
+
 SCSIM_NAMESPACE_START(cmod)
 
+
 // Base SystemC class for module NV_NVDLA_core
-class NV_NVDLA_core_base : public sc_module
+class NV_NVDLA_core_base : public sc_core::sc_module
 {
     public:
-
     // Constructor
-    NV_NVDLA_core_base(const sc_module_name name);
+    NV_NVDLA_core_base(const sc_core::sc_module_name name);
 
     // Target Socket (unrecognized protocol: NV_MSDEC_csb2xx_16m_secure_be_lvl_t): nvdla2csb
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_core_base, 32, tlm::tlm_base_protocol_types> nvdla2csb;
-    // virtual void nvdla2csb_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    // virtual void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay) = 0;
+    // virtual void nvdla2csb_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    // virtual void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay) = 0;
 
     // Initiator Socket (unrecognized protocol: NV_MSDEC_xx2csb_erpt_t): csb2nvdla
     tlm::tlm_generic_payload csb2nvdla_bp;
     NV_MSDEC_xx2csb_erpt_t csb2nvdla_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core_base, 32, tlm::tlm_base_protocol_types> csb2nvdla;
-    virtual void csb2nvdla_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_time& delay);
+    virtual void csb2nvdla_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_core::sc_time& delay);
 
     // Port has no flow: nvdla_fault_report_corrected
     // sc_out<bool> nvdla_fault_report_corrected;
@@ -49,7 +51,7 @@ class NV_NVDLA_core_base : public sc_module
     // sc_out<bool> nvdla_fault_report_uncorrected;
 
     // Port has no flow: nvdla_intr
-    sc_out<bool> nvdla_intr;
+    sc_core::sc_out<bool> nvdla_intr;
 
     // Destructor
     virtual ~NV_NVDLA_core_base() {}
@@ -57,8 +59,8 @@ class NV_NVDLA_core_base : public sc_module
 };
 
 // Constructor for base SystemC class for module NV_NVDLA_core
-inline NV_NVDLA_core_base::NV_NVDLA_core_base(const sc_module_name name)
-    : sc_module(name),
+inline NV_NVDLA_core_base::NV_NVDLA_core_base(const sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
     nvdla2csb("nvdla2csb"),
     csb2nvdla_bp(),
     csb2nvdla("csb2nvdla"),
@@ -70,14 +72,14 @@ inline NV_NVDLA_core_base::NV_NVDLA_core_base(const sc_module_name name)
 }
 
 // inline void
-// NV_NVDLA_core_base::nvdla2csb_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+// NV_NVDLA_core_base::nvdla2csb_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 // {
 //     NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload = (NV_MSDEC_csb2xx_16m_secure_be_lvl_t*) bp.get_data_ptr();
 //     nvdla2csb_b_transport(ID, payload, delay);
 // }
 // 
 inline void
-NV_NVDLA_core_base::csb2nvdla_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_time& delay)
+NV_NVDLA_core_base::csb2nvdla_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_core::sc_time& delay)
 {
     csb2nvdla_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < csb2nvdla.size(); socket_id++) {

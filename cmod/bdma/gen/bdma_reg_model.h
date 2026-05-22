@@ -11,7 +11,8 @@
 #ifndef _BDMA_REG_MODEL_H_
 #define _BDMA_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -22,10 +23,11 @@ SCSIM_NAMESPACE_END()
 
 SCSIM_NAMESPACE_START(cmod)
 
+
 // Forward declarating cmacro parsed register model class
 class CNVDLA_BDMA_REGSET;
 class BdmaCoreConfig;
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 // std::ostream& operator<<(std::ostream& out, const  BdmaCoreConfig & obj) {
 //     return out << "Just to fool compiler" << endl;
 // }
@@ -34,10 +36,10 @@ class bdma_reg_model {
     public:
         bdma_reg_model();
         ~bdma_reg_model();
-        sc_event operation_enable_event_;
-        sc_event operation_enable_clr_event_;
-        sc_event launch_grp0_event_;
-        sc_event launch_grp1_event_;
+        sc_core::sc_event operation_enable_event_;
+        sc_core::sc_event operation_enable_clr_event_;
+        sc_core::sc_event launch_grp0_event_;
+        sc_core::sc_event launch_grp1_event_;
         uint32_t op_count;
     protected:
         //bool is_there_ongoing_bdma_csb_response_;
@@ -72,7 +74,7 @@ class bdma_reg_model {
         uint32_t  status_grp1_write_stall_count_;
 
         // CSB request target socket
-        // void csb2bdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2bdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void BdmaSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

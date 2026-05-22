@@ -15,13 +15,11 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
 
-NvdlaCoreDummy::NvdlaCoreDummy( sc_module_name module_name )
-	: sc_module(module_name),
+
+NvdlaCoreDummy::NvdlaCoreDummy( sc_core::sc_module_name module_name )
+	: sc_core::sc_module(module_name),
 	cvif2csb_resp("cvif2csb_resp"),
 	mcif2csb_resp("mcif2csb_resp"),
 	csb2cvif_req("csb2cvif_req"),
@@ -37,16 +35,16 @@ NvdlaCoreDummy::~NvdlaCoreDummy() {
 }
 
 // b_transports for target sockets
-void NvdlaCoreDummy::csb2cvif_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay) {
+void NvdlaCoreDummy::csb2cvif_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay) {
 }
 
-void NvdlaCoreDummy::csb2mcif_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay) {
+void NvdlaCoreDummy::csb2mcif_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay) {
 }
 
 // void NvdlaCoreDummy::() {
 // }
 
-NvdlaCoreDummy * NvdlaCoreDummyCon(sc_module_name name)
+NvdlaCoreDummy * NvdlaCoreDummyCon(sc_core::sc_module_name name)
 {
     return new NvdlaCoreDummy(name);
 }

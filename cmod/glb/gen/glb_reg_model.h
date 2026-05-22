@@ -11,7 +11,8 @@
 #ifndef _GLB_REG_MODEL_H_
 #define _GLB_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -28,8 +29,8 @@ class glb_reg_model {
     public:
         glb_reg_model();
         ~glb_reg_model();
-        sc_event operation_enable_event_;
-        sc_event intr_status_w;
+        sc_core::sc_event operation_enable_event_;
+        sc_core::sc_event intr_status_w;
     protected:
 //        bool is_there_ongoing_glb_csb_response_;
         CNVDLA_GLB_REGSET *glb_register_group;
@@ -87,7 +88,7 @@ class glb_reg_model {
         uint8_t   s_intr_status_cacc_done_status1_;
 
         // CSB request target socket
-        // void csb2glb_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2glb_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void GlbSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

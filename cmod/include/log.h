@@ -12,7 +12,8 @@
 #define __LOG_H__
 
 #include <string.h>
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 
 #if defined(__cplusplus)
 // some c++ headers for csl
@@ -29,7 +30,7 @@
                                                 char msg_buf[MSG_BUF_SIZE]; \
                                                 int pos = snprintf(msg_buf, MSG_BUF_SIZE, "%d:", __LINE__); \
                                                 snprintf(msg_buf + pos, MSG_BUF_SIZE - pos, __VA_ARGS__); \
-                                                SC_REPORT_INFO_VERB(__FILENAME__, msg_buf, SC_DEBUG ); \
+                                                SC_REPORT_INFO_VERB(__FILENAME__, msg_buf, sc_core::SC_DEBUG ); \
                                             } while(0)
 #define cslDebug(args)                      cslDebugInternal args
 
@@ -37,7 +38,7 @@
                                                 char msg_buf[MSG_BUF_SIZE]; \
                                                 int pos = snprintf(msg_buf, MSG_BUF_SIZE, "%d:", __LINE__); \
                                                 snprintf(msg_buf + pos, MSG_BUF_SIZE - pos, __VA_ARGS__); \
-                                                SC_REPORT_INFO_VERB(__FILENAME__, msg_buf, SC_FULL ); \
+                                                SC_REPORT_INFO_VERB(__FILENAME__, msg_buf, sc_core::SC_FULL ); \
                                             } while(0)
 #define cslInfo(args)                       cslInfoInternal args
 

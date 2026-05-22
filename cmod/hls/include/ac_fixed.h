@@ -2,28 +2,28 @@
  *                                                                        *
  *  Algorithmic C (tm) Datatypes                                          *
  *                                                                        *
- *  Software Version: 3.7                                                 *
+ *  Software Version: 2025.4                                              *
  *                                                                        *
- *  Release Date    : Wed Jun  1 13:21:52 PDT 2016                        *
+ *  Release Date    : Thu Dec 11 10:19:28 PST 2025                        *
  *  Release Type    : Production Release                                  *
- *  Release Build   : 3.7.0                                               *
+ *  Release Build   : 2025.4.1                                            *
  *                                                                        *
- *  Copyright 2005-2016, Mentor Graphics Corporation,                     *
+ *  Copyright 2005-2020 Siemens                                                *
  *                                                                        *
- *  All Rights Reserved.                                                  *
- *  
+ *                                                                        *
+ *                                                                        *
  **************************************************************************
  *  Licensed under the Apache License, Version 2.0 (the "License");       *
- *  you may not use this file except in compliance with the License.      * 
+ *  you may not use this file except in compliance with the License.      *
  *  You may obtain a copy of the License at                               *
  *                                                                        *
  *      http://www.apache.org/licenses/LICENSE-2.0                        *
  *                                                                        *
- *  Unless required by applicable law or agreed to in writing, software   * 
- *  distributed under the License is distributed on an "AS IS" BASIS,     * 
+ *  Unless required by applicable law or agreed to in writing, software   *
+ *  distributed under the License is distributed on an "AS IS" BASIS,     *
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or       *
- *  implied.                                                              * 
- *  See the License for the specific language governing permissions and   * 
+ *  implied.                                                              *
+ *  See the License for the specific language governing permissions and   *
  *  limitations under the License.                                        *
  **************************************************************************
  *                                                                        *
@@ -62,6 +62,30 @@
 
 #endif
 
+// VRA-related includes and definitions.
+#ifdef __SYNTHESIS__
+// disable all class extensions when doing synthesis
+#ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+#undef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+#endif
+// void(0) is used as it is a compiler-safe no-op.
+// Refer to assert.h for an example of similar no-op usage.
+#define AC_FIXED_VRA_DISABLE(a) (void(0))
+#define AC_FIXED_VRA_ENABLE(a) (void(0))
+#else // VRA kicks in outside of HLS, if enabled.
+#ifdef AC_FIXED_VRA
+// Note that the value range analysis feature of AC Fixed is only available with a full
+// Catapult installation. vra_instr.h will be pre-included in ac_int.h if AC_FIXED_VRA is defined.
+#define AC_FIXED_VRA_DISABLE(a) a.disable_vra()
+#define AC_FIXED_VRA_ENABLE(a) a.enable_vra()
+#else
+// void(0) is used as it is a compiler-safe no-op.
+// Refer to assert.h for an example of similar no-op usage.
+#define AC_FIXED_VRA_DISABLE(a) (void(0))
+#define AC_FIXED_VRA_ENABLE(a) (void(0))
+#endif
+#endif
+
 #ifdef __AC_NAMESPACE
 namespace __AC_NAMESPACE {
 #endif
@@ -81,19 +105,62 @@ namespace ac_private {
     };
   };
   // specializations after definition of ac_fixed
-} 
+}
+
+namespace ac {
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  class basic_num_ovf_base {
+    bool d_enable;
+  public:
+    basic_num_ovf_base() : d_enable(true) {}
+    void enable_ovf(bool a) { d_enable = a; }
+    bool is_enabled() const { return d_enable; }
+    template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+    void update(bool overflow, bool neg, const basic_num_ovf_base<W2,I2,S2,Q2,O2> &op2, int int_bits, double frac_value) {
+#ifndef __AC_OVERRIDE_OVF_UPDATE_BODY
+      if(d_enable) {
+        if(overflow) {
+          std::cerr << (neg ? "-" : "+") << "OVF: ";
+          std::cerr << type_name() << " ( " << basic_num_ovf_base<W2,I2,S2,Q2,O2>::type_name();
+          std::cerr << " ( " << op2.value().to_double() << " ) )" << std::endl;
+        }
+      }
+#else
+      __AC_OVERRIDE_OVF_UPDATE_BODY
+#endif
+    }
+    void update(bool overflow, bool neg, double op2, int int_bits, double frac_value) {
+#ifndef __AC_OVERRIDE_OVF_UPDATE2_BODY
+      if(d_enable) {
+        if(overflow) {
+          std::cerr << (neg ? "-" : "+") << "OVF: ";
+          std::cerr << type_name() << " ( " << "double";
+          std::cerr << " ( " << op2 << " ) )" << std::endl;
+        }
+      }
+#else
+      __AC_OVERRIDE_OVF_UPDATE2_BODY
+#endif
+    }
+    const ac_fixed<W,I,S,Q,O> &value() const;
+    static std::string type_name();
+  };
+}
 
 //////////////////////////////////////////////////////////////////////////////
-//  ac_fixed 
+//  ac_fixed
 //////////////////////////////////////////////////////////////////////////////
 
 //enum ac_q_mode { AC_TRN, AC_RND, AC_TRN_ZERO, AC_RND_ZERO, AC_RND_INF, AC_RND_MIN_INF, AC_RND_CONV, AC_RND_CONV_ODD };
 //enum ac_o_mode { AC_WRAP, AC_SAT, AC_SAT_ZERO, AC_SAT_SYM };
 
 template<int W, int I, bool S=true, ac_q_mode Q=AC_TRN, ac_o_mode O=AC_WRAP>
-class ac_fixed : private ac_private::iv<(W+31+!S)/32> 
+class ac_fixed : private ac_private::iv<(W+31+!S)/32>
 #ifndef __SYNTHESIS__
-__AC_FIXED_UTILITY_BASE 
+__AC_FIXED_UTILITY_BASE
+#endif
+#ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+, public __AC_FIXED_NUMERICAL_ANALYSIS_BASE
 #endif
 {
 #if defined(__SYNTHESIS__) && !defined(AC_IGNORE_BUILTINS)
@@ -109,45 +176,95 @@ __AC_FIXED_UTILITY_BASE
   };
 
   typedef ac_private::iv<N> Base;
+  #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+  typedef __AC_FIXED_NUMERICAL_ANALYSIS_BASE NumBase;
+  #endif
 
   inline void bit_adjust() {
     const unsigned rem = (32-W)&31;
-    Base::v[N-1] =  S ? ((Base::v[N-1]  << rem) >> rem) : (rem ? 
-                  ((unsigned) Base::v[N-1]  << rem) >> rem : 0); 
+    Base::v[N-1] =  S ? ((signed) ((unsigned)Base::v[N-1]  << rem) >> rem) : (rem ?
+                  ((unsigned) Base::v[N-1]  << rem) >> rem : 0);
   }
   inline Base &base() { return *this; }
   inline const Base &base() const { return *this; }
 
-  inline void overflow_adjust(bool underflow, bool overflow) {
+  #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+  inline void this_update() {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    int int_bits = ac_vra_ns::calc_int_bits(*this);
+    double frac_value = ac_vra_ns::calc_frac_value(*this);
+    #else
+    int int_bits = 0;
+    double frac_value = 0.0;
+    #endif
+    NumBase::update(false, this->is_neg(), this->to_double(), int_bits, frac_value);
+  }
+
+  #ifdef _INCLUDED_VRA_INSTR_H_
+  template <int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+  friend int ac_vra_ns::calc_int_bits(const ac_fixed<W2, I2, S2, Q2, O2> &op2);
+
+  template <int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+  friend double ac_vra_ns::calc_frac_value(const ac_fixed<W2, I2, S2, Q2, O2> &op2);
+
+  template<ac_special_val V, int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+  friend inline ac_fixed<W2,I2,S2,Q2,O2> value(ac_fixed<W2,I2,S2,Q2,O2>);
+  #endif
+
+  template <class T_integ>
+  inline void init_with_integ_vra(const T_integ b) {
+    static_assert(std::is_integral<T_integ>::value, "Input must be of an integral type.");
+    constexpr bool S2 = std::is_signed<T_integ>::value;
+    constexpr int W2 = std::numeric_limits<T_integ>::digits + int(S2);
+
+    ac_int<W2, S2> temp_ac_int = b;
+    ac_fixed<W2,W2,S2> f_op;
+    f_op.base().operator =(temp_ac_int);
+    cpy_from_fxpt(f_op);
+  }
+
+  #ifdef _INCLUDED_VRA_INSTR_H_
+  ac_fixed(ac_vra_stack_trace_modes strace_mode_) : NumBase(strace_mode_) {
+    #ifdef AC_DEFAULT_IN_RANGE
+    bit_adjust();
+    #endif
+  }
+  #endif
+  #endif
+
+  inline void overflow_adjust(bool overflow, bool neg) {
     if(O==AC_WRAP) {
       bit_adjust();
       return;
-    } 
+    }
     else if(O==AC_SAT_ZERO) {
-      if((overflow || underflow))
+      if(overflow)
         ac_private::iv_extend<N>(Base::v, 0);
       else
         bit_adjust();
     }
     else if(S) {
       if(overflow) {
-        ac_private::iv_extend<N-1>(Base::v, ~0);
-        Base::v[N-1] = ~(~0 << ((W-1)&31));
-      } else if(underflow) {
-        ac_private::iv_extend<N-1>(Base::v, 0);
-        Base::v[N-1] = (~0 << ((W-1)&31));
-        if(O==AC_SAT_SYM)
-          Base::v[0] |= 1;
+        if(!neg) {
+          ac_private::iv_extend<N-1>(Base::v, ~0);
+          Base::v[N-1] = ~((unsigned)~0 << ((W-1)&31));
+        } else {
+          ac_private::iv_extend<N-1>(Base::v, 0);
+          Base::v[N-1] = ((unsigned)~0 << ((W-1)&31));
+          if(O==AC_SAT_SYM)
+            Base::v[0] |= 1;
+        }
       } else
         bit_adjust();
     }
     else {
       if(overflow) {
-        ac_private::iv_extend<N-1>(Base::v, ~0);
-        Base::v[N-1] = ~(~0 << (W&31));
-      } else if(underflow)
-        ac_private::iv_extend<N>(Base::v, 0);
-      else
+        if(!neg) {
+          ac_private::iv_extend<N-1>(Base::v, ~0);
+          Base::v[N-1] = ~((unsigned)~0 << (W&31));
+        } else
+          ac_private::iv_extend<N>(Base::v, 0);
+      } else
         bit_adjust();
     }
   }
@@ -156,21 +273,39 @@ __AC_FIXED_UTILITY_BASE
     if(Q==AC_TRN)
       return false;
     if(Q==AC_RND_ZERO)
-      qb &= s || r; 
-    else if(Q==AC_RND_MIN_INF) 
+      qb &= s || r;
+    else if(Q==AC_RND_MIN_INF)
       qb &= r;
-    else if(Q==AC_RND_INF) 
+    else if(Q==AC_RND_INF)
       qb &= !s || r;
-    else if(Q==AC_RND_CONV) 
+    else if(Q==AC_RND_CONV)
       qb &= (Base::v[0] & 1) || r;
-    else if(Q==AC_RND_CONV_ODD) 
+    else if(Q==AC_RND_CONV_ODD)
       qb &= (!(Base::v[0] & 1)) || r;
-    else if(Q==AC_TRN_ZERO) 
+    else if(Q==AC_TRN_ZERO)
       qb = s && ( qb || r );
     return ac_private::iv_uadd_carry<N>(Base::v, qb, Base::v);
   }
 
   inline bool is_neg() const { return S && Base::v[N-1] < 0; }
+
+  template <class T_stream>
+  void write_to_fs_private(T_stream& fs) const {
+    #ifdef AC_VALID_FSTREAM
+    AC_ASSERT(fs.good(), "File stream is not good.");
+    #endif
+
+    fs.write(reinterpret_cast<const char*>(&Base::v[0]), sizeof(Base::v));
+  }
+
+  template <class T_stream>
+  void read_from_fs_private(T_stream& fs) {
+    #ifdef AC_VALID_FSTREAM
+    AC_ASSERT(fs.good(), "File stream is not good.");
+    #endif
+
+    fs.read(reinterpret_cast<char*>(&Base::v[0]), sizeof(Base::v));
+  }
 
 public:
   static const int width = W;
@@ -179,11 +314,16 @@ public:
   static const ac_o_mode o_mode = O;
   static const ac_q_mode q_mode = Q;
   static const int e_width = 0;
+#ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+  static const bool compute_overflow_for_wrap = true;
+#else
+  static const bool compute_overflow_for_wrap = false;
+#endif
 
   template<int W2, int I2, bool S2>
   struct rt {
     enum {
-      F=W-I, 
+      F=W-I,
       F2=W2-I2,
       mult_w = W+W2,
       mult_i = I+I2,
@@ -246,8 +386,10 @@ public:
       typedef ac_fixed<sum_w, sum_i, sum_s> sum;
     };
   };
-
+  
+  #ifndef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
   ac_fixed(const ac_fixed &op): Base(op) { }
+  #endif
 
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2> friend class ac_fixed;
   ac_fixed() {
@@ -257,10 +399,26 @@ public:
       Base::v[0] |= 1;
 #endif
   }
+
+private: // Don't let users use cpy_from_fxpt directly.
+
+  // Putting the ac_fixed -> ac_fixed copying in a separate function to eliminate the need for "*this ="
+  // assignments while dealing with integer -> fixed conversions and hence avoid issues with VRA.
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
-  inline ac_fixed (const ac_fixed<W2,I2,S2,Q2,O2> &op) {
+  inline void cpy_from_fxpt(const ac_fixed<W2,I2,S2,Q2,O2> &op) {
     enum {N2=(W2+31+!S2)/32, F=W-I, F2=W2-I2, QUAN_INC = F2>F && !(Q==AC_TRN || (Q==AC_TRN_ZERO && !S2)) };
     bool carry = false;
+
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    int int_bits = ac_vra_ns::calc_int_bits(op);
+    double frac_value = ac_vra_ns::calc_frac_value(op);
+    #else
+    int int_bits = 0;
+    double frac_value = 0.0;
+    #endif
+    #endif
+
     // handle quantization
     if(F2 == F)
       Base::operator =(op);
@@ -274,47 +432,109 @@ public:
       }
     }
     else  // no quantization
-      op.template const_shift_l<N,F-F2>(*this); 
+      op.template const_shift_l<N,F-F2>(*this);
 //      ac_private::iv_const_shift_l<N2,N,F-F2>(op.v, Base::v);
-    // handle overflow/underflow
-    if(O!=AC_WRAP && ((!S && S2) || I-S < I2-S2+(QUAN_INC || (S2 && O==AC_SAT_SYM && (O2 != AC_SAT_SYM || F2 > F) ))) ) { // saturation 
+    // handle overflow
+    if((O!=AC_WRAP || compute_overflow_for_wrap)
+       && ((!S && S2) || I-S < I2-S2+(QUAN_INC || (S2 && O==AC_SAT_SYM && (O2 != AC_SAT_SYM || F2 > F) )))
+    ) { // saturation
       bool deleted_bits_zero = !(W&31)&S || !(Base::v[N-1] >> (W&31));
       bool deleted_bits_one = !(W&31)&S || !~(Base::v[N-1] >> (W&31));
       bool neg_src;
       if(F2-F+32*N < W2) {
         bool all_ones = ac_private::iv_equal_ones_from<F2-F+32*N,N2>(op.v);
-        deleted_bits_zero = deleted_bits_zero && (carry ? all_ones : ac_private::iv_equal_zeros_from<F2-F+32*N,N2>(op.v)); 
-        deleted_bits_one = deleted_bits_one && (carry ? ac_private::iv_equal_ones_from<1+F2-F+32*N,N2>(op.v) && !op[F2-F+32*N] : all_ones); 
-        neg_src = S2 && op.v[N2-1] < 0 && !(carry & all_ones); 
+        deleted_bits_zero = deleted_bits_zero && (carry ? all_ones : ac_private::iv_equal_zeros_from<F2-F+32*N,N2>(op.v));
+        deleted_bits_one = deleted_bits_one && (carry ? ac_private::iv_equal_ones_from<1+F2-F+32*N,N2>(op.v) && !op[F2-F+32*N] : all_ones);
+        neg_src = S2 && op.v[N2-1] < 0 && !(carry & all_ones);
       }
       else
         neg_src = S2 && op.v[N2-1] < 0 && Base::v[N-1] < 0;
-      bool neg_trg = S && (bool) this->operator[](W-1); 
-      bool overflow = !neg_src && (neg_trg || !deleted_bits_zero); 
-      bool underflow = neg_src && (!neg_trg || !deleted_bits_one); 
+      bool neg_trg = S && (bool) this->operator[](W-1);
+      bool overflow = !neg_src && (neg_trg || !deleted_bits_zero);
+      overflow |= neg_src && (!neg_trg || !deleted_bits_one);
       if(O==AC_SAT_SYM && S && S2)
-        underflow |= neg_src && (W > 1 ? ac_private::iv_equal_zeros_to<W-1,N>(Base::v) : true);
-      overflow_adjust(underflow, overflow);
+        overflow |= neg_src && (W > 1 ? ac_private::iv_equal_zeros_to<W-1,N>(Base::v) : true);
+      overflow_adjust(overflow, neg_src);
+      #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+      NumBase::update(overflow, neg_src, op, int_bits, frac_value);
+      #endif
     }
-    else 
+    else {
+      #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+      NumBase::update(false, false, op, int_bits, frac_value);
+      #endif
       bit_adjust();
+    }
+  }
+
+public:
+  template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
+  inline ac_fixed (const ac_fixed<W2,I2,S2,Q2,O2> &op) {
+    cpy_from_fxpt(op);
   }
 
   template<int W2, bool S2>
   inline ac_fixed (const ac_int<W2,S2> &op) {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W2,W2,S2> f_op(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W2,W2,S2> f_op;
+    #endif
     f_op.base().operator =(op);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // The *this = assignment in the code can lead to issues with rvalues being
+    // tracked as separate variables, further down the line. We call the cpy_from_fxpt
+    // function instead.
+    cpy_from_fxpt(f_op);
+    #else
     *this = f_op;
+    #endif
   }
 
   template<int W2>
   typename rt_priv<W2>::shiftl shiftl() const {
     typedef typename rt_priv<W2>::shiftl shiftl_t;
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    shiftl_t r(AC_VRA_STACK_NOT_TRACED);
+    #else
     shiftl_t r;
+    #endif
     Base::template const_shift_l<shiftl_t::N,W2>(r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
 
+  // Construct ac_fixed with file streams.
+  explicit inline ac_fixed(std::ifstream &ifs) {
+    read_from_fs_private(ifs);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    this_update();
+    #endif
+  }
+
+  explicit inline ac_fixed(std::fstream &fs) {
+    read_from_fs_private(fs);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    this_update();
+    #endif
+  }
+
+  #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+  inline ac_fixed( bool b ) { init_with_integ_vra(b); }
+  inline ac_fixed( char b ) { init_with_integ_vra(b); }
+  inline ac_fixed( signed char b ) { init_with_integ_vra(b); }
+  inline ac_fixed( unsigned char b ) { init_with_integ_vra(b); }
+  inline ac_fixed( signed short b ) { init_with_integ_vra(b); }
+  inline ac_fixed( unsigned short b ) { init_with_integ_vra(b); }
+  inline ac_fixed( signed int b ) { init_with_integ_vra(b); }
+  inline ac_fixed( unsigned int b ) { init_with_integ_vra(b); }
+  inline ac_fixed( signed long b ) { init_with_integ_vra(b); }
+  inline ac_fixed( unsigned long b ) { init_with_integ_vra(b); }
+  inline ac_fixed( Slong b ) { init_with_integ_vra(b); }
+  inline ac_fixed( Ulong b ) { init_with_integ_vra(b); }
+  #else
   inline ac_fixed( bool b ) { *this = (ac_int<1,false>) b; }
   inline ac_fixed( char b ) { *this = (ac_int<8,true>) b; }
   inline ac_fixed( signed char b ) { *this = (ac_int<8,true>) b; }
@@ -327,33 +547,50 @@ public:
   inline ac_fixed( unsigned long b ) { *this = (ac_int<ac_private::long_w,false>) b; }
   inline ac_fixed( Slong b ) { *this = (ac_int<64,true>) b; }
   inline ac_fixed( Ulong b ) { *this = (ac_int<64,false>) b; }
+  #endif
 
   inline ac_fixed( double d ) {
     double di = ac_private::ldexpr<-(I+!S+((32-W-!S)&31))>(d);
     bool o, qb, r;
     bool neg_src = d < 0;
-    Base::conv_from_fraction(di, &qb, &r, &o); 
+    Base::conv_from_fraction(di, &qb, &r, &o);
     quantization_adjust(qb, r, neg_src);
     // a neg number may become non neg (0) after quantization
     neg_src &= o || Base::v[N-1] < 0;
 
-    if(O!=AC_WRAP) { // saturation 
-      bool overflow, underflow;
-      bool neg_trg = S && (bool) this->operator[](W-1); 
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    int int_bits = ac_vra_ns::calc_int_bits(d, true);
+    double frac_value = ac_vra_ns::calc_frac_value(d);
+    #else
+    int int_bits = 0;
+    double frac_value = 0.0;
+    #endif
+    #endif
+
+    if(O!=AC_WRAP || compute_overflow_for_wrap) { // saturation
+      bool overflow;
+      bool neg_trg = S && (bool) this->operator[](W-1);
       if(o) {
-        overflow = !neg_src;
-        underflow = neg_src;
+        overflow = true;
       } else {
         bool deleted_bits_zero = !(W&31)&S || !(Base::v[N-1] >> (W&31));
         bool deleted_bits_one = !(W&31)&S || !~(Base::v[N-1] >> (W&31));
-        overflow = !neg_src && (neg_trg || !deleted_bits_zero); 
-        underflow = neg_src && (!neg_trg || !deleted_bits_one); 
+        overflow = !neg_src && (neg_trg || !deleted_bits_zero);
+        overflow |= neg_src && (!neg_trg || !deleted_bits_one);
       }
       if(O==AC_SAT_SYM && S)
-        underflow |= neg_src && (W > 1 ? ac_private::iv_equal_zeros_to<W-1,N>(Base::v) : true);
-      overflow_adjust(underflow, overflow);
-    } else 
+        overflow |= neg_src && (W > 1 ? ac_private::iv_equal_zeros_to<W-1,N>(Base::v) : true);
+      overflow_adjust(overflow, neg_src);
+      #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+      NumBase::update(overflow, neg_src, d, int_bits, frac_value);
+      #endif
+    } else {
       bit_adjust();
+      #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+      NumBase::update(false, neg_src, d, int_bits, frac_value);
+      #endif
+    }
   }
 
 #if (defined(_MSC_VER) && !defined(__EDG__))
@@ -371,7 +608,11 @@ public:
   template<ac_special_val V>
   inline ac_fixed &set_val() {
     if(V == AC_VAL_DC) {
+      #ifdef _INCLUDED_VRA_INSTR_H_
+      ac_fixed r(AC_VRA_STACK_NOT_TRACED);
+      #else
       ac_fixed r;
+      #endif
       Base::operator =(r);
       bit_adjust();
     }
@@ -379,7 +620,7 @@ public:
       Base::operator =(0);
       if(S && V == AC_VAL_MIN) {
         const unsigned rem = (W-1)&31;
-        Base::v[N-1] = (-1 << rem);
+        Base::v[N-1] = ((unsigned)~0 << rem);
         if(O == AC_SAT_SYM) {
           if(W == 1)
             Base::v[0] = 0;
@@ -389,11 +630,19 @@ public:
       } else if(V == AC_VAL_QUANTUM)
         Base::v[0] = 1;
     }
-    else if(AC_VAL_MAX) {
+    else {  // AC_VAL_MAX
       Base::operator =(-1);
       const unsigned int rem = (32-W - (unsigned) !S )&31;
       Base::v[N-1] = ((unsigned) (-1) >> 1) >> rem;
     }
+    
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    if (V != AC_VAL_DC) { // Don't cares should not be tracked by VRA.
+      // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+      *this = *this;
+    }
+    #endif
+
     return *this;
   }
 #if (defined(_MSC_VER) && !defined(__EDG__))
@@ -407,20 +656,20 @@ public:
 #endif
 
   // Explicit conversion functions to ac_int that captures all integer bits (bits are truncated)
-  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).slc<AC_MAX(I,1)>(0); }
+  inline ac_int<AC_MAX(I,1),S> to_ac_int() const { return ((ac_fixed<AC_MAX(I,1),AC_MAX(I,1),S>) *this).template slc<AC_MAX(I,1)>(0); }
 
   // Explicit conversion functions to C built-in types -------------
-  inline int to_int() const { return ((I-W) >= 32) ? 0 : (signed int) to_ac_int(); } 
+  inline int to_int() const { return ((I-W) >= 32) ? 0 : (signed int) to_ac_int(); }
   inline unsigned to_uint() const { return ((I-W) >= 32) ? 0 : (unsigned int) to_ac_int(); }
-  inline long to_long() const { return ((I-W) >= ac_private::long_w) ? 0 : (signed long) to_ac_int(); } 
-  inline unsigned long to_ulong() const { return ((I-W) >= ac_private::long_w) ? 0 : (unsigned long) to_ac_int(); } 
-  inline Slong to_int64() const { return ((I-W) >= 64) ? 0 : (Slong) to_ac_int(); } 
-  inline Ulong to_uint64() const { return ((I-W) >= 64) ? 0 : (Ulong) to_ac_int(); } 
-  inline double to_double() const { return ac_private::ldexpr<I-W>(Base::to_double()); } 
+  inline long to_long() const { return ((I-W) >= ac_private::long_w) ? 0 : (signed long) to_ac_int(); }
+  inline unsigned long to_ulong() const { return ((I-W) >= ac_private::long_w) ? 0 : (unsigned long) to_ac_int(); }
+  inline Slong to_int64() const { return ((I-W) >= 64) ? 0 : (Slong) to_ac_int(); }
+  inline Ulong to_uint64() const { return ((I-W) >= 64) ? 0 : (Ulong) to_ac_int(); }
+  inline double to_double() const { return ac_private::ldexpr<I-W>(Base::to_double()); }
 
   inline int length() const { return W; }
 
-  inline std::string to_string(ac_base_mode base_rep, bool sign_mag = false) const {
+  inline std::string to_string(ac_base_mode base_rep, bool sign_mag = false, bool pad_to_width = false) const {
     // base_rep == AC_DEC => sign_mag == don't care (always print decimal in sign magnitude)
     char r[(W-AC_MIN(AC_MIN(W-I,I),0)+31)/32*32+5] = {0};
     int i = 0;
@@ -432,17 +681,23 @@ public:
       r[i++] = '0';
       r[i++] = base_rep == AC_BIN ? 'b' : (base_rep == AC_OCT ? 'o' : 'x');
     }
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W+1, I+1, true> t(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W+1, I+1, true> t;
+    #endif
     if( (base_rep == AC_DEC || sign_mag) && is_neg() )
       t = operator -();
+    else if(pad_to_width)
+      t = ac_fixed<W,I,false>(*this);
     else
       t = *this;
     ac_fixed<AC_MAX(I+1,1),AC_MAX(I+1,1),true> i_part = t;
     ac_fixed<AC_MAX(W-I,1),0,false> f_part = t;
-    i += ac_private::to_string(i_part.v, AC_MAX(I+1,1), sign_mag, base_rep, false, r+i);
+    i += ac_private::to_string(i_part.v, AC_MAX(I+!pad_to_width,1), sign_mag, base_rep, false, pad_to_width, r+i);
     if(W-I > 0) {
       r[i++] = '.';
-      if(!ac_private::to_string(f_part.v, W-I, false, base_rep, true, r+i))
+      if(!ac_private::to_string(f_part.v, W-I, false, base_rep, true, pad_to_width, r+i))
         r[--i] = 0;
     }
     if(!i) {
@@ -470,47 +725,76 @@ public:
   // Arithmetic : Binary ----------------------------------------------------
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::mult operator *( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::mult r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::mult r;
+    #endif
     Base::mult(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::plus operator +( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
     enum { F=W-I, F2=W2-I2 };
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::plus r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::plus r;
+    #endif
     if(F == F2)
       Base::add(op2, r);
     else if(F > F2)
       Base::add(op2.template shiftl<F-F2>(), r);
     else
       shiftl<F2-F>().add(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::minus operator -( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
     enum { F=W-I, F2=W2-I2 };
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::minus r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::minus r;
+    #endif
     if(F == F2)
       Base::sub(op2, r);
     else if(F > F2)
       Base::sub(op2.template shiftl<F-F2>(), r);
     else
       shiftl<F2-F>().sub(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wenum-compare"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::div operator /( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::div r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::div r;
-    enum { Num_w = W+AC_MAX(W2-I2,0), Num_i = I, Num_w_minus = Num_w+S, Num_i_minus = Num_i+S,  
-          N1 = ac_fixed<Num_w,Num_i,S>::N, N1minus = ac_fixed<Num_w_minus,Num_i_minus,S>::N, 
+    #endif
+    enum { Num_w = W+AC_MAX(W2-I2,0), Num_i = I, Num_w_minus = Num_w+S, Num_i_minus = Num_i+S,
+          N1 = ac_fixed<Num_w,Num_i,S>::N, N1minus = ac_fixed<Num_w_minus,Num_i_minus,S>::N,
           N2 = ac_fixed<W2,I2,S2>::N, N2minus = ac_fixed<W2+S2,I2+S2,S2>::N,
           num_s = S + (N1minus > N1), den_s = S2 + (N2minus > N2), Nr = rt<W2,I2,S2>::div::N };
     ac_fixed<Num_w, Num_i, S> t = *this;
     t.template div<num_s, N2, den_s, Nr>(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
@@ -540,95 +824,157 @@ public:
   // increment/decrement by quantum (smallest difference that can be represented)
   // Arithmetic prefix increment, decrement ---------------------------------
   ac_fixed &operator ++() {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<1,I-W+1,false> q(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<1,I-W+1,false> q;
+    #endif
     q.template set_val<AC_VAL_QUANTUM>();
     operator += (q);
     return *this;
   }
   ac_fixed &operator --() {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<1,I-W+1,false> q(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<1,I-W+1,false> q;
+    #endif
     q.template set_val<AC_VAL_QUANTUM>();
     operator -= (q);
     return *this;
   }
   // Arithmetic postfix increment, decrement ---------------------------------
   const ac_fixed operator ++(int) {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed t(AC_VRA_STACK_NOT_TRACED);
+    t = *this;
+    ac_fixed<1,I-W+1,false> q(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed t = *this;
     ac_fixed<1,I-W+1,false> q;
+    #endif
     q.template set_val<AC_VAL_QUANTUM>();
-    operator += (q); 
+    operator += (q);
     return t;
   }
   const ac_fixed operator --(int) {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed t(AC_VRA_STACK_NOT_TRACED);
+    t = *this;
+    ac_fixed<1,I-W+1,false> q(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed t = *this;
     ac_fixed<1,I-W+1,false> q;
+    #endif
     q.template set_val<AC_VAL_QUANTUM>();
     operator -= (q);
     return t;
   }
   // Arithmetic Unary --------------------------------------------------------
-  ac_fixed operator +() {
+  ac_fixed operator +() const {
     return *this;
   }
   typename rt_unary::neg operator -() const {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt_unary::neg r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt_unary::neg r;
+    #endif
     Base::neg(r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // ! ------------------------------------------------------------------------
   bool operator ! () const {
-    return Base::equal_zero(); 
+    return Base::equal_zero();
   }
 
   // Bitwise (arithmetic) unary: complement  -----------------------------
   ac_fixed<W+!S, I+!S, true> operator ~() const {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W+!S, I+!S, true> r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W+!S, I+!S, true> r;
+    #endif
     Base::bitwise_complement(r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // Bitwise (not arithmetic) bit complement  -----------------------------
   ac_fixed<W, I, false> bit_complement() const {
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W, I, false> r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W, I, false> r;
+    #endif
     Base::bitwise_complement(r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // Bitwise (not arithmetic): and, or, xor ----------------------------------
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::logic operator &( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
     enum { F=W-I, F2=W2-I2 };
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::logic r;
+    #endif
     if(F == F2)
       Base::bitwise_and(op2, r);
     else if(F > F2)
       Base::bitwise_and(op2.template shiftl<F-F2>(), r);
     else
       shiftl<F2-F>().bitwise_and(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::logic operator |( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
     enum { F=W-I, F2=W2-I2 };
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::logic r;
+    #endif
     if(F == F2)
       Base::bitwise_or(op2, r);
     else if(F > F2)
       Base::bitwise_or(op2.template shiftl<F-F2>(), r);
     else
       shiftl<F2-F>().bitwise_or(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   typename rt<W2,I2,S2>::logic operator ^( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
     enum { F=W-I, F2=W2-I2 };
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    typename rt<W2,I2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    #else
     typename rt<W2,I2,S2>::logic r;
+    #endif
     if(F == F2)
       Base::bitwise_xor(op2, r);
     else if(F > F2)
       Base::bitwise_xor(op2.template shiftl<F-F2>(), r);
     else
       shiftl<F2-F>().bitwise_xor(op2, r);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // Bitwise assign (not arithmetic): and, or, xor ----------------------------
@@ -651,33 +997,61 @@ public:
   template<int W2>
   ac_fixed operator << ( const ac_int<W2,true> &op2 ) const {
     // currently not written to overflow or quantize (neg shift)
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed r;
+    #endif
     Base::shift_l2(op2.to_int(), r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_fixed operator << ( const ac_int<W2,false> &op2 ) const {
     // currently not written to overflow
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed r;
+    #endif
     Base::shift_l(op2.to_uint(), r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_fixed operator >> ( const ac_int<W2,true> &op2 ) const {
     // currently not written to quantize or overflow (neg shift)
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed r;
+    #endif
     Base::shift_r2(op2.to_int(), r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_fixed operator >> ( const ac_int<W2,false> &op2 ) const {
-    // currently not written to quantize 
+    // currently not written to quantize
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed r;
+    #endif
     Base::shift_r(op2.to_uint(), r);
     r.bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // Shift assign ------------------------------------------------------------
@@ -688,6 +1062,10 @@ public:
     Base::shift_l2(op2.to_int(), r);
     Base::operator=(r);
     bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return *this;
   }
   template<int W2>
@@ -697,6 +1075,10 @@ public:
     Base::shift_l(op2.to_uint(), r);
     Base::operator=(r);
     bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return *this;
   }
   template<int W2>
@@ -706,15 +1088,23 @@ public:
     Base::shift_r2(op2.to_int(), r);
     Base::operator=(r);
     bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return *this;
   }
   template<int W2>
   ac_fixed operator >>= ( const ac_int<W2,false> &op2 ) {
-    // currently not written to quantize 
+    // currently not written to quantize
     Base r;
     Base::shift_r(op2.to_uint(), r);
     Base::operator=(r);
     bit_adjust();
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return *this;
   }
   // Relational ---------------------------------------------------------------
@@ -766,7 +1156,7 @@ public:
     else if(F > F2)
       return Base::greater_than(op2.template shiftl<F-F2>());
     else
-      return shiftl<F2-F>().greater_than(op2); 
+      return shiftl<F2-F>().greater_than(op2);
   }
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2>
   bool operator <= ( const ac_fixed<W2,I2,S2,Q2,O2> &op2) const {
@@ -783,7 +1173,11 @@ public:
       return false;
     double di = ac_private::ldexpr<-(I+!S+((32-W-!S)&31))>(d);
     bool overflow, qb, r;
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W,I,S> t(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W,I,S> t;
+    #endif
     t.conv_from_fraction(di, &qb, &r, &overflow);
     if(qb || r || overflow)
       return false;
@@ -797,7 +1191,11 @@ public:
       return is_neg();
     double di = ac_private::ldexpr<-(I+!S+((32-W-!S)&31))>(d);
     bool overflow, qb, r;
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W,I,S> t(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W,I,S> t;
+    #endif
     t.conv_from_fraction(di, &qb, &r, &overflow);
     if(is_neg() && overflow)
       return false;
@@ -811,7 +1209,11 @@ public:
       return !is_neg();
     double di = ac_private::ldexpr<-(I+!S+((32-W-!S)&31))>(d);
     bool overflow, qb, r;
+    #ifdef _INCLUDED_VRA_INSTR_H_
+    ac_fixed<W,I,S> t(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_fixed<W,I,S> t;
+    #endif
     t.conv_from_fraction(di, &qb, &r, &overflow);
     if(!is_neg() && overflow )
       return false;
@@ -823,54 +1225,84 @@ public:
 
   // Bit and Slice Select -----------------------------------------------------
   template<int WS, int WX, bool SX>
-  inline ac_int<WS,S> slc(const ac_int<WX,SX> &index) const {
+  inline const ac_int<WS,S> slc(const ac_int<WX,SX> &index) const {
     ac_int<WS,S> r;
-    AC_ASSERT(index >= 0, "Attempting to read slc with negative indeces");
-    ac_int<WX-SX, false> uindex = index;
-    Base::shift_r(uindex.to_uint(), r);
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read slc with negative indeces");
+    unsigned uindex = ac_int<WX-SX, false>(index).to_uint();
+    Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
 
   template<int WS>
-  inline ac_int<WS,S> slc(signed index) const {
+  inline const ac_int<WS,S> slc(signed index) const {
     ac_int<WS,S> r;
     AC_ASSERT(index >= 0, "Attempting to read slc with negative indeces");
     unsigned uindex = index & ((unsigned)~0 >> 1);
     Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
   template<int WS>
-  inline ac_int<WS,S> slc(unsigned uindex) const {
+  inline const ac_int<WS,S> slc(unsigned uindex) const {
     ac_int<WS,S> r;
     Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
 
   template<int W2, bool S2, int WX, bool SX>
   inline ac_fixed &set_slc(const ac_int<WX,SX> lsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(lsb.to_int() + W2 <= W && lsb.to_int() >= 0, "Out of bounds set_slc");
-    ac_int<WX-SX, false> ulsb = lsb;
-    Base::set_slc(ulsb.to_uint(), W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else {
+      unsigned ulsb = ac_int<WX-SX, false>(lsb).to_uint();
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    }
+    bit_adjust();   // in case sign bit was assigned
     return *this;
   }
   template<int W2, bool S2>
   inline ac_fixed &set_slc(signed lsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(lsb + W2 <= W && lsb >= 0, "Out of bounds set_slc");
-    unsigned ulsb = lsb & ((unsigned)~0 >> 1);
-    Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else {
+      unsigned ulsb = lsb & ((unsigned)~0 >> 1);
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    }
+    bit_adjust();   // in case sign bit was assigned
     return *this;
   }
   template<int W2, bool S2>
   inline ac_fixed &set_slc(unsigned ulsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(ulsb + W2 <= W, "Out of bounds set_slc");
-    Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    bit_adjust();   // in case sign bit was assigned
     return *this;
+  }
+
+  template<int Msb, int Lsb>
+  inline ac::sliceref<Msb-Lsb+1,Lsb,Msb==W-1,S> range() {
+    #if __cplusplus > 199711L
+    static_assert(Msb-Lsb+1 > 0, "Range length not positive: MSB < LSB");
+    static_assert(Lsb >= 0, "LSB is negative");
+    static_assert(Msb < W, "MSB >= W");
+    #endif
+    return ac::sliceref<Msb-Lsb+1,Lsb,Msb==W-1,S>(Base::v);
   }
 
   class ac_bitref {
@@ -887,7 +1319,9 @@ public:
       // lsb of int (val&1) is written to bit
       if(d_index < W) {
         int *pval = &d_bv.v[d_index>>5];
-        *pval ^= (*pval ^ (val << (d_index&31) )) & 1 << (d_index&31);
+        int shift = d_index & 31;
+        unsigned int mask = 1u << shift;
+        *pval = (*pval & ~mask) | ((val & 1) << shift);
         d_bv.bit_adjust();   // in case sign bit was assigned
       }
       return *this;
@@ -900,7 +1334,7 @@ public:
       return operator =((int) (bool) val);
     }
   };
-                                                                                                             
+
   ac_bitref operator [] ( unsigned int uindex) {
     AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     ac_bitref bvh( this, uindex );
@@ -908,17 +1342,17 @@ public:
   }
   ac_bitref operator [] ( int index) {
     AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
     unsigned uindex = index & ((unsigned)~0 >> 1);
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     ac_bitref bvh( this, uindex );
     return bvh;
   }
   template<int W2, bool S2>
   ac_bitref operator [] ( const ac_int<W2,S2> &index) {
-    AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
-    ac_int<W2-S2,false> uindex = index;
-    ac_bitref bvh( this, uindex.to_uint() );
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read bit with negative index");
+    unsigned uindex = ac_int<W2-S2,false>(index).to_uint();
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
+    ac_bitref bvh( this, uindex );
     return bvh;
   }
 
@@ -928,16 +1362,16 @@ public:
   }
   bool operator [] ( int index) const {
     AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
     unsigned uindex = index & ((unsigned)~0 >> 1);
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     return (uindex < W) ? (Base::v[uindex>>5]>>(uindex&31) & 1) : 0;
   }
   template<int W2, bool S2>
   bool operator [] ( const ac_int<W2,S2> &index) const {
-    AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
-    ac_int<W2-S2,false> uindex = index;
-    return (uindex < W) ? (Base::v[uindex>>5]>>(uindex.to_uint()&31) & 1) : 0;
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read bit with negative index");
+    unsigned uindex = ac_int<W2-S2,false>(index).to_uint();
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
+    return (uindex < W) ? (Base::v[uindex>>5]>>(uindex&31) & 1) : 0;
   }
   typename rt_unary::leading_sign leading_sign() const {
     unsigned ls = Base::leading_bits(S & (Base::v[N-1] < 0)) - (32*N - W)-S;
@@ -954,6 +1388,10 @@ public:
     ac_int<W,S> m = this->template slc<W>(0);
     bool r = m.normalize(exp);
     this->set_slc(0,m);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return r;
   }
   // returns false if number is denormal, minimum exponent is reserved (usually for encoding special values/errors)
@@ -962,14 +1400,59 @@ public:
     ac_int<W,S> m = this->template slc<W>(0);
     bool r = m.normalize_RME(exp);
     this->set_slc(0,m);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
     return r;
   }
+
+  inline void write_to_fs(std::ofstream &ofs) const {
+    write_to_fs_private(ofs);
+  }
+
+  inline void write_to_fs(std::fstream &fs) const {
+    write_to_fs_private(fs);
+  }
+
+  inline ac_fixed & read_from_fs(std::ifstream &ifs) {
+    read_from_fs_private(ifs);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
+    return *this;
+  }
+
+  inline ac_fixed & read_from_fs(std::fstream &fs) {
+    read_from_fs_private(fs);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
+    return *this;
+  }
+
+  bool and_reduce() const {
+    return this->template slc<W>(0).and_reduce();
+  }
+  bool or_reduce() const {
+    return this->template slc<W>(0).or_reduce();
+  }
+  bool xor_reduce() const {
+    return this->template slc<W>(0).xor_reduce();
+  }
+
   inline void bit_fill_hex(const char *str) {
     // Zero Pads if str is too short, throws ms bits away if str is too long
     // Asserts if anything other than 0-9a-fA-F is encountered
     ac_int<W,S> x;
     x.bit_fill_hex(str);
     set_slc(0, x);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
   }
   template<int N>
   inline void bit_fill(const int (&ivec)[N], bool bigendian=true) {
@@ -977,12 +1460,16 @@ public:
     //   if W > N*32, missing most significant bits are zeroed
     //   if W < N*32, additional bits in ivec are ignored (no overflow checking)
     //
-    // Example:  
+    // Example:
     //   ac_fixed<80,40,false> x;    int vec[] = { 0xffffa987, 0x6543210f, 0xedcba987 };
-    //   x.bit_fill(vec);   // vec[0] fill bits 79-64 
+    //   x.bit_fill(vec);   // vec[0] fill bits 79-64
     ac_int<W,S> x;
     x.bit_fill(ivec, bigendian);
     set_slc(0, x);
+    #ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
   }
 };
 
@@ -1056,6 +1543,10 @@ namespace ac_private {
   };
 }
 
+// Specialized constructors for bit_adjust bypass are disabled when using
+// ac_fixed VRA, which helps to reduce the number of instrumentation hooks
+// needed and simplifies the coding involved.
+#ifndef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
 
 // Specializations for constructors on integers that bypass bit adjusting
 //  and are therefore more efficient
@@ -1105,14 +1596,20 @@ template<> inline ac_fixed<64,64,true,AC_TRN,AC_WRAP>::ac_fixed( Slong b ) { v[0
 template<> inline ac_fixed<64,64,true,AC_TRN,AC_WRAP>::ac_fixed( Ulong b ) { v[0] = (int) b; v[1] = (int) (b >> 32);}
 template<> inline ac_fixed<64,64,false,AC_TRN,AC_WRAP>::ac_fixed( Slong b ) { v[0] = (int) b; v[1] = (int) ((Ulong) b >> 32); v[2] = 0; }
 template<> inline ac_fixed<64,64,false,AC_TRN,AC_WRAP>::ac_fixed( Ulong b ) { v[0] = (int) b; v[1] = (int) (b >> 32); v[2] = 0; }
-
+#endif
 
 // Stream --------------------------------------------------------------------
 
 template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
 inline std::ostream& operator << (std::ostream &os, const ac_fixed<W,I,S,Q,O> &x) {
 #ifndef __SYNTHESIS__
-  os << x.to_string(AC_DEC);
+  if ((os.flags() & std::ios::hex) != 0) {
+    os << x.to_string(AC_HEX);
+  } else if ((os.flags() & std::ios::oct) != 0) {
+    os << x.to_string(AC_OCT);
+  } else {
+    os << x.to_string(AC_DEC);
+  }
 #endif
   return os;
 }
@@ -1120,9 +1617,9 @@ inline std::ostream& operator << (std::ostream &os, const ac_fixed<W,I,S,Q,O> &x
 
 // Macros for Binary Operators with C Integers --------------------------------------------
 
-#define FX_BIN_OP_WITH_INT_2I(BIN_OP, C_TYPE, WI, SI, RTYPE)  \
+#define FX_BIN_OP_WITH_INT_2I(BIN_OP, C_TYPE, WI, SI)  \
   template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O> \
-  inline typename ac_fixed<W,I,S>::template rt<WI,WI,SI>::RTYPE operator BIN_OP ( const ac_fixed<W,I,S,Q,O> &op, C_TYPE i_op) {  \
+  inline ac_fixed<W,I,S,Q,O> operator BIN_OP ( const ac_fixed<W,I,S,Q,O> &op, C_TYPE i_op) {  \
     return op.operator BIN_OP (ac_int<WI,SI>(i_op));  \
   }
 
@@ -1163,8 +1660,8 @@ inline std::ostream& operator << (std::ostream &os, const ac_fixed<W,I,S,Q,O> &x
   FX_BIN_OP_WITH_INT(+, C_TYPE, WI, SI, plus) \
   FX_BIN_OP_WITH_INT(-, C_TYPE, WI, SI, minus) \
   FX_BIN_OP_WITH_INT(/, C_TYPE, WI, SI, div) \
-  FX_BIN_OP_WITH_INT_2I(>>, C_TYPE, WI, SI, arg1) \
-  FX_BIN_OP_WITH_INT_2I(<<, C_TYPE, WI, SI, arg1) \
+  FX_BIN_OP_WITH_INT_2I(>>, C_TYPE, WI, SI) \
+  FX_BIN_OP_WITH_INT_2I(<<, C_TYPE, WI, SI) \
   FX_BIN_OP_WITH_INT(&, C_TYPE, WI, SI, logic) \
   FX_BIN_OP_WITH_INT(|, C_TYPE, WI, SI, logic) \
   FX_BIN_OP_WITH_INT(^, C_TYPE, WI, SI, logic) \
@@ -1186,10 +1683,12 @@ inline std::ostream& operator << (std::ostream &os, const ac_fixed<W,I,S,Q,O> &x
   FX_ASSIGN_OP_WITH_INT_2(|=, C_TYPE, WI, SI) \
   FX_ASSIGN_OP_WITH_INT_2(^=, C_TYPE, WI, SI)
 
-// --------------------------------------- End of Macros for Binary Operators with C Integers 
+// --------------------------------------- End of Macros for Binary Operators with C Integers
 
+#ifdef AC_FIXED_NS_FOR_MIXED_OPERATORS
 namespace ac {
   namespace ops_with_other_types {
+#endif
     // Binary Operators with C Integers --------------------------------------------
     FX_OPS_WITH_INT(bool, 1, false)
     FX_OPS_WITH_INT(char, 8, true)
@@ -1203,10 +1702,11 @@ namespace ac {
     FX_OPS_WITH_INT(unsigned long, ac_private::long_w, false)
     FX_OPS_WITH_INT(Slong, 64, true)
     FX_OPS_WITH_INT(Ulong, 64, false)
-    // -------------------------------------- End of Binary Operators with Integers 
+    // -------------------------------------- End of Binary Operators with Integers
+#ifdef AC_FIXED_NS_FOR_MIXED_OPERATORS
   }  // ops_with_other_types namespace
-
 } // ac namespace
+#endif
 
 
 // Macros for Binary Operators with ac_int --------------------------------------------
@@ -1245,12 +1745,14 @@ namespace ac {
   template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O, int WI, bool SI> \
   inline ac_int<WI,SI> &operator ASSIGN_OP ( ac_int<WI,SI> &op, const ac_fixed<W,I,S,Q,O> &op2) {  \
     return op.operator ASSIGN_OP (op2.to_ac_int());  \
-  }  
+  }
 
 // -------------------------------------------- End of Macros for Binary Operators with ac_int
 
+#ifdef AC_FIXED_NS_FOR_MIXED_OPERATORS
 namespace ac {
   namespace ops_with_other_types {
+#endif
     // Binary Operators with ac_int --------------------------------------------
     FX_BIN_OP_WITH_AC_INT(*, mult)
     FX_BIN_OP_WITH_AC_INT(+, plus)
@@ -1271,43 +1773,43 @@ namespace ac {
     FX_ASSIGN_OP_WITH_AC_INT(-=)
     FX_ASSIGN_OP_WITH_AC_INT(*=)
     FX_ASSIGN_OP_WITH_AC_INT(/=)
-    FX_ASSIGN_OP_WITH_AC_INT(%=)
     FX_ASSIGN_OP_WITH_AC_INT(&=)
     FX_ASSIGN_OP_WITH_AC_INT(|=)
     FX_ASSIGN_OP_WITH_AC_INT(^=)
-    // -------------------------------------- End of Binary Operators with ac_int 
+    // -------------------------------------- End of Binary Operators with ac_int
 
     // Relational Operators with double --------------------------------------
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator == ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator == (op); 
+      return op2.operator == (op);
     }
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator != ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator != (op); 
+      return op2.operator != (op);
     }
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator > ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator < (op); 
+      return op2.operator < (op);
     }
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator < ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator > (op); 
+      return op2.operator > (op);
     }
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator <= ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator >= (op); 
+      return op2.operator >= (op);
     }
     template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
     inline bool operator >= ( double op, const ac_fixed<W,I,S,Q,O> &op2) {
-      return op2.operator <= (op); 
+      return op2.operator <= (op);
     }
-    // -------------------------------------- End of Relational Operators with double 
-
+    // -------------------------------------- End of Relational Operators with double
+#ifdef AC_FIXED_NS_FOR_MIXED_OPERATORS
   }  // ops_with_other_types namespace
 } // ac namespace
-
 using namespace ac::ops_with_other_types;
+#endif
+
 
 #if (defined(_MSC_VER) && !defined(__EDG__))
 #pragma warning( disable: 4700 )
@@ -1324,18 +1826,52 @@ using namespace ac::ops_with_other_types;
 // Global templatized functions for easy initialization to special values
 template<ac_special_val V, int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
 inline ac_fixed<W,I,S,Q,O> value(ac_fixed<W,I,S,Q,O>) {
+  #ifdef _INCLUDED_VRA_INSTR_H_
+  ac_fixed<W,I,S> r(AC_VRA_STACK_NOT_TRACED);
+  #else
   ac_fixed<W,I,S> r;
-  return r.template set_val<V>();
+  #endif
+  r.template set_val<V>();
+  return r;
 }
 
 namespace ac {
 // PUBLIC FUNCTIONS
 // function to initialize (or uninitialize) arrays
-  template<ac_special_val V, int W, int I, bool S, ac_q_mode Q, ac_o_mode O> 
+  template<ac_special_val V, int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
   inline bool init_array(ac_fixed<W,I,S,Q,O> *a, int n) {
-    ac_fixed<W,I,S> t = value<V>(*a);
+    ac_fixed<W,I,S> t;
+    t.template set_val<V>();
     for(int i=0; i < n; i++)
       a[i] = t;
+    return true;
+  }
+
+  // functions to initialize array from filestream.
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  inline bool init_array(ac_fixed<W,I,S,Q,O> *a, int n, std::ifstream &ifs) {
+    for (int i = 0; i < n; i++) { a[i].read_from_fs(ifs); }
+    return true;
+  }
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  inline bool init_array(ac_fixed<W,I,S,Q,O> *a, int n, std::fstream &fs) {
+    for (int i = 0; i < n; i++) { a[i].read_from_fs(fs); }
+    return true;
+  }
+
+  // functions to dump array to filestream.
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  inline bool dump_array(const ac_fixed<W,I,S,Q,O> *a, int n, std::ofstream &ofs) {
+    for (int i = 0; i < n; i++) { a[i].write_to_fs(ofs); }
+    return true;
+  }
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  inline bool dump_array(const ac_fixed<W,I,S,Q,O> *a, int n, std::fstream &fs) {
+    for (int i = 0; i < n; i++) { a[i].write_to_fs(fs); }
     return true;
   }
 
@@ -1346,16 +1882,16 @@ namespace ac {
       return 0;
     }
     int exp_i;
-    double f0 = frexp(d, &exp_i); 
+    double f0 = frexp(d, &exp_i);
     AC_ASSERT(exp_i <= Max_Exp+1, "Exponent greater than standard double-precision float exponent max (+1024). It is probably an extended double");
     AC_ASSERT(exp_i >= Denorm_Min_Exp+1, "Exponent less than standard double-precision float exponent min (-1021). It is probably an extended double");
     exp_i--;
-    int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : (exp_i > Min_Exp && f0 < 0 && f0 >= -0.5) ? -1 : 0; 
+    int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : (exp_i > Min_Exp && f0 < 0 && f0 >= -0.5) ? -1 : 0;
     exp = exp_i + rshift;
-    ac_int<Mant_W+2,true> f_i = f0 * ((Ulong) 1 << (Mant_W + 1 -rshift));
+    ac_int<Mant_W+2,true> f_i = f0 * ((double)((Ulong) 1 << (Mant_W + 1 -rshift)));
     ac_fixed<Mant_W+2,2,true> r;
     r.set_slc(0, f_i);
-    return r; 
+    return r;
   }
   inline ac_fixed<25,2,true> frexp_f(float f, ac_int<8,true> &exp) {
     enum {Min_Exp = -126, Max_Exp = 127, Mant_W = 23, Denorm_Min_Exp = Min_Exp - Mant_W};
@@ -1364,16 +1900,16 @@ namespace ac {
       return 0;
     }
     int exp_i;
-    float f0 = frexpf(f, &exp_i); 
+    float f0 = frexpf(f, &exp_i);
     AC_ASSERT(exp_i <= Max_Exp+1, "Exponent greater than standard single-precision float exponent max (+128). It is probably an extended float");
     AC_ASSERT(exp_i >= Denorm_Min_Exp+1, "Exponent less than standard single-precision float exponent min (-125). It is probably an extended float");
     exp_i--;
-    int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : (exp_i >= Min_Exp && f0 < 0 && f0 >= -0.5) ? -1 : 0; 
+    int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : (exp_i >= Min_Exp && f0 < 0 && f0 >= -0.5) ? -1 : 0;
     exp = exp_i + rshift;
-    ac_int<Mant_W+2,true> f_i = f0 * (1 << (Mant_W + 1 - rshift));
+    ac_int<Mant_W+2,true> f_i = f0 * ((float)(1 << (Mant_W + 1 - rshift)));
     ac_fixed<Mant_W+2,2,true> r;
     r.set_slc(0, f_i);
-    return r; 
+    return r;
   }
 
   inline ac_fixed<53,1,false> frexp_sm_d(double d, ac_int<11,true> &exp, bool &sign) {
@@ -1391,7 +1927,7 @@ namespace ac {
     exp_i--;
     int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : 0;
     exp = exp_i + rshift;
-    ac_int<Mant_W+1,false> f_i = f0 * ((Ulong) 1 << (Mant_W + 1 -rshift));
+    ac_int<Mant_W+1,false> f_i = f0 * ((double)((Ulong) 1 << (Mant_W + 1 -rshift)));
     ac_fixed<Mant_W+1,1,false> r;
     r.set_slc(0, f_i);
     sign = s;
@@ -1406,17 +1942,26 @@ namespace ac {
     }
     int exp_i;
     bool s = f < 0;
-    float f0 = frexp(s ? -f : f, &exp_i);
+    float f0 = frexpf(s ? -f : f, &exp_i);
     AC_ASSERT(exp_i <= Max_Exp+1, "Exponent greater than standard single-precision float exponent max (+128). It is probably an extended float");
     AC_ASSERT(exp_i >= Denorm_Min_Exp+1, "Exponent less than standard single-precision float exponent min (-125). It is probably an extended float");
     exp_i--;
     int rshift = exp_i < Min_Exp ? Min_Exp - exp_i : 0;
     exp = exp_i + rshift;
-    ac_int<24,false> f_i = f0 * (1 << (Mant_W + 1 - rshift));
+    ac_int<24,false> f_i = f0 * ((float)(1 << (Mant_W + 1 - rshift)));
     ac_fixed<24,1,false> r;
     r.set_slc(0, f_i);
     sign = s;
     return r;
+  }
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
+  const ac_fixed<W,I,S,Q,O> &basic_num_ovf_base<W,I,S,Q,O>::value() const {
+    return (const ac_fixed<W,I,S,Q,O> &) *this;
+  }
+
+  template<int W, int I, bool S, ac_q_mode Q, ac_o_mode O> std::string basic_num_ovf_base<W,I,S,Q,O>::type_name() {
+    return ac_fixed<W,I,S,Q,O>::type_name();
   }
 }
 
@@ -1436,5 +1981,12 @@ namespace ac {
 #ifdef __AC_NAMESPACE
 }
 #endif
+
+#ifdef AC_FIXED_VRA
+// Note that the value range analysis feature of AC Fixed is only available with a full
+// Catapult installation.
+#include "vra_instr_fixed_fns.h"
+#endif
+
 
 #endif // __AC_FIXED_H

@@ -12,13 +12,14 @@
 #define _NV_NVDLA_RBK_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
 
 #include "scsim_common.h"
-#include "systemc.h"
+//#include "systemc.h"
 #include "NV_NVDLA_rbk_base.h"
 #include "rbk_reg_model.h"
 // #include "rbkoreconfigclass.h"
@@ -44,6 +45,13 @@ SCSIM_NAMESPACE_START(clib)
 SCSIM_NAMESPACE_END()
 
 SCSIM_NAMESPACE_START(cmod)
+
+using namespace sc_core;
+using namespace sc_dt;
+using namespace sc_gem5;
+using namespace sc_unnamed;
+using namespace std;
+
 
 class RubikConfig {
     public:
@@ -77,7 +85,7 @@ class rbk_ack_info {
         uint8_t group_id;
 };
 
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 inline std::ostream& operator<<(std::ostream& out, const RubikConfig & obj) {
     return out << "Just to fool compiler" << endl;
 }
@@ -88,11 +96,11 @@ class NV_NVDLA_rbk:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_rbk);
-        NV_NVDLA_rbk( sc_module_name module_name );
+        NV_NVDLA_rbk( sc_core::sc_module_name module_name );
         ~NV_NVDLA_rbk();
         // Target sockets
         // CSB request transport implementation shall in generated code
-        void csb2rbk_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2rbk_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         void mcif2rbk_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
         void cvif2rbk_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
 
@@ -111,10 +119,10 @@ class NV_NVDLA_rbk:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event            rbk_kickoff_;
-        sc_event            rbk_done_;
-        sc_event rbk_mc_ack_;
-        sc_event rbk_cv_ack_;
+        sc_core::sc_event            rbk_kickoff_;
+        sc_core::sc_event            rbk_done_;
+        sc_core::sc_event rbk_mc_ack_;
+        sc_core::sc_event rbk_cv_ack_;
         bool     is_mc_ack_done_;
         bool     is_cv_ack_done_;
         uint8_t             *reorder_array_;
@@ -161,10 +169,10 @@ class NV_NVDLA_rbk:
 
         // #  Functional functions
         //  Send DMA read request
-        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay);
+        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay);
         // Send DMA write request
         void SendDmaWriteRequest(sc_core::sc_fifo <uint8_t *> *wdma_fifo, uint64_t payload_addr, uint32_t payload_size, uint32_t payload_atom_num, bool ack_required = false);
-        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, bool ack_required = false);
+        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, bool ack_required = false);
 
         //  Extract DMA read response payload
         void ExtractDmaPayload(sc_core::sc_fifo <uint8_t *> *dma_fifo, nvdla_dma_rd_rsp_t* payload);
@@ -177,7 +185,7 @@ class NV_NVDLA_rbk:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_rbk * NV_NVDLA_rbkCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_rbk * NV_NVDLA_rbkCon(sc_core::sc_module_name module_name);
 
 #endif
 

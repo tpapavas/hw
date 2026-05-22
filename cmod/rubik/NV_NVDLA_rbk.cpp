@@ -27,23 +27,21 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_rbk::NV_NVDLA_rbk( sc_module_name module_name ):
+
+NV_NVDLA_rbk::NV_NVDLA_rbk( sc_core::sc_module_name module_name ):
     NV_NVDLA_rbk_base(module_name),
     planar_fifo_("planar_fifo", RUBIK_PLANAR_FIFO_NUM)
     // Delay setup
 {
-    sc_core::sc_vector<sc_fifo <uint8_t *>>::iterator iter;
+    sc_core::sc_vector<sc_core::sc_fifo <uint8_t *>>::iterator iter;
     // uint32_t iter;
     reorder_array_                  = new uint8_t[RUBIK_INTERNAL_BUF_SIZE];
-    feature_cube_in_fifo_           = new sc_fifo <uint8_t *> (RUBIK_FEATURE_CUBE_IN_FIFO_DEPTH);
-    feature_cube_out_fifo_          = new sc_fifo <uint8_t *> (RUBIK_FEATURE_CUBE_OUT_FIFO_DEPTH);
-    rbk_ack_fifo_     = new sc_fifo <rbk_ack_info*> (2);
-    rubik_config_fifo_r2d_          = new sc_fifo <RubikConfig *>  (1);
-    rubik_config_fifo_d2w_          = new sc_fifo <RubikConfig *>  (1);
+    feature_cube_in_fifo_           = new sc_core::sc_fifo <uint8_t *> (RUBIK_FEATURE_CUBE_IN_FIFO_DEPTH);
+    feature_cube_out_fifo_          = new sc_core::sc_fifo <uint8_t *> (RUBIK_FEATURE_CUBE_OUT_FIFO_DEPTH);
+    rbk_ack_fifo_     = new sc_core::sc_fifo <rbk_ack_info*> (2);
+    rubik_config_fifo_r2d_          = new sc_core::sc_fifo <RubikConfig *>  (1);
+    rubik_config_fifo_d2w_          = new sc_core::sc_fifo <RubikConfig *>  (1);
     dma_rd_req_payload_             = new nvdla_dma_rd_req_t;
     dma_wr_req_cmd_payload_         = new nvdla_dma_wr_req_t;
     dma_wr_req_data_payload_        = new nvdla_dma_wr_req_t;
@@ -67,7 +65,7 @@ NV_NVDLA_rbk::NV_NVDLA_rbk( sc_module_name module_name ):
 
 #pragma CTC SKIP
 NV_NVDLA_rbk::~NV_NVDLA_rbk () {
-    sc_core::sc_vector<sc_fifo <uint8_t *>>::iterator iter;
+    sc_core::sc_vector<sc_core::sc_fifo <uint8_t *>>::iterator iter;
     // uint32_t iter;
     if (reorder_array_)                 delete [] reorder_array_;
     if (feature_cube_in_fifo_)          delete feature_cube_in_fifo_;
@@ -81,7 +79,7 @@ NV_NVDLA_rbk::~NV_NVDLA_rbk () {
 }
 #pragma CTC ENDSKIP
 
-void NV_NVDLA_rbk::ExtractDmaPayload(sc_fifo <uint8_t *> *dma_fifo, nvdla_dma_rd_rsp_t* payload){
+void NV_NVDLA_rbk::ExtractDmaPayload(sc_core::sc_fifo <uint8_t *> *dma_fifo, nvdla_dma_rd_rsp_t* payload){
     // Extract data from payload
     //  Each payload is 64 byte, two mask bit tells which 32 byte groups are effective
     uint8_t *payload_data_ptr;
@@ -360,12 +358,12 @@ void NV_NVDLA_rbk::RubikRdmaSequenceContract() {
                 // Input width iteration
                 width_in_iter = 0;
                 while (width_in_iter < cube_in_width) {
-                    payload_atom_num= min ((cube_in_width - width_in_iter), uint32_t(8));
+                    payload_atom_num= std::min ((cube_in_width - width_in_iter), uint32_t(8));
                     cslDebug((70, "NV_NVDLA_rbk::RubikRdmaSequenceContract, width_in_iter:0x%x, cube_in_width:0x%x, width_in_step:0x%x\n", width_in_iter, cube_in_width, payload_atom_num));
                     // Stride X iteration
                     stride_x_iter = 0;
                     while (stride_x_iter < stride_x) {
-                        stride_x_step = min ((stride_x - stride_x_iter), uint32_t(8));
+                        stride_x_step = std::min ((stride_x - stride_x_iter), uint32_t(8));
                         cslDebug((70, "NV_NVDLA_rbk::RubikRdmaSequenceContract, stride_x_iter:0x%x, stride_x:0x%x, stride_x_step:0x%x\n", stride_x_iter, stride_x, stride_x_step));
                         for (surface_in_iter = 0; surface_in_iter < stride_x_step; surface_in_iter++) {
                             payload_addr    = src_base_addr + ( (stride_y_iter * stride_x + stride_x_iter + surface_in_iter) * surface_out_num + surface_out_iter) * src_surface_stride + height_in_iter * src_line_stride + width_in_iter*RUBIK_ATOM_CUBE_SIZE;
@@ -437,7 +435,7 @@ void NV_NVDLA_rbk::RubikRdmaSequenceSplit(){
             while (width_iter < cube_width) {
                 cslDebug((80, "NV_NVDLA_rbk::RubikRdmaSequenceSplit: width_iter=0x%x height_iter=0x%x surface_iter=0x%x\n", width_iter, height_iter, surface_iter));
                 payload_addr = src_base_addr + surface_iter * src_surface_stride + height_iter * src_line_stride + width_iter * RUBIK_ATOM_CUBE_SIZE;
-                payload_atom_num    = min (cube_width - width_iter, uint32_t(trans_size));
+                payload_atom_num    = std::min (cube_width - width_iter, uint32_t(trans_size));
                 // payload_atom_num    = cube_width - width_iter;
                 // Prepare payload
                 dma_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr;
@@ -507,8 +505,8 @@ void NV_NVDLA_rbk::RubikRdmaSequenceMerge() {
         for (height_iter = 0; height_iter < cube_height; height_iter ++) {
             width_iter = 0;
             while (width_iter < cube_width) {
-                width_step      = min ((cube_width - width_iter), trans_size);
-                payload_size    = max (uint32_t(RUBIK_ATOM_CUBE_SIZE), width_step * element_byte_size);
+                width_step      = std::min ((cube_width - width_iter), trans_size);
+                payload_size    = std::max (uint32_t(RUBIK_ATOM_CUBE_SIZE), width_step * element_byte_size);
                 cslDebug((80, "NV_NVDLA_rbk::RubikRdmaSequenceMerge: width_iter=0x%x height_iter=0x%x surface_iter=0x%x, width_step=0x%x\n",
                             width_iter, height_iter, surface_iter, width_step));
                 payload_atom_num= (payload_size + RUBIK_ATOM_CUBE_SIZE-1)/RUBIK_ATOM_CUBE_SIZE;
@@ -613,12 +611,12 @@ void NV_NVDLA_rbk::RubikDataPathSequenceContract(){
                 // Input width iteration
                 width_in_iter = 0;
                 while (width_in_iter < cube_in_width) {
-                    width_in_step   = min ((cube_in_width - width_in_iter), uint32_t(8));
+                    width_in_step   = std::min ((cube_in_width - width_in_iter), uint32_t(8));
                     cslDebug((70, "NV_NVDLA_rbk::RubikDataPathSequenceContract, width_in_iter:0x%x, cube_in_width:0x%x, width_in_step:0x%x\n", width_in_iter, cube_in_width, width_in_step));
                     // Stride X iteration
                     stride_x_iter = 0;
                     while (stride_x_iter < stride_x) {
-                        stride_x_step = min ((stride_x - stride_x_iter), uint32_t(8));
+                        stride_x_step = std::min ((stride_x - stride_x_iter), uint32_t(8));
                         cslDebug((70, "NV_NVDLA_rbk::RubikDataPathSequenceContract, stride_x_iter:0x%x, stride_x:0x%x, stride_x_step:0x%x\n", stride_x_iter, stride_x, stride_x_step));
                         for (surface_in_iter = 0; surface_in_iter < stride_x_step; surface_in_iter++) {
                             for (atom_iter=0; atom_iter<width_in_step; atom_iter++) {
@@ -749,12 +747,12 @@ void NV_NVDLA_rbk::RubikWdmaSequenceContract(){
                     // Input width iteration
                     width_in_iter = 0;
                     while (width_in_iter < cube_in_width) {
-                        width_in_step   =   min ((cube_in_width - width_in_iter), uint32_t(8));
+                        width_in_step   =   std::min ((cube_in_width - width_in_iter), uint32_t(8));
                         cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceContract, width_in_iter:0x%x, cube_in_width:0x%x, width_in_step:0x%x\n", width_in_iter, cube_in_width, width_in_step));
                         // Stride X iteration
                         stride_x_iter = 0;
                         while (stride_x_iter < stride_x) {
-                            stride_x_step = min ((stride_x - stride_x_iter), uint32_t(8));
+                            stride_x_step = std::min ((stride_x - stride_x_iter), uint32_t(8));
                             cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceContract, stride_x_iter:0x%x, stride_x:0x%x, stride_x_step:0x%x\n", stride_x_iter, stride_x, stride_x_step));
                             for (width_in_step_iter=0;width_in_step_iter<width_in_step;width_in_step_iter++) {
                                 payload_atom_num=   stride_x_step;
@@ -855,15 +853,15 @@ void NV_NVDLA_rbk::RubikWdmaSequenceSplit(){
     channel_stride_in_reorder_array = element_byte_size * trans_size;
     for (surface_iter = 0; surface_iter < surface_num; surface_iter ++) {
         planar_num = cube_channel - surface_iter*element_per_atom;
-        planar_num = min(planar_num, element_per_atom);
+        planar_num = std::min(planar_num, element_per_atom);
         cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceSplit, surface_iter:0x%x, surface_num:0x%x, planar_num:0x%x\n", surface_iter, surface_num, planar_num));
         for (height_iter = 0; height_iter < cube_height; height_iter ++) {
             cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceSplit, height_iter:0x%x, cube_height:0x%x\n", height_iter, cube_height));
             width_iter = 0;
             while (width_iter < cube_width) {
-                width_step      = min ((cube_width - width_iter), trans_size);
+                width_step      = std::min ((cube_width - width_iter), trans_size);
                 cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceSplit, width_iter:0x%x, cube_width:0x%x, width_step:0x%x\n", width_iter, cube_width, width_step));
-                payload_size    = max (uint32_t(RUBIK_ATOM_CUBE_SIZE), width_step * element_byte_size);
+                payload_size    = std::max (uint32_t(RUBIK_ATOM_CUBE_SIZE), width_step * element_byte_size);
                 payload_atom_num= (payload_size + RUBIK_ATOM_CUBE_SIZE-1)/RUBIK_ATOM_CUBE_SIZE;
                 memset(reorder_array_, 0, RUBIK_INTERNAL_BUF_SIZE);
                 for (reorder_iter=0; reorder_iter < width_step; reorder_iter++) {
@@ -976,7 +974,7 @@ void NV_NVDLA_rbk::RubikWdmaSequenceMerge(){
             cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceMerge, height_iter:0x%x, cube_height:0x%x\n", height_iter, cube_height));
             width_iter = 0;
             while (width_iter < cube_width) {
-                width_step      = min ((cube_width - width_iter), trans_size);
+                width_step      = std::min ((cube_width - width_iter), trans_size);
                 memset(reorder_array_, 0, RUBIK_INTERNAL_BUF_SIZE);
                 cslDebug((70, "NV_NVDLA_rbk::RubikWdmaSequenceMerge, width_iter:0x%x, cube_width:0x%x, width_step:0x%x\n", width_iter, cube_width, width_step));
                 for (channel_iter = 0; channel_iter < planar_num; channel_iter ++) {
@@ -997,7 +995,7 @@ void NV_NVDLA_rbk::RubikWdmaSequenceMerge(){
                 }
                 cslDebug((50, "%s reorder done\n", __FUNCTION__));
                 // Send out write transactions atom by atom
-                // payload_atom_num= min ((cube_width - width_iter), uint32_t(RUBIK_ATOM_CUBE_SIZE/element_byte_size));
+                // payload_atom_num= std::min ((cube_width - width_iter), uint32_t(RUBIK_ATOM_CUBE_SIZE/element_byte_size));
                 payload_atom_num= width_step;
                 payload_size    = payload_atom_num*RUBIK_ATOM_CUBE_SIZE;
                 // Copy data from reorder_array to feature_cube_out_fifo_ fifos
@@ -1023,13 +1021,13 @@ void NV_NVDLA_rbk::RubikWdmaSequenceMerge(){
 }
 
 #pragma CTC SKIP
-void NV_NVDLA_rbk::WaitUntilFifoFreeSizeGreaterThan(sc_fifo <uint8_t *> *data_fifo, uint32_t num) {
+void NV_NVDLA_rbk::WaitUntilFifoFreeSizeGreaterThan(sc_core::sc_fifo <uint8_t *> *data_fifo, uint32_t num) {
     while (uint32_t(data_fifo->num_free()) < num) {
         wait( data_fifo->data_read_event() );
     }
 }
 
-void NV_NVDLA_rbk::WaitUntilFifoAvailableSizeGreaterThan(sc_fifo <uint8_t *> *data_fifo, uint32_t num) {
+void NV_NVDLA_rbk::WaitUntilFifoAvailableSizeGreaterThan(sc_core::sc_fifo <uint8_t *> *data_fifo, uint32_t num) {
     while (uint32_t(data_fifo->num_available()) < num) {
         wait( data_fifo->data_written_event() );
     }
@@ -1037,7 +1035,7 @@ void NV_NVDLA_rbk::WaitUntilFifoAvailableSizeGreaterThan(sc_fifo <uint8_t *> *da
 #pragma CTC ENDSKIP
 
 // Send DMA read request
-void NV_NVDLA_rbk::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_rbk::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     cslDebug((50, "NV_NVDLA_rbk::SendDmaReadRequest: payload_addr=0x%lx payload_atom_num=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size+1));
     if (NVDLA_RBK_D_DAIN_RAM_TYPE_0_DATAIN_RAM_TYPE_MCIF == rbk_datain_ram_type_) {
         rbk2mcif_rd_req_b_transport(payload, dma_delay_);
@@ -1047,7 +1045,7 @@ void NV_NVDLA_rbk::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& dela
 }
 
 // Send DMA write request
-void NV_NVDLA_rbk::SendDmaWriteRequest(sc_fifo <uint8_t *> *wdma_fifo, uint64_t payload_addr, uint32_t payload_size, uint32_t payload_atom_num, bool ack_required){
+void NV_NVDLA_rbk::SendDmaWriteRequest(sc_core::sc_fifo <uint8_t *> *wdma_fifo, uint64_t payload_addr, uint32_t payload_size, uint32_t payload_atom_num, bool ack_required){
     uint32_t atom_iter = 0;
     uint8_t *dma_write_data_ptr;
     uint8_t *payload_data_ptr;
@@ -1086,7 +1084,7 @@ void NV_NVDLA_rbk::SendDmaWriteRequest(sc_fifo <uint8_t *> *wdma_fifo, uint64_t 
     cslDebug((50, "NV_NVDLA_rbk::SendDmaWriteRequest: payload_addr=0x%lx payload_atom_num=0x%x, end\n", payload_addr, payload_atom_num));
 }
 
-void NV_NVDLA_rbk::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, bool ack_required) {
+void NV_NVDLA_rbk::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, bool ack_required) {
     if (NVDLA_RBK_D_DAOUT_RAM_TYPE_0_DATAOUT_RAM_TYPE_MCIF == rubik_config_wdma_->rbk_dataout_ram_type_) {
         if (TAG_CMD == payload->tag) {
             if (ack_required) {
@@ -1146,7 +1144,7 @@ void NV_NVDLA_rbk::WriteResponseThreadCv() {
 }
 
 #pragma CTC SKIP
-NV_NVDLA_rbk * NV_NVDLA_rbkCon(sc_module_name name) {
+NV_NVDLA_rbk * NV_NVDLA_rbkCon(sc_core::sc_module_name name) {
     return new NV_NVDLA_rbk(name);
 }
 #pragma CTC ENDSKIP

@@ -11,7 +11,8 @@
 #ifndef _PDP_REG_MODEL_H_
 #define _PDP_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -35,8 +36,8 @@ class pdp_reg_model {
         CNVDLA_PDP_REGSET *pdp_register_group_0;
         CNVDLA_PDP_REGSET *pdp_register_group_1;
 
-        sc_event event_pdp_reg_group_0_operation_enable;
-        sc_event event_pdp_reg_group_1_operation_enable;
+        sc_core::sc_event event_pdp_reg_group_0_operation_enable;
+        sc_core::sc_event event_pdp_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *pdp_lut;
         uint32_t pdp_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -101,7 +102,7 @@ class pdp_reg_model {
         uint32_t  pdp_cya_;
 
         // CSB request target socket
-        // void csb2pdp_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2pdp_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void PdpSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

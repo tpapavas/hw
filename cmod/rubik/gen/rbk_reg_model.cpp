@@ -84,7 +84,7 @@ bool rbk_reg_model::RbkAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 rbk_register_group_0->SetWritable(offset, data);
                 if (rbk_register_group_0->rD_OP_ENABLE.uOP_EN()) {
-                    event_rbk_reg_group_0_operation_enable.notify(SC_ZERO_TIME);
+                    event_rbk_reg_group_0_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "rbk_reg_model::RbkAccessRegister, notified op_en for group 0.\x0A"));
                 }
             } else {
@@ -96,7 +96,7 @@ bool rbk_reg_model::RbkAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 rbk_register_group_1->SetWritable(offset, data);
                 if (rbk_register_group_1->rD_OP_ENABLE.uOP_EN()) {
-                    event_rbk_reg_group_1_operation_enable.notify(SC_ZERO_TIME);
+                    event_rbk_reg_group_1_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "rbk_reg_model::RbkAccessRegister, notified op_en for group 1.\x0A"));
                 }
             }

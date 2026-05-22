@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CDMA_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -20,7 +21,7 @@
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_cdma_base.h"
 #include "cdma_reg_model.h"
-#include "systemc.h"
+//#include "systemc.h"
 
 #include "cdma_hls_wrapper.h"
 
@@ -114,20 +115,20 @@ class NV_NVDLA_cdma:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cdma);
-        NV_NVDLA_cdma( sc_module_name module_name );
+        NV_NVDLA_cdma( sc_core::sc_module_name module_name );
         ~NV_NVDLA_cdma();
         // Overload for pure virtual TLM target functions
         // # CSB request transport implementation shall in generated code
-        void csb2cdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2cdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // # MC/CV_SRAM read response
-        void mcif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay);
-        void mcif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay);
-        void cvif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay);
-        void cvif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay);
+        void mcif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay);
+        void mcif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay);
+        void cvif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay);
+        void cvif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay);
         // # CSC-CDMA status update
-        void dat_up_sc2cdma_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_time& delay);
-        void wt_up_sc2cdma_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_time& delay);
-        void cdma_wt_dma_arbiter_source_id_b_transport(int ID, int source_id, sc_time& delay);
+        void dat_up_sc2cdma_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_core::sc_time& delay);
+        void wt_up_sc2cdma_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_core::sc_time& delay);
+        void cdma_wt_dma_arbiter_source_id_b_transport(int ID, int source_id, sc_core::sc_time& delay);
 
     private:
         // Variables
@@ -157,18 +158,18 @@ class NV_NVDLA_cdma:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event cdma_kickoff_;
-        sc_event wgs2wt_update_;
+        sc_core::sc_event cdma_kickoff_;
+        sc_core::sc_event wgs2wt_update_;
         // Sequence controller and DMA fetcher communication on CBuffer usage
-        sc_event sc_updated_cbuf_usage_data_;
-        sc_event sc_updated_cbuf_usage_weight_;
-        sc_event sc_updated_cbuf_usage_wmb_;
+        sc_core::sc_event sc_updated_cbuf_usage_data_;
+        sc_core::sc_event sc_updated_cbuf_usage_weight_;
+        sc_core::sc_event sc_updated_cbuf_usage_wmb_;
         // Done signals are not DMA mapped
-        sc_event cdma_data_fetch_done_;
-        sc_event cdma_mean_fetch_done_;
-        sc_event cdma_weight_fetch_done_;
-        sc_event cdma_wgs_fetch_done_;
-        sc_event cdma_wmb_fetch_done_;
+        sc_core::sc_event cdma_data_fetch_done_;
+        sc_core::sc_event cdma_mean_fetch_done_;
+        sc_core::sc_event cdma_weight_fetch_done_;
+        sc_core::sc_event cdma_wgs_fetch_done_;
+        sc_core::sc_event cdma_wmb_fetch_done_;
 
         sc_core::sc_fifo <bool>      *cdma_data_fetch_done_fifo_;
         sc_core::sc_fifo <bool>      *cdma_mean_fetch_done_fifo_;
@@ -304,9 +305,9 @@ class NV_NVDLA_cdma:
         void Reset();
         void CdmaSendCsbResponse(uint8_t type, uint32_t data, uint8_t error_id);
 
-        void SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cmda_source, sc_time& delay);
-        void SendWeightDmaReadRequestRTL(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_time& delay);
-        void SendWeightDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_time& delay);
+        void SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cmda_source, sc_core::sc_time& delay);
+        void SendWeightDmaReadRequestRTL(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_core::sc_time& delay);
+        void SendWeightDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_core::sc_time& delay);
 
         void ActDmaResponseHandler(nvdla_dma_rd_rsp_t* payload);
         void WeightDmaResponseHandler(nvdla_dma_rd_rsp_t* payload);
@@ -350,7 +351,7 @@ class NV_NVDLA_cdma:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_cdma * NV_NVDLA_cdmaCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_cdma * NV_NVDLA_cdmaCon(sc_core::sc_module_name module_name);
 
 #endif
 

@@ -12,14 +12,15 @@
 #define _NV_NVDLA_PDP_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
 
 #include "scsim_common.h"
 #include "nvdla_dma_wr_req_iface.h"
-#include "systemc.h"
+//#include "systemc.h"
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_pdp_base.h"
 #include "pdp_reg_model.h"
@@ -84,6 +85,13 @@ SCSIM_NAMESPACE_START(clib)
 SCSIM_NAMESPACE_END()
 
 SCSIM_NAMESPACE_START(cmod)
+using namespace sc_core;
+using namespace sc_dt;
+using namespace sc_gem5;
+using namespace sc_unnamed;
+using namespace std;
+
+
 // class container_payload_wrapper {
 // public:
 //     uint8_t *data;
@@ -109,16 +117,16 @@ class NV_NVDLA_pdp:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_pdp);
-        NV_NVDLA_pdp( sc_module_name module_name );
+        NV_NVDLA_pdp( sc_core::sc_module_name module_name );
         ~NV_NVDLA_pdp();
         // CSB request transport implementation shall in generated code
-        void csb2pdp_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
-        void csb2pdp_rdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2pdp_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
+        void csb2pdp_rdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         void sdp2pdp_b_transport(int ID, nvdla_sdp2pdp_t* payload, sc_core::sc_time& delay);
         void mcif2pdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
         void cvif2pdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
-        // void pdp2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay) {NV_NVDLA_pdp_base::pdp2csb_resp_b_transport(payload, delay);}
-        // void pdp_rdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay) {NV_NVDLA_pdp_base::pdp2csb_resp_b_transport(payload, delay);}
+        // void pdp2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay) {NV_NVDLA_pdp_base::pdp2csb_resp_b_transport(payload, delay);}
+        // void pdp_rdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay) {NV_NVDLA_pdp_base::pdp2csb_resp_b_transport(payload, delay);}
 
     private:
         // Payloads
@@ -133,22 +141,22 @@ class NV_NVDLA_pdp:
 
         // Events
         // PDP config evaluation is done
-        sc_event event_pdp_config_evaluation_done;
+        sc_core::sc_event event_pdp_config_evaluation_done;
         // Receiving data from sdp
-        sc_event event_got_conv_data;
+        sc_core::sc_event event_got_conv_data;
         // Functional logic have fetched data from RDMA buffer
-        sc_event event_functional_logic_got_data;
-        sc_event rdma_read_event;
-        sc_event rdma_write_event;
+        sc_core::sc_event event_functional_logic_got_data;
+        sc_core::sc_event rdma_read_event;
+        sc_core::sc_event rdma_write_event;
         // For PDP hardware layer kickoff and end
-        sc_event pdp_rdma_kickoff_;
-        sc_event pdp_rdma_done_;
-        sc_event pdp_kickoff_;
-        sc_event pdp_done_;
+        sc_core::sc_event pdp_rdma_kickoff_;
+        sc_core::sc_event pdp_rdma_done_;
+        sc_core::sc_event pdp_kickoff_;
+        sc_core::sc_event pdp_done_;
         sc_core::sc_fifo<uint8_t>  *line_buffer_usage_free_[PDP_LINE_BUFFER_ENTRY_NUM];
         sc_core::sc_fifo<uint8_t>  *line_buffer_usage_available_;
-        // sc_event                        *line_buffer_usage_free_read_event;
-        // sc_event                        *line_buffer_usage_free_write_event;
+        // sc_core::sc_event                        *line_buffer_usage_free_read_event;
+        // sc_core::sc_event                        *line_buffer_usage_free_write_event;
         // sc_mutex line_buffer_data_ready_;
         // uint32_t line_buffer_data_num_;
         sc_core::sc_fifo<uint8_t> *line_buffer_ready_[PDP_LINE_BUFFER_ENTRY_NUM];
@@ -177,8 +185,8 @@ class NV_NVDLA_pdp:
         sc_core::sc_fifo          <uint8_t *> *wdma_buffer_;
         sc_core::sc_fifo <pdp_ack_info *>     *pdp_ack_fifo_;
 
-        sc_event pdp_mc_ack_;
-        sc_event pdp_cv_ack_;
+        sc_core::sc_event pdp_mc_ack_;
+        sc_core::sc_event pdp_cv_ack_;
         bool     is_mc_ack_done_;
         bool     is_cv_ack_done_;
 
@@ -234,12 +242,12 @@ class NV_NVDLA_pdp:
         void WdmaSequenceCommon(uint64_t dst_base_addr, uint32_t cube_out_width, bool split_last);
         // #  Functional functions
         //  Send DMA read request
-        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay);
-        // void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type);
+        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay);
+        // void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay, uint8_t src_ram_type);
         //  Extract DMA read response payload
         void ExtractDmaPayload(nvdla_dma_rd_rsp_t* payload);
         // Send DMA write request
-        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, bool ack_required = false);
+        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, bool ack_required = false);
         void SendDmaWriteRequest(uint64_t payload_addr, uint32_t payload_size, uint32_t payload_atom_num, bool ack_required = false);
         // template <typename T>
         // void FetchInputData (uint8_t * atomic_cube);
@@ -273,7 +281,7 @@ class NV_NVDLA_pdp:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_pdp * NV_NVDLA_pdpCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_pdp * NV_NVDLA_pdpCon(sc_core::sc_module_name module_name);
 
 #endif
 

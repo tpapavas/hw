@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CORE_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -46,6 +47,10 @@
 #endif
 // For reference model usage, end
 
+namespace gem5 {
+    class ScNVDLA;
+}
+
 SCSIM_NAMESPACE_START(clib)
 // clib class forward declaration
 SCSIM_NAMESPACE_END()
@@ -55,15 +60,15 @@ SCSIM_NAMESPACE_START(cmod)
 
 class NV_NVDLA_core:
     public  NV_NVDLA_core_base  // ports
-{
+{   
     public:
         SC_HAS_PROCESS(NV_NVDLA_core);
-        NV_NVDLA_core( sc_module_name module_name );
-        NV_NVDLA_core( sc_module_name module_name, uint8_t nvdla_id_in );
+        NV_NVDLA_core( sc_core::sc_module_name module_name );
+        NV_NVDLA_core( sc_core::sc_module_name module_name, uint8_t nvdla_id_in );
         ~NV_NVDLA_core();
         void Initialize();
         // Overload for pure virtual TLM target functions
-        // void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
 
         uint8_t              nvdla_id;
 
@@ -99,24 +104,24 @@ class NV_NVDLA_core:
         tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core, 512>   mcif2ext_wr_req;
         // MC write response (target)
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_core, 512>      ext2mcif_wr_rsp;
-        // virtual void ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        // virtual void ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
         // MC read request (initiator)
         tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core, 512>   mcif2ext_rd_req;
         // MC read response (target)
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_core, 512>      ext2mcif_rd_rsp;
-        // virtual void ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        // virtual void ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
 
         // # CVSRAM
         // CV write request (initiator)
         tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core, 512>   cvif2ext_wr_req;
         // CV write response (target)
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_core, 512>      ext2cvif_wr_rsp;
-        // virtual void ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        // virtual void ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
         // CV read request (initiator)
         tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core, 512>   cvif2ext_rd_req;
         // CV read response (target)
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_core, 512>      ext2cvif_rd_rsp;
-        // virtual void ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        // virtual void ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
 
         // FIXME, hack for csb2nvdla write response initial socket
         tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_core, 32, tlm::tlm_base_protocol_types, 0, sc_core::SC_ONE_OR_MORE_BOUND> csb2nvdla_wr_hack;
@@ -142,7 +147,7 @@ class NV_NVDLA_core:
         sc_buffer<bool> rbk2glb_done_intr[2];
         sc_buffer<bool> cacc2glb_done_intr[2];
 
-        sc_signal<bool> cdma_wt_dma_arbiter_override_enable;
+        sc_core::sc_signal<bool> cdma_wt_dma_arbiter_override_enable;
 
         // For reference model usage, begin
 #ifdef  NVDLA_REFERENCE_MODEL_ENABLE
@@ -172,7 +177,7 @@ class NV_NVDLA_core:
 
 SCSIM_NAMESPACE_END()
 
-//extern "C" scsim::cmod::NV_NVDLA_core * NV_NVDLA_coreCon(sc_module_name module_name);
+//extern "C" scsim::cmod::NV_NVDLA_core * NV_NVDLA_coreCon(sc_core::sc_module_name module_name);
 
 #endif
 

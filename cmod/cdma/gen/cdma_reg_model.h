@@ -11,7 +11,8 @@
 #ifndef _CDMA_REG_MODEL_H_
 #define _CDMA_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -22,6 +23,7 @@ SCSIM_NAMESPACE_START(clib)
 SCSIM_NAMESPACE_END()
 
 SCSIM_NAMESPACE_START(cmod)
+using sc_core::sc_event;
 
 // Forward declarating cmacro parsed register model class
 class CNVDLA_CDMA_REGSET;
@@ -35,8 +37,8 @@ class cdma_reg_model {
         CNVDLA_CDMA_REGSET *cdma_register_group_0;
         CNVDLA_CDMA_REGSET *cdma_register_group_1;
 
-        sc_event event_cdma_reg_group_0_operation_enable;
-        sc_event event_cdma_reg_group_1_operation_enable;
+        sc_core::sc_event event_cdma_reg_group_0_operation_enable;
+        sc_core::sc_event event_cdma_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *cdma_lut;
         uint32_t cdma_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -132,7 +134,7 @@ class cdma_reg_model {
         uint32_t  cdma_cya_;
 
         // CSB request target socket
-        // void csb2cdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2cdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void CdmaSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

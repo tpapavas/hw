@@ -26,26 +26,24 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_cmac::NV_NVDLA_cmac( sc_module_name module_name ):
+
+NV_NVDLA_cmac::NV_NVDLA_cmac( sc_core::sc_module_name module_name ):
     NV_NVDLA_cmac_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
     // weight_operand_shadow_  = new uint8_t [max( (WEIGHT_OPERAND_BIT_WIDTH_INT8+8-1)/8*2,(WEIGHT_OPERAND_BIT_WIDTH_INT16+8-1)/8 )*PARALLEL_CHANNEL_NUM*MAC_CELL_NUM];
     // weight_operand_         = new uint8_t [max( (WEIGHT_OPERAND_BIT_WIDTH_INT8+8-1)/8*2,(WEIGHT_OPERAND_BIT_WIDTH_INT16+8-1)/8 )*PARALLEL_CHANNEL_NUM*MAC_CELL_NUM];
     // data_operand_           = new uint8_t [max( (DATA_OPERAND_BIT_WIDTH_INT8+8-1)/8*2,(DATA_OPERAND_BIT_WIDTH_INT16+8-1)/8 )*ARALLEL_CHANNEL_NUM];
     // mac_result_             = new uint8_t [max( (OUTPUT_BIT_WIDTH_INT8+8-1)/8*2, (OUTPUT_BIT_WIDTH_INT16+8-1)/8)*MAC_CELL_NUM];
-    data_operand_           = new sc_int<DATA_OPERAND_BIT_WIDTH_INT8>   [DATA_ELEMENT_NUM];     // 128*8bit
-    weight_operand_shadow_  = new sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> [WEIGHT_ELEMENT_NUM];   // 8*128*8bit   - We have 8 MAC cells, 128B per MAC
-    weight_operand_         = new sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> [WEIGHT_ELEMENT_NUM];
-    mac_result_             = new sc_int<OUTPUT_BIT_WIDTH_INT8>         [MAC_CELL_NUM * RESULT_NUM_PER_MACELL]; // 8*8*22bit - 8 MAC cells, 8 output per MAC for INT8+WG mode(worst case)
+    data_operand_           = new sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8>   [DATA_ELEMENT_NUM];     // 128*8bit
+    weight_operand_shadow_  = new sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> [WEIGHT_ELEMENT_NUM];   // 8*128*8bit   - We have 8 MAC cells, 128B per MAC
+    weight_operand_         = new sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> [WEIGHT_ELEMENT_NUM];
+    mac_result_             = new sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8>         [MAC_CELL_NUM * RESULT_NUM_PER_MACELL]; // 8*8*22bit - 8 MAC cells, 8 output per MAC for INT8+WG mode(worst case)
     mac_cell_array          = new NvdlaMacCell[MAC_CELL_NUM];
 
     // Reset
@@ -115,10 +113,10 @@ void NV_NVDLA_cmac::CmacHardwareLayerExecutionTrigger () {
     is_working_ = false;
 }
 
-void NV_NVDLA_cmac::sc2mac_wt_b_transport(int ID, nvdla_sc2mac_weight_if_t* payload, sc_time& delay) {
+void NV_NVDLA_cmac::sc2mac_wt_b_transport(int ID, nvdla_sc2mac_weight_if_t* payload, sc_core::sc_time& delay) {
     uint32_t    payload_sel;
     uint8_t     mac_cell_id;
-    sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *payload_data_ptr;
+    sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *payload_data_ptr;
     uint32_t    iter;
     while (is_working_ == false) {
         // wait(cmac_kickoff_);
@@ -149,9 +147,9 @@ void NV_NVDLA_cmac::sc2mac_wt_b_transport(int ID, nvdla_sc2mac_weight_if_t* payl
 
 }
 
-void NV_NVDLA_cmac::sc2mac_dat_b_transport(int ID, nvdla_sc2mac_data_if_t* payload, sc_time& delay) {
-    sc_int<8> *csc2cmac_payload_data_ptr;
-    sc_int<OUTPUT_BIT_WIDTH_INT8>       *cmac2cacc_payload_data_ptr;
+void NV_NVDLA_cmac::sc2mac_dat_b_transport(int ID, nvdla_sc2mac_data_if_t* payload, sc_core::sc_time& delay) {
+    sc_dt::sc_int<8> *csc2cmac_payload_data_ptr;
+    sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8>       *cmac2cacc_payload_data_ptr;
     bool        mac_enable;
     bool        wino_op;
     uint16_t    mac_cell_iter;
@@ -231,7 +229,7 @@ void NV_NVDLA_cmac::UpdateWeightFromShadowToActive () {
     }
 }
 
-NV_NVDLA_cmac * NV_NVDLA_cmacCon(sc_module_name name)
+NV_NVDLA_cmac * NV_NVDLA_cmacCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_cmac(name);
 }

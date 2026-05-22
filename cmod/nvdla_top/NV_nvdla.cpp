@@ -18,13 +18,16 @@ USING_SCSIM_NAMESPACE(clib)
 using namespace tlm;
 using namespace sc_core;
 
-NV_nvdla::NV_nvdla( sc_module_name module_name, uint8_t id, bool sctb_args )
+NV_nvdla::NV_nvdla( sc_core::sc_module_name module_name, uint8_t id, bool sctb_args )
     : NV_nvdla_base(module_name),
       nvdla_core( 0 ), 
       csb_adaptor( 0 ),
       axi_adaptor_mc( 0 ), axi_adaptor_cv( 0 ),
       nvdla_top_dummy( 0 )
 {
+    std::cout << "[NV_NVDLA] Constructor called, id = "
+              << unsigned(id) << std::endl;
+
     csb_adaptor = new NvdlaCsbAdaptor( "nvdla_csb_adaptor" );
     axi_adaptor_mc = new NvdlaAxiAdaptor("axi_adaptor_mc");
     axi_adaptor_cv = new NvdlaAxiAdaptor("axi_adaptor_cv");
@@ -73,7 +76,7 @@ NV_nvdla::~NV_nvdla()
 
 }
 
-NV_nvdla * NV_nvdlaCon(sc_module_name name, uint8_t inst)
+NV_nvdla * NV_nvdlaCon(sc_core::sc_module_name name, uint8_t inst)
 {
     return new NV_nvdla(name, inst);
 }

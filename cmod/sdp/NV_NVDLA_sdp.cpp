@@ -24,9 +24,7 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 #define INTERNAL_BUF_SIZE (256)
 
@@ -43,38 +41,38 @@ using namespace sc_core;
 #define NVDLA_VMOD_SDP_WDMA_LATENCY_FIFO_DEPTH          64
 
 
-NV_NVDLA_sdp::NV_NVDLA_sdp( sc_module_name module_name ):
+NV_NVDLA_sdp::NV_NVDLA_sdp( sc_core::sc_module_name module_name ):
     NV_NVDLA_sdp_base(module_name),
     sdp2glb_done_intr("sdp2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
 #if 0
-    rdma_fifo_        = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_MRDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_b_alu_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_BRDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_b_mul_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_BRDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_n_alu_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_NRDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_n_mul_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_NRDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_e_alu_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_ERDMA_LATENCY_FIFO_DEPTH*2);
-    rdma_e_mul_fifo_  = new sc_fifo <int16_t *> (NVDLA_VMOD_SDP_ERDMA_LATENCY_FIFO_DEPTH*2);
-    wdma_fifo_        = new sc_fifo <int16_t *> (1);
-    cc2pp_fifo_       = new sc_fifo <int32_t *> (1);
+    rdma_fifo_        = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_MRDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_b_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_BRDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_b_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_BRDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_n_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_NRDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_n_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_NRDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_e_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_ERDMA_LATENCY_FIFO_DEPTH*2);
+    rdma_e_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (NVDLA_VMOD_SDP_ERDMA_LATENCY_FIFO_DEPTH*2);
+    wdma_fifo_        = new sc_core::sc_fifo <int16_t *> (1);
+    cc2pp_fifo_       = new sc_core::sc_fifo <int32_t *> (1);
 #else
-    rdma_fifo_        = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_b_alu_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_b_mul_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_n_alu_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_n_mul_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_e_alu_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    rdma_e_mul_fifo_  = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    wdma_fifo_        = new sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
-    cc2pp_fifo_       = new sc_fifo <int32_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_fifo_        = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_b_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_b_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_n_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_n_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_e_alu_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    rdma_e_mul_fifo_  = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    wdma_fifo_        = new sc_core::sc_fifo <int16_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
+    cc2pp_fifo_       = new sc_core::sc_fifo <int32_t *> (128*SDP_RDMA_BUFFER_SIZE/ATOM_CUBE_SIZE);
 #endif
-    sdp_ack_fifo_     = new sc_fifo <ack_info*> (2);
-    sdp_config_fifo_  = new sc_fifo <SdpConfig *> (1);
+    sdp_ack_fifo_     = new sc_core::sc_fifo <ack_info*> (2);
+    sdp_config_fifo_  = new sc_core::sc_fifo <SdpConfig *> (1);
     for(int i = SDP_RDMA_INPUT; i < SDP_RDMA_NUM; i++) {
         sdp_internal_buf_[i]    = new uint8_t[INTERNAL_BUF_SIZE];
         sdp_buf_wr_ptr_[i]      = 0;
@@ -242,7 +240,7 @@ void NV_NVDLA_sdp::SdpIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(1, sc_core::SC_NS);
         cslInfo(( "%s: trigger interrupt on %d group\n", __FUNCTION__, (uint32_t)ack->group_id));
         sdp2glb_done_intr[ack->group_id].write(true);
 
@@ -1738,7 +1736,7 @@ void NV_NVDLA_sdp::SdpWdmaThread () {
 }
 #pragma CTC ENDSKIP
 
-void NV_NVDLA_sdp::cacc2sdp_b_transport(int ID, nvdla_accu2pp_if_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::cacc2sdp_b_transport(int ID, nvdla_accu2pp_if_t* payload, sc_core::sc_time& delay){
     int i;
     int32_t  *fifo_data_ptr;
     while (true) {
@@ -1776,7 +1774,7 @@ void NV_NVDLA_sdp::ExtractRdmaResponsePayloadCore(te_rdma_type eRdDma, nvdla_dma
     int     cube_width;
     uint32_t buf_limit;
     int     bytes_per_element, component_per_element, bytes_per_component, element_per_atom;
-    sc_fifo <int16_t *> *fifo_alu = NULL, *fifo_mul = NULL, *fifo;
+    sc_core::sc_fifo <int16_t *> *fifo_alu = NULL, *fifo_mul = NULL, *fifo;
     mask = payload->pd.dma_read_data.mask;
     payload_data_ptr_i8    = reinterpret_cast <int8_t *> (payload->pd.dma_read_data.data);
     payload_data_ptr_i16   = reinterpret_cast <int16_t *> (payload->pd.dma_read_data.data);
@@ -1991,35 +1989,35 @@ void NV_NVDLA_sdp::ExtractRdmaResponsePayloadCore(te_rdma_type eRdDma, nvdla_dma
     }
 }
 
-void NV_NVDLA_sdp::mcif2sdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::mcif2sdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::mcif2sdp_b_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::mcif2sdp_b_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_X1_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::mcif2sdp_n_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::mcif2sdp_n_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_X2_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::mcif2sdp_e_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::mcif2sdp_e_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_Y_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::cvif2sdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::cvif2sdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::cvif2sdp_b_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::cvif2sdp_b_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_X1_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::cvif2sdp_n_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::cvif2sdp_n_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_X2_INPUT, payload);
 }
 
-void NV_NVDLA_sdp::cvif2sdp_e_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_sdp::cvif2sdp_e_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     ExtractRdmaResponsePayloadCore(SDP_RDMA_Y_INPUT, payload);
 }
 
@@ -2032,7 +2030,7 @@ void NV_NVDLA_sdp::WaitUntilRdmaFifoFreeSizeGreaterThan(uint32_t num) {
 */
 
 // Send DMA read request
-void NV_NVDLA_sdp::SendDmaReadRequest(te_rdma_type eRdDma, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_sdp::SendDmaReadRequest(te_rdma_type eRdDma, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     if (eRdDma == SDP_RDMA_INPUT) {
         if ( (NVDLA_SDP_RDMA_D_SRC_DMA_CFG_0_SRC_RAM_TYPE_MC) == sdp_rdma_src_ram_type_) {
             cslDebug((50, "NV_NVDLA_sdp::%s on SDP_RDMA MC port start.\n", __FUNCTION__));
@@ -2189,7 +2187,7 @@ void NV_NVDLA_sdp::SendDmaWriteRequest(uint64_t payload_addr, uint32_t payload_s
     cslDebug((70, "exit:%s\n", __FUNCTION__));
 }
 
-void NV_NVDLA_sdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, bool ack_required) {
+void NV_NVDLA_sdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, bool ack_required) {
     if (NVDLA_SDP_D_DST_DMA_CFG_0_DST_RAM_TYPE_MC == sdp_dst_ram_type_) {
         if (TAG_CMD == payload->tag) {
             if (ack_required) {
@@ -2240,7 +2238,7 @@ void NV_NVDLA_sdp::WriteResponseThreadCv() {
 }
 
 #pragma CTC SKIP
-NV_NVDLA_sdp * NV_NVDLA_sdpCon(sc_module_name name) {
+NV_NVDLA_sdp * NV_NVDLA_sdpCon(sc_core::sc_module_name name) {
     return new NV_NVDLA_sdp(name);
 }
 #pragma CTC ENDSKIP

@@ -30,9 +30,7 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 enum CDMA_ACT_DATA_MODE_ALIAS {
     ACT_MODE_DIRECT_CONV_NONE_BATCH,
@@ -47,12 +45,12 @@ enum CDMA_WT_DATA_MODE_ALIAS {
     WT_MODE_IMAGE_LOAD
 };
 
-NV_NVDLA_cdma::NV_NVDLA_cdma( sc_module_name module_name ):
+NV_NVDLA_cdma::NV_NVDLA_cdma( sc_core::sc_module_name module_name ):
     NV_NVDLA_cdma_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
     dma_act_rd_req_payload_ = new nvdla_dma_rd_req_t;
@@ -1071,7 +1069,7 @@ void NV_NVDLA_cdma::DirectConvDataRequestSequencerCommon() {
                 // Calculate payload size, payload transaction must be within a 256 byte
                 payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr_1x1%MAX_MEM_TRANSACTION_SIZE;
                 // Payload transaction shall not larger than rest of atom cube number
-                payload_atom_num    = min(atom_num_1x1 - atom_sent_num_1x1, payload_size/atom_size);
+                payload_atom_num    = std::min(atom_num_1x1 - atom_sent_num_1x1, payload_size/atom_size);
                 payload_size        = payload_atom_num*atom_size;
                 // Prepare payload
                 dma_act_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr_1x1;
@@ -1126,7 +1124,7 @@ void NV_NVDLA_cdma::DirectConvDataRequestSequencerCommon() {
                                 // Calculate payload size, payload transaction must be within a 256 byte
                                 payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr[surface_iter]%MAX_MEM_TRANSACTION_SIZE;
                                 // Payload transaction shall not larger than rest of atom cube number
-                                payload_atom_num    = min(atom_num[surface_iter]-atom_sent_num[surface_iter], payload_size/atom_size);
+                                payload_atom_num    = std::min(atom_num[surface_iter]-atom_sent_num[surface_iter], payload_size/atom_size);
                                 payload_size        = payload_atom_num*atom_size;
                                 // Prepare payload
                                 dma_act_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr[surface_iter];
@@ -1411,7 +1409,7 @@ void NV_NVDLA_cdma::DirectConvDataResponseSequencerCommon() {
                                 // Calculate payload size, payload transaction must be within a 256 byte
                                 payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr[surface_iter]%MAX_MEM_TRANSACTION_SIZE;
                                 // Payload transaction shall not larger than rest of atom cube number
-                                payload_atom_num    = min(atom_num[surface_iter] - atom_sent_num[surface_iter], payload_size/ATOM_CUBE_SIZE);
+                                payload_atom_num    = std::min(atom_num[surface_iter] - atom_sent_num[surface_iter], payload_size/ATOM_CUBE_SIZE);
                                 payload_size        = payload_atom_num*ATOM_CUBE_SIZE;
                                 // Get data from act_data_read_rsp_fifo_
                                 for (payload_atom_iter=0; payload_atom_iter<payload_atom_num; payload_atom_iter++) {
@@ -1680,7 +1678,7 @@ void NV_NVDLA_cdma::ConvWMBRequestSequencerCommon() {
         // Calculate payload size, payload transaction must be within a 256 byte
         payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr%MAX_MEM_TRANSACTION_SIZE;
         // Payload transaction shall not larger than rest of atom cube number
-        payload_atom_num    = min( (wmb_total_bytes-wmb_bytes_fetched+ATOM_CUBE_SIZE-1)/ATOM_CUBE_SIZE, payload_size/ATOM_CUBE_SIZE);
+        payload_atom_num    = std::min( (wmb_total_bytes-wmb_bytes_fetched+ATOM_CUBE_SIZE-1)/ATOM_CUBE_SIZE, payload_size/ATOM_CUBE_SIZE);
         payload_size        = payload_atom_num*ATOM_CUBE_SIZE;
         // Prepare payload
         dma_wmb_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr;
@@ -1881,7 +1879,7 @@ void NV_NVDLA_cdma::DirectConvWeightRequestSequencerCommon(){
         // Calculate payload size, payload transaction must be within a 256 byte
         payload_size        = MAX_MEM_TRANSACTION_SIZE - payload_addr%MAX_MEM_TRANSACTION_SIZE;
         // Payload transaction shall not larger than rest of atom cube number
-        payload_atom_num    = min((weight_total_bytes-weight_bytes_fetched+ATOM_CUBE_SIZE-1)/ATOM_CUBE_SIZE, payload_size/ATOM_CUBE_SIZE);
+        payload_atom_num    = std::min((weight_total_bytes-weight_bytes_fetched+ATOM_CUBE_SIZE-1)/ATOM_CUBE_SIZE, payload_size/ATOM_CUBE_SIZE);
         payload_size        = payload_atom_num*ATOM_CUBE_SIZE;
         // Prepare payload
         dma_wt_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr;
@@ -2193,9 +2191,9 @@ void NV_NVDLA_cdma::ImageConvDataRequestSequencerCommon() {
                 // Send one read transaction for planar0
                 if (planar0_bytes_fetched < planar0_to_fetch_bytes) {
                     if(planar0_bytes_fetched==0)
-                        payload_size        = min((p0_line_st * ATOM_CUBE_SIZE), planar0_to_fetch_bytes);
+                        payload_size        = std::min((p0_line_st * ATOM_CUBE_SIZE), planar0_to_fetch_bytes);
                     else
-                        payload_size        = min((planar0_to_fetch_bytes - planar0_bytes_fetched), (uint32_t)(8*ATOM_CUBE_SIZE));
+                        payload_size        = std::min((planar0_to_fetch_bytes - planar0_bytes_fetched), (uint32_t)(8*ATOM_CUBE_SIZE));
                     payload_atom_num    = (payload_size + ATOM_CUBE_SIZE -1)/ATOM_CUBE_SIZE;
                     cslDebug((50, "Pitch Linear Request: planar0_bytes_fetched=0x%x payload_size=0x%x payload_atom_num=0x%x\n", planar0_bytes_fetched, payload_size, payload_atom_num));
                     payload_size        = payload_atom_num * ATOM_CUBE_SIZE;
@@ -2209,9 +2207,9 @@ void NV_NVDLA_cdma::ImageConvDataRequestSequencerCommon() {
                 // Send one read transaction for planar1
                 if ((2==planar_num) && planar1_bytes_fetched < planar1_to_fetch_bytes) {
                     if(planar1_bytes_fetched==0)
-                        payload_size        = min((p1_line_st * ATOM_CUBE_SIZE), planar1_to_fetch_bytes);
+                        payload_size        = std::min((p1_line_st * ATOM_CUBE_SIZE), planar1_to_fetch_bytes);
                     else
-                        payload_size        = min((planar1_to_fetch_bytes - planar1_bytes_fetched), (uint32_t)(16*ATOM_CUBE_SIZE));
+                        payload_size        = std::min((planar1_to_fetch_bytes - planar1_bytes_fetched), (uint32_t)(16*ATOM_CUBE_SIZE));
                     payload_atom_num    = (payload_size + ATOM_CUBE_SIZE -1)/ATOM_CUBE_SIZE;
                     payload_size        = payload_atom_num * ATOM_CUBE_SIZE;
                     cslDebug((50, "Pitch Linear Request: planar1_bytes_fetched=0x%x payload_size=0x%x payload_atom_num=0x%x\n", planar1_bytes_fetched, payload_size, payload_atom_num));
@@ -2375,9 +2373,9 @@ void NV_NVDLA_cdma::ImageConvDataResponseSequencerCommon() {
                 // One read transaction for planar0
                 if (planar0_bytes_fetched < planar0_to_fetch_bytes) {
                     if(planar0_bytes_fetched==0)
-                        payload_size        = min((p0_line_st * ATOM_CUBE_SIZE), planar0_to_fetch_bytes);
+                        payload_size        = std::min((p0_line_st * ATOM_CUBE_SIZE), planar0_to_fetch_bytes);
                     else
-                        payload_size        = min((planar0_to_fetch_bytes - planar0_bytes_fetched), (uint32_t)(8*ATOM_CUBE_SIZE));
+                        payload_size        = std::min((planar0_to_fetch_bytes - planar0_bytes_fetched), (uint32_t)(8*ATOM_CUBE_SIZE));
                     payload_atom_num    = (payload_size + ATOM_CUBE_SIZE -1)/ATOM_CUBE_SIZE;
                     cslDebug((50, "Pitch Linear Request: planar0_bytes_fetched=0x%x payload_size=0x%x payload_atom_num=0x%x\n", planar0_bytes_fetched, payload_size, payload_atom_num));
                     // Get atoms from read port
@@ -2401,9 +2399,9 @@ void NV_NVDLA_cdma::ImageConvDataResponseSequencerCommon() {
                 if ((2==planar_num) && (planar1_bytes_fetched < planar1_to_fetch_bytes)) {
                     // One read transaction for planar0
                     if(planar1_bytes_fetched==0)
-                        payload_size        = min((p1_line_st * ATOM_CUBE_SIZE), planar1_to_fetch_bytes);
+                        payload_size        = std::min((p1_line_st * ATOM_CUBE_SIZE), planar1_to_fetch_bytes);
                     else
-                        payload_size        = min((planar1_to_fetch_bytes - planar1_bytes_fetched), (uint32_t)(16*ATOM_CUBE_SIZE));
+                        payload_size        = std::min((planar1_to_fetch_bytes - planar1_bytes_fetched), (uint32_t)(16*ATOM_CUBE_SIZE));
                     payload_atom_num    = (payload_size + ATOM_CUBE_SIZE -1)/ATOM_CUBE_SIZE;
                     // Get atoms from read port
                     received_atoms = 0;
@@ -2819,7 +2817,7 @@ void NV_NVDLA_cdma::ImageConvDataResponseSequencerCommon() {
         uint32_t write_line_bytes = 0;
         while (write_line_bytes < pad_line_bytes) {
             left_line_bytes = pad_line_bytes - write_line_bytes;
-            curr_cbuf_entry_size = min((uint32_t)CBUF_ENTRY_SIZE, left_line_bytes);
+            curr_cbuf_entry_size = std::min((uint32_t)CBUF_ENTRY_SIZE, left_line_bytes);
             if (curr_cbuf_entry_size == CBUF_ENTRY_SIZE)
                 memcpy(to_cbuf_128B, &pad_buffer[height_iter][write_line_bytes], CBUF_ENTRY_SIZE);
             else {
@@ -2953,7 +2951,7 @@ void NV_NVDLA_cdma::WinoConvDataRequestSequencerCommon() {
                             cslDebug((30, "base_addr:0x%lx, super_height_iter:%d, surface_iter:%d, stride_y_iter:%d, width_iter:%d, i:%d, height_iter:%d\n",
                                         base_addr, super_height_iter, surface_iter, stride_y_iter, width_iter, i, height_iter));
 #pragma CTC ENDSKIP
-                            payload_atom_num    = min(uint32_t(8), cube_width - width_iter);
+                            payload_atom_num    = std::min(uint32_t(8), cube_width - width_iter);
                             // Prepare payload
                             dma_act_rd_req_payload_->pd.dma_read_cmd.addr = payload_addr;
                             dma_act_rd_req_payload_->pd.dma_read_cmd.size = payload_atom_num-1;
@@ -3111,9 +3109,9 @@ void NV_NVDLA_cdma::WinoConvDataResponseSequencerCommon() {
                 while (width_iter < total_width) {
                     // Read data from act_data_read_rsp_fifo_
                     // Make sure that at lease 4*conv_x_stride atoms for each line are fetched.
-                    //to_fetch_width = min(conv_x_stride * 4, total_width - fetched_width);
+                    //to_fetch_width = std::min(conv_x_stride * 4, total_width - fetched_width);
                     while (fetched_width - width_iter < conv_x_stride*4) {
-                        payload_atom_num = min(uint32_t(8), cube_width - (fetched_width-pad_left));
+                        payload_atom_num = std::min(uint32_t(8), cube_width - (fetched_width-pad_left));
                         for (i=0; i<4; i++) {  // 4 rows
                             height_iter = super_height_iter*part_4_sy_height + i*conv_y_stride + stride_y_iter;
                             if (!((height_iter < pad_top) || (height_iter >= (pad_top+cube_height)))) {
@@ -3249,7 +3247,7 @@ void NV_NVDLA_cdma::WinoConvDataResponseSequencerCommon() {
 }
 
 // Send Activation data DMA read request
-void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_time& delay) {
+void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_core::sc_time& delay) {
     // TODO: push payload_addr for debug purpose. it can be poped when receiving data from mcif/cvif
     cslDebug((50, "NV_NVDLA_cdma::SendActDmaReadRequest, begin. payload_addr=0x%0lx atom_num=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size + 1));
     //cslDebug((50, "Writing cdma_req_source_fifo_ in unit of a dma request (may be not 64bytes)\n"));
@@ -3262,7 +3260,7 @@ void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t c
 }
 
 // Send weight DMA read request
-void NV_NVDLA_cdma::SendWeightDmaReadRequestRTL(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_time& delay) {
+void NV_NVDLA_cdma::SendWeightDmaReadRequestRTL(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_core::sc_time& delay) {
     cdma_wt_req_t *cdma_wt_req;
     cslDebug((50, "NV_NVDLA_cdma::SendWeightDmaReadRequestRTL, begin. payload_addr=0x%016lx, cdma_source=%d\n", payload->pd.dma_read_cmd.addr, cdma_source));
 
@@ -3281,7 +3279,7 @@ void NV_NVDLA_cdma::SendWeightDmaReadRequestRTL(nvdla_dma_rd_req_t* payload, uin
 }
 
 // Send weight DMA read request
-void NV_NVDLA_cdma::SendWeightDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_time& delay) {
+void NV_NVDLA_cdma::SendWeightDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t cdma_source, sc_core::sc_time& delay) {
     cdma_wt_info_t*     cdma_wt_info;
     cslDebug((50, "NV_NVDLA_cdma::SendWeightDmaReadRequest, begin. cdma_source=%d payload_addr=0x%016lx\n", cdma_source, payload->pd.dma_read_cmd.addr));
 
@@ -3500,31 +3498,31 @@ void NV_NVDLA_cdma::WeightDmaResponseHandler(nvdla_dma_rd_rsp_t* payload){
 
 // Target sockets
 // # MC/CV_SRAM read response
-void NV_NVDLA_cdma::mcif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::mcif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     //cslDebug((50, "NV_NVDLA_cdma::mcif2cdma_dat_rd_rsp_b_transport, begin\n"));
     ActDmaResponseHandler(payload);
     //cslDebug((50, "NV_NVDLA_cdma::mcif2cdma_dat_rd_rsp_b_transport, end\n"));
 }
 
-void NV_NVDLA_cdma::mcif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::mcif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     //cslDebug((50, "NV_NVDLA_cdma::mcif2cdma_wt_rd_rsp_b_transport, begin\n"));
     WeightDmaResponseHandler(payload);
     //cslDebug((50, "NV_NVDLA_cdma::mcif2cdma_wt_rd_rsp_b_transport, end\n"));
 }
 
-void NV_NVDLA_cdma::cvif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::cvif2cdma_dat_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     //cslDebug((50, "NV_NVDLA_cdma::cvif2cdma_dat_rd_rsp_b_transport, begin\n"));
     ActDmaResponseHandler(payload);
     //cslDebug((50, "NV_NVDLA_cdma::cvif2cdma_dat_rd_rsp_b_transport, end\n"));
 }
 
-void NV_NVDLA_cdma::cvif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::cvif2cdma_wt_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
     //cslDebug((50, "NV_NVDLA_cdma::cvif2cdma_wt_rd_rsp_b_transport, begin\n"));
     WeightDmaResponseHandler(payload);
     //cslDebug((50, "NV_NVDLA_cdma::cvif2cdma_wt_rd_rsp_b_transport, end\n"));
 }
 
-void NV_NVDLA_cdma::dat_up_sc2cdma_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::dat_up_sc2cdma_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_core::sc_time& delay){
     data_entry_idx_free_            += payload->dat_entries;
     cslDebug((50, "NV_NVDLA_cdma::dat_up_sc2cdma_b_transport\n"));
     cslDebug((50, "    payload->dat_entries is 0x%x\n", uint32_t (payload->dat_entries)));
@@ -3533,7 +3531,7 @@ void NV_NVDLA_cdma::dat_up_sc2cdma_b_transport(int ID, nvdla_dat_info_update_t* 
     sc_updated_cbuf_usage_data_.notify();
 }
 
-void NV_NVDLA_cdma::wt_up_sc2cdma_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_time& delay){
+void NV_NVDLA_cdma::wt_up_sc2cdma_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_core::sc_time& delay){
     weight_entry_idx_free_  +=  payload->wt_entries;
     wmb_entry_idx_free_     +=  payload->wmb_entries;
     cslDebug((50, "NV_NVDLA_cdma::wt_up_sc2cdma_b_transport\n"));
@@ -3547,7 +3545,7 @@ void NV_NVDLA_cdma::wt_up_sc2cdma_b_transport(int ID, nvdla_wt_info_update_t* pa
     sc_updated_cbuf_usage_weight_.notify();
 }
 
-void NV_NVDLA_cdma::cdma_wt_dma_arbiter_source_id_b_transport(int ID, int source_id, sc_time& delay){
+void NV_NVDLA_cdma::cdma_wt_dma_arbiter_source_id_b_transport(int ID, int source_id, sc_core::sc_time& delay){
     cslDebug((50, "NV_NVDLA_cdma::cdma_wt_dma_arbiter_source_id_b_transport. source_id=%d\n", source_id));
     wt_dma_rtl_source_id_fifo_->write(source_id);
 }
@@ -4044,7 +4042,7 @@ void NV_NVDLA_cdma::countInfinData(uint8_t *read_data_ptr, uint32_t *data_inf_nu
 }
 
 #pragma CTC SKIP
-NV_NVDLA_cdma * NV_NVDLA_cdmaCon(sc_module_name name)
+NV_NVDLA_cdma * NV_NVDLA_cdmaCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_cdma(name);
 }

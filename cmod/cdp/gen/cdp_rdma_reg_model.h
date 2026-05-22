@@ -11,7 +11,8 @@
 #ifndef _CDP_RDMA_REG_MODEL_H_
 #define _CDP_RDMA_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -35,8 +36,8 @@ class cdp_rdma_reg_model {
         CNVDLA_CDP_RDMA_REGSET *cdp_rdma_register_group_0;
         CNVDLA_CDP_RDMA_REGSET *cdp_rdma_register_group_1;
 
-        sc_event event_cdp_rdma_reg_group_0_operation_enable;
-        sc_event event_cdp_rdma_reg_group_1_operation_enable;
+        sc_core::sc_event event_cdp_rdma_reg_group_0_operation_enable;
+        sc_core::sc_event event_cdp_rdma_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *cdp_rdma_lut;
         uint32_t cdp_rdma_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -66,7 +67,7 @@ class cdp_rdma_reg_model {
         uint32_t  cdp_rdma_cya_;
 
         // CSB request target socket
-        // void csb2cdp_rdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2cdp_rdma_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void CdpRdmaSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

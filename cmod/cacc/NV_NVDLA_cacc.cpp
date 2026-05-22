@@ -34,28 +34,27 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
+
+NV_NVDLA_cacc::NV_NVDLA_cacc( sc_core::sc_module_name module_name ):
     NV_NVDLA_cacc_base(module_name),
     cacc2glb_done_intr("cacc2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
+    
     // Memory allocation
     // No matter which precision (int8, Int16 and FP16) is used, both assembly and delivery ram use the highest bit consumption precision which is Int16
-    assembly_sram_group_    = new sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> [SRAM_GROUP_SIZE];
-    delivery_sram_group_    = new sc_int<ACCU_DELIVERY_BIT_WIDTH_INT16> [SRAM_GROUP_SIZE];
-    mac_a2acc_fifo_ = new sc_fifo <nvdla_mac2accu_data_if_t *> (1);
-    mac_b2acc_fifo_ = new sc_fifo <nvdla_mac2accu_data_if_t *> (1);
-    to_sdp_fifo_    = new sc_core::sc_fifo <sc_int<32> *> (SRAM_GROUP_SIZE*4);
-    assembly2reshape_config_fifo_   = new sc_fifo <CaccConfig *> (1);
-    assembly2delivery_config_fifo_  = new sc_fifo <CaccConfig *> (1);
-    assembly2send_config_fifo_      = new sc_fifo <CaccConfig *> (1);
+    assembly_sram_group_    = new sc_dt::sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> [SRAM_GROUP_SIZE];
+    delivery_sram_group_    = new sc_dt::sc_int<ACCU_DELIVERY_BIT_WIDTH_INT16> [SRAM_GROUP_SIZE];
+    mac_a2acc_fifo_ = new sc_core::sc_fifo <nvdla_mac2accu_data_if_t *> (1);
+    mac_b2acc_fifo_ = new sc_core::sc_fifo <nvdla_mac2accu_data_if_t *> (1);
+    to_sdp_fifo_    = new sc_core::sc_fifo <sc_dt::sc_int<32> *> (SRAM_GROUP_SIZE*4);
+    assembly2reshape_config_fifo_   = new sc_core::sc_fifo <CaccConfig *> (1);
+    assembly2delivery_config_fifo_  = new sc_core::sc_fifo <CaccConfig *> (1);
+    assembly2send_config_fifo_      = new sc_core::sc_fifo <CaccConfig *> (1);
     cacc2sdp_count = 0;
     mac2cacc_count = 0;
     first_layer = true;
@@ -63,6 +62,7 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     reshape_first_layer  = true;
     input_first_layer    = true;
     input_first_channel  = true;
+    is_assembly_working_ = false;
     deliver_prev_conv_mode_      = -1;
     reshape_prev_conv_mode_      = -1;
     deliver_prev_precision_      = -1;
@@ -127,6 +127,7 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 1 opeartion done\n"));
     }
 }
+    
 
 void NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger () {
     uint32_t    atom_per_mac_cell;
@@ -162,10 +163,10 @@ void NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger () {
             delivery_sram_group_idx_fetched_    = -1 * atom_per_mac_cell;
         }
     }
-
+    cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (!is_assembly_working_) {
         is_assembly_working_ = true;
-
+        cslDebug((50, "after is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
 #pragma CTC SKIP
         if (cacc_clip_truncate_+ACCU_DELIVERY_BIT_WIDTH_INT16 > ACCU_ASSEMBLY_BIT_WIDTH_INT16) {
             FAIL(("NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger, cacc_clip_truncate_ shall not be greater than %d, it's value is %d\n", ACCU_ASSEMBLY_BIT_WIDTH_INT16 - ACCU_DELIVERY_BIT_WIDTH_INT16, cacc_clip_truncate_));
@@ -210,7 +211,7 @@ void NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger () {
     cslInfo(("cacc after wait cacc_done_\n"));
 }
 
-void NV_NVDLA_cacc::mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay) {
+void NV_NVDLA_cacc::mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay) {
     uint8_t *src_ptr, *dst_ptr;
     nvdla_mac2accu_data_if_t * payload_copy = new nvdla_mac2accu_data_if_t;
     src_ptr = (uint8_t*) payload;
@@ -222,16 +223,16 @@ void NV_NVDLA_cacc::mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* pay
     cslDebug((50, "MARKFIFO: after write to mac_a2acc_fifo_\n"));
 }
 
-void NV_NVDLA_cacc::mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay) {
+void NV_NVDLA_cacc::mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay) {
     uint8_t *src_ptr, *dst_ptr;
     nvdla_mac2accu_data_if_t * payload_copy = new nvdla_mac2accu_data_if_t;
     src_ptr = (uint8_t*) payload;
     dst_ptr = (uint8_t*) payload_copy;
     memcpy(dst_ptr, src_ptr, sizeof(nvdla_mac2accu_data_if_t));
     // mac_b2acc_fifo_->write(payload);
-    //cslDebug((50, "MARKFIFO: before write to mac_b2acc_fifo_\n"));
+    cslDebug((50, "MARKFIFO: before write to mac_b2acc_fifo_\n"));
     mac_b2acc_fifo_->write(payload_copy);
-    //cslDebug((50, "MARKFIFO: after write to mac_b2acc_fifo_\n"));
+    cslDebug((50, "MARKFIFO: after write to mac_b2acc_fifo_\n"));
 }
 
 void NV_NVDLA_cacc::CmacDataConcatThread() {
@@ -239,9 +240,9 @@ void NV_NVDLA_cacc::CmacDataConcatThread() {
     int offset = HALF_MAC_CELL_NUM*RESULT_NUM_PER_MACCELL;
 
     while(1) {
-        //cslDebug((50,"MARKWAIT: before mac_a2acc_fifo_ and mac_b2acc_fifo_\n"));
+        cslDebug((50,"MARKWAIT: before mac_a2acc_fifo_ and mac_b2acc_fifo_\n"));
         wait(mac_a2acc_fifo_->data_written_event() & mac_b2acc_fifo_->data_written_event());
-        //cslDebug((50,"MARKWAIT: after mac_a2acc_fifo_ and mac_b2acc_fifo_\n"));
+        cslDebug((50,"MARKWAIT: after mac_a2acc_fifo_ and mac_b2acc_fifo_\n"));
         mac2accu_payload.mask = 0;
 
         // MAC_A
@@ -308,6 +309,7 @@ void NV_NVDLA_cacc::SendToSDPThread () {
 }
 
 void NV_NVDLA_cacc::SendToSDPCommon () {
+    //std::cout << "[CACC->SDP] ENTER SendToSDPCommon @" << sc_time_stamp() << std::endl;
     // Config variables, they have corresponding value in registers
     uint32_t    precision;
     uint32_t    cube_width;
@@ -328,7 +330,7 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
     uint16_t    atom_num_batch_2sdp;
     bool        line_start_addr_aligned_to_64B;
     bool        cube_size_1x1;
-    sc_int<32>* to_sdp_atom[2*2*MAX_BATCH_SIZE];    // 1st 2: for int8; 2nd 2: for line_start_addr_aligned_to_64B cases
+    sc_dt::sc_int<32>* to_sdp_atom[2*2*MAX_BATCH_SIZE];    // 1st 2: for int8; 2nd 2: for line_start_addr_aligned_to_64B cases
     uint32_t    cube_out_width_coor;
     uint32_t    cube_out_height_coor;
     bool        cube_out_width_first;
@@ -341,12 +343,14 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
 
     cacc2sdp_count  = 0;
 
-    sc_int<32>  *payload_data_ptr = cacc2sdp_payload.pd.nvdla_cc2pp_pkg.data;   // cacc2sdp_payload.pd.nvdla_cc2pp_pkg.data is an array of 16 sc_int<32> elements
+    sc_dt::sc_int<32>  *payload_data_ptr = cacc2sdp_payload.pd.nvdla_cc2pp_pkg.data;   // cacc2sdp_payload.pd.nvdla_cc2pp_pkg.data is an array of 16 sc_dt::sc_int<32> elements
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.batch_end = 0;
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.layer_end = 0;
-
+    //std::cout << "[CACC->SDP] BEFORE config FIFO READ"<< sc_time_stamp() << std::end;
+    cslDebug((70, "before read assembly2send_config_fifo_\n"));
     assembly2send_config_fifo_->read(cacc_config);
     cslDebug((70, "after read assembly2send_config_fifo_\n"));
+    //std::cout << "[CACC->SDP] AFTER config FIFO READ"<< sc_time_stamp() << std::end;
 
     precision    = cacc_config->cacc_proc_precision_;
     cube_width   = cacc_config->cacc_dataout_width_ + 1;
@@ -429,7 +433,7 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
                         for(j=0;j<element_per_payload;j++) {
                             payload_data_ptr[j] = to_sdp_atom[(atom_iter+i)*trans_num+trans_iter][j];
                         }
-                        //cslDebug((50, "%s: [HYZ] to_sdp_atom delete, i = %d, atom_iter = %d, trans_num = %d, trans_iter = %d, total = %d\n", __FUNCTION__, i, atom_iter, trans_num, trans_iter, ((i+atom_iter)*trans_num+trans_iter)));
+                        cslDebug((50, "%s: [HYZ] to_sdp_atom delete, i = %d, atom_iter = %d, trans_num = %d, trans_iter = %d, total = %d\n", __FUNCTION__, i, atom_iter, trans_num, trans_iter, ((i+atom_iter)*trans_num+trans_iter)));
                         delete [] to_sdp_atom[(i+atom_iter)*trans_num+trans_iter];
                         if ((trans_iter==trans_num-1) && (atom_num_sent + 1 == batch_atom_num)) {    // Send layer_end to SDP only for the last cube in the batch
                             cacc2sdp_payload.pd.nvdla_cc2pp_pkg.batch_end = 0;  // Note: batch_end is not used by SDP cmodel??
@@ -532,16 +536,17 @@ void NV_NVDLA_cacc::DeliverSequencerDirectConvCommon() {
     uint32_t    round_stride_accu;
     uint32_t    atom_per_mac_cell;
     uint8_t     atom_per_mac_cell_iter;
-    sc_int<32>* prepared_sdp_atom;
+    sc_dt::sc_int<32>* prepared_sdp_atom;
     CaccConfig* cacc_config;
 
     cacc2sdp_count  = 0;
 
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.batch_end = 0;
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.layer_end = 0;
-
+    
     assembly2delivery_config_fifo_->read(cacc_config);
     cslDebug((70, "after read assembly2delivery_config_fifo_\n"));
+
 
     precision    = cacc_config->cacc_proc_precision_;
     cube_width   = cacc_config->cacc_dataout_width_ + 1;
@@ -620,7 +625,7 @@ void NV_NVDLA_cacc::DeliverSequencerDirectConvCommon() {
             case DATA_FORMAT_INT8:
                 // For INT8, two transactions have to be sent from cacc to sdp for one 32B SDP output atom
                 for(atom_per_mac_cell_iter=0;atom_per_mac_cell_iter<atom_per_mac_cell;atom_per_mac_cell_iter++) {
-                    prepared_sdp_atom = new sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
+                    prepared_sdp_atom = new sc_dt::sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
                     element_per_payload_prepared = 0;
                     for (mac_cell_iter = 0; mac_cell_iter < MAC_CELL_NUM; mac_cell_iter ++) {
                         prepared_sdp_atom[element_per_payload_prepared%element_per_payload] = delivery_sram_group_[((delivery_sram_group_idx_fetched_+atom_per_mac_cell_iter*2)*round_stride_accu+mac_cell_iter*2)%SRAM_GROUP_SIZE];
@@ -636,7 +641,7 @@ void NV_NVDLA_cacc::DeliverSequencerDirectConvCommon() {
                             to_sdp_fifo_->write(prepared_sdp_atom); // FIXME(skip-t194): can be optimized to not use fifo to improve cmod performance
                             if (element_per_payload_prepared == element_per_payload)
                                 // allocate for 2nd payload of INT8 case when element_per_payload_prepared is 16
-                                prepared_sdp_atom = new sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
+                                prepared_sdp_atom = new sc_dt::sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
                         }
                     }
                     atom_num_sent++;
@@ -645,7 +650,7 @@ void NV_NVDLA_cacc::DeliverSequencerDirectConvCommon() {
             case DATA_FORMAT_INT16:
             case DATA_FORMAT_FP16:
                 for(atom_per_mac_cell_iter=0;atom_per_mac_cell_iter<atom_per_mac_cell;atom_per_mac_cell_iter++) {
-                    prepared_sdp_atom = new sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
+                    prepared_sdp_atom = new sc_dt::sc_int<32>[CACC_TO_SDP_THROUGHPUT_INT8];
                     element_per_payload_prepared = 0;
                     cslAssert(MAC_CELL_NUM == CACC_TO_SDP_THROUGHPUT_INT8);
                     for (mac_cell_iter = 0; mac_cell_iter < MAC_CELL_NUM; mac_cell_iter ++) {
@@ -681,6 +686,7 @@ void NV_NVDLA_cacc::DeliverSequencerDirectConvCommon() {
 
     cslDebug((50, "CACC delivery Done. consumer pointer is %d\n", cacc_consumer_));
 }
+    
 
 void NV_NVDLA_cacc::ReshapeSequencerDirectConvCommon() {
     // Config variables, they have corresponding value in registers
@@ -700,20 +706,20 @@ void NV_NVDLA_cacc::ReshapeSequencerDirectConvCommon() {
     uint32_t    atom_per_mac_cell;
     uint8_t     atom_per_mac_cell_iter;
 
-    sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> assembly_int16;
+    sc_dt::sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> assembly_int16;
     uint32_t    element_per_atom;
     sc_uint<48> fp16_assembly_data;
-    sc_int<32>  fp16_delivery_data;
+    sc_dt::sc_int<32>  fp16_delivery_data;
     sc_uint<FP16_ALEN> fp16_assembly_value;
-    sc_int<32>  truncator_signed_part;
-    sc_int<32>  truncator_remained_part;
+    sc_dt::sc_int<32>  truncator_signed_part;
+    sc_dt::sc_int<32>  truncator_remained_part;
 
     uint32_t assembly_idx;
     uint32_t delivery_idx;
-    sc_int<48> assembly_value;
-    sc_int<48> rouding_addend;
-    sc_int<48> truncated_result_tmp;
-    sc_int<48> truncated_result;
+    sc_dt::sc_int<48> assembly_value;
+    sc_dt::sc_int<48> rouding_addend;
+    sc_dt::sc_int<48> truncated_result_tmp;
+    sc_dt::sc_int<48> truncated_result;
 
     uint32_t nan_num=0;
     uint32_t total_case=0;
@@ -924,7 +930,7 @@ void NV_NVDLA_cacc::ReshapeSequencerDirectConvCommon() {
 // | INT16: |   4 elements    |     46                         48                      32
 // | FP16:  |   4 elements    |     32                         32                      16
 */
-void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payload, sc_time& delay) {
+void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payload, sc_core::sc_time& delay) {
     // Config variables, they have corresponding value in registers
     uint32_t    precision;
     uint32_t    conv_mode;
@@ -935,10 +941,10 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
     uint32_t    atom_per_mac_cell;
     uint32_t    payload_idx;
     uint32_t    assembly_idx;
-    sc_int<MAC_OUTPUT_BIT_WIDTH_INT8>     *payload_data_ptr;    //sc_int<22>
-    sc_int<38>  int16_mac_data;
-    sc_int<22>  int8_mac_data;
-    sc_int<49>  sum_tmp;
+    sc_dt::sc_int<MAC_OUTPUT_BIT_WIDTH_INT8>     *payload_data_ptr;    //sc_dt::sc_int<22>
+    sc_dt::sc_int<38>  int16_mac_data;
+    sc_dt::sc_int<22>  int8_mac_data;
+    sc_dt::sc_int<49>  sum_tmp;
     // For float point calculation
     sc_uint<44> fp16_mac_data;
     sc_uint<FP16_ALEN> fp16_accu_data;
@@ -953,16 +959,18 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
     cslDebug((50, "payload->pd.nvdla_stripe_info.stripe_end = %d\n", (unsigned int)payload->pd.nvdla_stripe_info.stripe_end));
     cslDebug((50, "payload->pd.nvdla_stripe_info.channel_end = %d\n", (unsigned int)payload->pd.nvdla_stripe_info.channel_end));
 #if LOG_DETAIL
-    for (int i=0;i<MAC_CELL_NUM*8;i++)    // each element is sc_int<22>
+    for (int i=0;i<MAC_CELL_NUM*8;i++)    // each element is sc_dt::sc_int<22>
         cslDebug((70, "    mac2cacc payload[%d]: 0x%08x\n", i, (uint32_t)payload_data_ptr[i].to_int()));
 #endif
 
+    ////std::cout << "[NV_NVDLA_cacc::mac2accu_b_transport] is_assembly_working_ are " <<  (is_assembly_working_ ? "true" : "false" ) << " @ "<< sc_time_stamp() << std::end; 
+    cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (is_assembly_working_ == false) {
         wait(cacc_kickoff_);
         // cacc should be kicked off before other cc sub-units
         // FAIL(("NV_NVDLA_cacc::mac2accu_b_transport, CACCU is not in working status."));
     }
-    
+    cslDebug((50, "after is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     // Copy from register value to local config variables, similar with RTL connection
     precision = cacc_proc_precision_;
     conv_mode = cacc_conv_mode_;
@@ -1003,7 +1011,7 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
     // };
     // typedef struct nvdla_mac2accu_data_if_s {
     //     uint16_t mask ; 
-    //     sc_int<22> data [16*8];
+    //     sc_dt::sc_int<22> data [16*8];
     //     union nvdla_mac2accu_data_if_u pd ;
     // } nvdla_mac2accu_data_if_t;
     cslDebug((50, "NV_NVDLA_cacc::mac2accu_b_transport, assembly_sram_group_idx_working_ is 0x%x\n", assembly_sram_group_idx_working_));
@@ -1202,6 +1210,9 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((50, "NV_NVDLA_cacc::mac2accu_b_transport, end of layer, assembly_sram_group_idx_working_=0x%x\n", assembly_sram_group_idx_working_));
 
         is_assembly_working_ = false;
+        //std::cout << "[mac2accu_b_transport] is_assembly_working_ are " <<  (is_assembly_working_ ? "true" : "false" ) << " @ "<< sc_time_stamp() << std::end;
+        cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
+
         input_first_channel  = true;    // For next layer
         input_first_layer    = false;
         // save assembly_sram_group_idx_working_ for next layer. it's assigned when channel_end
@@ -1246,14 +1257,14 @@ void NV_NVDLA_cacc::cacc_fp16_add(sc_uint<FP16_ALEN> *fp16_accu_data, sc_uint<44
     sc_uint<FP16_ELEN>  accu_in_exp         = fp16_accu_data->range(FP16_ALEN-1, FP16_ALEN-FP16_ELEN);
     sc_uint<FP16_MLEN>  accu_in_mantisa_u     = fp16_accu_data->range(FP16_MLEN-1,  0);
 
-    sc_int<40> sum_mantisa_tmp;
-    sc_int<40> sum_mantisa;
-    sc_int<FP16_MLEN> sum_mantisa_round;
-    sc_int<FP16_MLEN> sum_mantisa_final;
+    sc_dt::sc_int<40> sum_mantisa_tmp;
+    sc_dt::sc_int<40> sum_mantisa;
+    sc_dt::sc_int<FP16_MLEN> sum_mantisa_round;
+    sc_dt::sc_int<FP16_MLEN> sum_mantisa_final;
 	sc_uint<FP16_ELEN>  sum_exp;
 
-    sc_int<38>  mac_in_mantisa;
-    sc_int<FP16_MLEN>  accu_in_mantisa;
+    sc_dt::sc_int<38>  mac_in_mantisa;
+    sc_dt::sc_int<FP16_MLEN>  accu_in_mantisa;
     int         exp_diff=0;
 	int			num_need_left_shift0=0;
 	int     	num_need_left_shift1=0;
@@ -1263,11 +1274,11 @@ void NV_NVDLA_cacc::cacc_fp16_add(sc_uint<FP16_ALEN> *fp16_accu_data, sc_uint<44
 	int  		real_sum_exp=0;
 	int			i=36;
     int         j=38;
-	sc_int<38>  mac_in_mantisa_regulized=0;
+	sc_dt::sc_int<38>  mac_in_mantisa_regulized=0;
 	sc_uint<8>  mac_in_exp_regulized=0;
 	
-	sc_int<40> mac_in_mantisa_extended=0;
-    sc_int<40> accu_in_mantisa_extended=0;
+	sc_dt::sc_int<40> mac_in_mantisa_extended=0;
+    sc_dt::sc_int<40> accu_in_mantisa_extended=0;
 	sc_uint<40> shift_out_bits0=0;	
 	sc_uint<1> shift_out_high_bit1=0;
 	
@@ -1290,7 +1301,7 @@ void NV_NVDLA_cacc::cacc_fp16_add(sc_uint<FP16_ALEN> *fp16_accu_data, sc_uint<44
     int need_round=0;
 
 
- //transfer from sc_uint to sc_int
+ //transfer from sc_uint to sc_dt::sc_int
     mac_in_mantisa = mac_in_mantisa_u; 
     accu_in_mantisa = accu_in_mantisa_u;
 
@@ -1515,14 +1526,14 @@ void NV_NVDLA_cacc::cacc_fp16_add(sc_uint<FP16_ALEN> *fp16_accu_data, sc_uint<44
 		
 	
 //the input FP48 should be regulized data.
-void NV_NVDLA_cacc::cacc_fp48_to_fp32(sc_int<32> *fp32_to_sdp, sc_uint<FP16_ALEN> fp16_accu_data) {
-    sc_int<32>  to_sdp_tmp;
+void NV_NVDLA_cacc::cacc_fp48_to_fp32(sc_dt::sc_int<32> *fp32_to_sdp, sc_uint<FP16_ALEN> fp16_accu_data) {
+    sc_dt::sc_int<32>  to_sdp_tmp;
     sc_uint<FP16_ELEN>  accu_in_exp           = fp16_accu_data.range(FP16_ALEN-1, FP16_ALEN-FP16_ELEN);
     sc_uint<FP16_MLEN> accu_in_mantisa_u     = fp16_accu_data.range(FP16_MLEN-1,  0);
-    sc_int<FP16_MLEN>  accu_in_mantisa;
-    sc_int<25>  mantisa_temp=0;
+    sc_dt::sc_int<FP16_MLEN>  accu_in_mantisa;
+    sc_dt::sc_int<25>  mantisa_temp=0;
     sc_uint<8>  exp_temp=0;
-    sc_int<FP16_MLEN>  accu_in_mantisa_o=0; //yuanma
+    sc_dt::sc_int<FP16_MLEN>  accu_in_mantisa_o=0; //yuanma
     sc_uint<FP16_MLEN-1> temp=0;
     int guard=0;
     //sc_uint<FP16_MLEN-26> sticky_bits=0;
@@ -1629,7 +1640,7 @@ void NV_NVDLA_cacc::cacc_fp48_to_fp32(sc_int<32> *fp32_to_sdp, sc_uint<FP16_ALEN
 
 
 #pragma CTC SKIP
-NV_NVDLA_cacc * NV_NVDLA_caccCon(sc_module_name name)
+NV_NVDLA_cacc * NV_NVDLA_caccCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_cacc(name);
 }

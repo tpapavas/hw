@@ -84,7 +84,7 @@ bool csc_reg_model::CscAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 csc_register_group_0->SetWritable(offset, data);
                 if (csc_register_group_0->rD_OP_ENABLE.uOP_EN()) {
-                    event_csc_reg_group_0_operation_enable.notify(SC_ZERO_TIME);
+                    event_csc_reg_group_0_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "csc_reg_model::CscAccessRegister, notified op_en for group 0.\x0A"));
                 }
             } else {
@@ -96,7 +96,7 @@ bool csc_reg_model::CscAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 csc_register_group_1->SetWritable(offset, data);
                 if (csc_register_group_1->rD_OP_ENABLE.uOP_EN()) {
-                    event_csc_reg_group_1_operation_enable.notify(SC_ZERO_TIME);
+                    event_csc_reg_group_1_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "csc_reg_model::CscAccessRegister, notified op_en for group 1.\x0A"));
                 }
             }
@@ -137,7 +137,7 @@ void csc_reg_model::CscUpdateVariables(CNVDLA_CSC_REGSET *reg_group_ptr) {
         csc_consumer_ = reg_group_ptr->rS_POINTER.uCONSUMER();
         csc_op_en_ = reg_group_ptr->rD_OP_ENABLE.uOP_EN();
         csc_conv_mode_ = reg_group_ptr->rD_MISC_CFG.uCONV_MODE();
-        csc_in_precision_ = reg_group_ptr->rD_MISC_CFG.uIN_PRECISION();
+        sc_in_precision_ = reg_group_ptr->rD_MISC_CFG.uIN_PRECISION();
         csc_proc_precision_ = reg_group_ptr->rD_MISC_CFG.uPROC_PRECISION();
         csc_data_reuse_ = reg_group_ptr->rD_MISC_CFG.uDATA_REUSE();
         csc_weight_reuse_ = reg_group_ptr->rD_MISC_CFG.uWEIGHT_REUSE();

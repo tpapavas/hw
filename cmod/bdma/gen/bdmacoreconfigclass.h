@@ -12,7 +12,8 @@
 #define _BDMACORECONFIGCLASS_H_
 
 #include <iomanip>
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 
 #include "scsim_common.h"
 
@@ -57,12 +58,12 @@ public:
     uint16_t op_count;
 };
 
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 inline std::ostream& operator<<(std::ostream& out, const BdmaCoreConfig & obj) {
     return out << "Just to fool compiler" << endl;
 }
 
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 inline std::ostream& operator<<(std::ostream& out, const BdmaCoreInt & obj) {
     return out << "Just to fool compiler" << endl;
 }

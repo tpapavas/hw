@@ -11,7 +11,8 @@
 #if !defined(_nvdla_sc2mac_data_if_iface_H_)
 #define _nvdla_sc2mac_data_if_iface_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <stdint.h>
 #ifndef _nvdla_stripe_info_struct_H_
 #include "nvdla_stripe_info_struct.h"
@@ -22,7 +23,7 @@ union nvdla_sc2mac_data_if_u {
 };
 typedef struct nvdla_sc2mac_data_if_s {
     uint64_t mask [2] ; 
-    sc_int<8> data[128];
+    sc_dt::sc_int<8> data[128];
     union nvdla_sc2mac_data_if_u pd ; 
 } nvdla_sc2mac_data_if_t;
 

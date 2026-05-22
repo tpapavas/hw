@@ -20,105 +20,107 @@
 #include "nvdla_ram_rd_addr_iface.h"
 #include "nvdla_ram_rd_data_128B_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 
 SCSIM_NAMESPACE_START(cmod)
 
+
 // Base SystemC class for module NV_NVDLA_conv
-class NV_NVDLA_conv_base : public sc_module
+class NV_NVDLA_conv_base : public sc_core::sc_module
 {
     public:
 
     // Constructor
-    NV_NVDLA_conv_base(const sc_module_name name);
+    NV_NVDLA_conv_base(const sc_core::sc_module_name name);
 
     // Target Socket (unrecognized protocol: NV_MSDEC_csb2xx_adr32_t): csb_req
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> csb_req;
-    virtual void csb_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void csb_req_b_transport(int ID, NV_MSDEC_csb2xx_adr32_t* payload, sc_time& delay) = 0;
+    virtual void csb_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void csb_req_b_transport(int ID, NV_MSDEC_csb2xx_adr32_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_data_only_24B_t): data_out
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> data_out;
-    virtual void data_out_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void data_out_b_transport(int ID, nvdla_data_only_24B_t* payload, sc_time& delay) = 0;
+    virtual void data_out_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void data_out_b_transport(int ID, nvdla_data_only_24B_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_fc_sc_credit_t): act_data_debit
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> act_data_debit;
-    virtual void act_data_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void act_data_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_time& delay) = 0;
+    virtual void act_data_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void act_data_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_fc_sc_credit_t): weight_debit
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_debit;
-    virtual void weight_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void weight_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_time& delay) = 0;
+    virtual void weight_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void weight_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_fc_sc_credit_t): weight_mask_debit
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_mask_debit;
-    virtual void weight_mask_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void weight_mask_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_time& delay) = 0;
+    virtual void weight_mask_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void weight_mask_debit_b_transport(int ID, nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_ram_rd_data_128B_t): act_data
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> act_data;
-    virtual void act_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void act_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_time& delay) = 0;
+    virtual void act_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void act_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_ram_rd_data_128B_t): weight_data
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_data;
-    virtual void weight_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void weight_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_time& delay) = 0;
+    virtual void weight_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void weight_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_ram_rd_data_128B_t): weight_mask_data
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_mask_data;
-    virtual void weight_mask_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void weight_mask_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_time& delay) = 0;
+    virtual void weight_mask_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void weight_mask_data_b_transport(int ID, nvdla_ram_rd_data_128B_t* payload, sc_core::sc_time& delay) = 0;
 
     // Initiator Socket (unrecognized protocol: NV_MSDEC_xx2csb_erpt_t): csb_rrsp
     tlm::tlm_generic_payload csb_rrsp_bp;
     NV_MSDEC_xx2csb_erpt_t csb_rrsp_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> csb_rrsp;
-    virtual void csb_rrsp_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_time& delay);
+    virtual void csb_rrsp_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_core::sc_time& delay);
 
     // Port has no flow: csb_wrsp
-    sc_out<bool> csb_wrsp [34];
+    sc_core::sc_out<bool> csb_wrsp [34];
 
     // Initiator Socket (unrecognized protocol: nvdla_fc_sc_credit_t): act_data_credit
     tlm::tlm_generic_payload act_data_credit_bp;
     nvdla_fc_sc_credit_t act_data_credit_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> act_data_credit;
-    virtual void act_data_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay);
+    virtual void act_data_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_fc_sc_credit_t): weight_credit
     tlm::tlm_generic_payload weight_credit_bp;
     nvdla_fc_sc_credit_t weight_credit_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_credit;
-    virtual void weight_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay);
+    virtual void weight_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_fc_sc_credit_t): weight_mask_credit
     tlm::tlm_generic_payload weight_mask_credit_bp;
     nvdla_fc_sc_credit_t weight_mask_credit_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_mask_credit;
-    virtual void weight_mask_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay);
+    virtual void weight_mask_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_ram_rd_addr_t): act_addr
     tlm::tlm_generic_payload act_addr_bp;
     nvdla_ram_rd_addr_t act_addr_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> act_addr;
-    virtual void act_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay);
+    virtual void act_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_ram_rd_addr_t): weight_addr
     tlm::tlm_generic_payload weight_addr_bp;
     nvdla_ram_rd_addr_t weight_addr_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_addr;
-    virtual void weight_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay);
+    virtual void weight_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_ram_rd_addr_t): weight_mask_addr
     tlm::tlm_generic_payload weight_mask_addr_bp;
     nvdla_ram_rd_addr_t weight_mask_addr_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_conv_base, 32, tlm::tlm_base_protocol_types> weight_mask_addr;
-    virtual void weight_mask_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay);
+    virtual void weight_mask_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay);
 
     // Destructor
     virtual ~NV_NVDLA_conv_base() {}
@@ -126,8 +128,8 @@ class NV_NVDLA_conv_base : public sc_module
 };
 
 // Constructor for base SystemC class for module NV_NVDLA_conv
-inline NV_NVDLA_conv_base::NV_NVDLA_conv_base(const sc_module_name name)
-    : sc_module(name),
+inline NV_NVDLA_conv_base::NV_NVDLA_conv_base(const sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
     csb_req("csb_req"),
     data_out("data_out"),
     act_data_debit("act_data_debit"),
@@ -178,63 +180,63 @@ inline NV_NVDLA_conv_base::NV_NVDLA_conv_base(const sc_module_name name)
 }
 
 inline void
-NV_NVDLA_conv_base::csb_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::csb_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     NV_MSDEC_csb2xx_adr32_t* payload = (NV_MSDEC_csb2xx_adr32_t*) bp.get_data_ptr();
     csb_req_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::data_out_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::data_out_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_data_only_24B_t* payload = (nvdla_data_only_24B_t*) bp.get_data_ptr();
     data_out_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::act_data_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::act_data_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_fc_sc_credit_t* payload = (nvdla_fc_sc_credit_t*) bp.get_data_ptr();
     act_data_debit_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::weight_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::weight_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_fc_sc_credit_t* payload = (nvdla_fc_sc_credit_t*) bp.get_data_ptr();
     weight_debit_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::weight_mask_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::weight_mask_debit_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_fc_sc_credit_t* payload = (nvdla_fc_sc_credit_t*) bp.get_data_ptr();
     weight_mask_debit_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::act_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::act_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_ram_rd_data_128B_t* payload = (nvdla_ram_rd_data_128B_t*) bp.get_data_ptr();
     act_data_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::weight_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::weight_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_ram_rd_data_128B_t* payload = (nvdla_ram_rd_data_128B_t*) bp.get_data_ptr();
     weight_data_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::weight_mask_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_conv_base::weight_mask_data_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_ram_rd_data_128B_t* payload = (nvdla_ram_rd_data_128B_t*) bp.get_data_ptr();
     weight_mask_data_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_conv_base::csb_rrsp_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::csb_rrsp_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_core::sc_time& delay)
 {
     csb_rrsp_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < csb_rrsp.size(); socket_id++) {
@@ -243,7 +245,7 @@ NV_NVDLA_conv_base::csb_rrsp_b_transport(NV_MSDEC_xx2csb_erpt_t* payload, sc_tim
 }
 
 inline void
-NV_NVDLA_conv_base::act_data_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::act_data_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay)
 {
     act_data_credit_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < act_data_credit.size(); socket_id++) {
@@ -252,7 +254,7 @@ NV_NVDLA_conv_base::act_data_credit_b_transport(nvdla_fc_sc_credit_t* payload, s
 }
 
 inline void
-NV_NVDLA_conv_base::weight_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::weight_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay)
 {
     weight_credit_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < weight_credit.size(); socket_id++) {
@@ -261,7 +263,7 @@ NV_NVDLA_conv_base::weight_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_
 }
 
 inline void
-NV_NVDLA_conv_base::weight_mask_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::weight_mask_credit_b_transport(nvdla_fc_sc_credit_t* payload, sc_core::sc_time& delay)
 {
     weight_mask_credit_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < weight_mask_credit.size(); socket_id++) {
@@ -270,7 +272,7 @@ NV_NVDLA_conv_base::weight_mask_credit_b_transport(nvdla_fc_sc_credit_t* payload
 }
 
 inline void
-NV_NVDLA_conv_base::act_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::act_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay)
 {
     act_addr_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < act_addr.size(); socket_id++) {
@@ -279,7 +281,7 @@ NV_NVDLA_conv_base::act_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& 
 }
 
 inline void
-NV_NVDLA_conv_base::weight_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::weight_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay)
 {
     weight_addr_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < weight_addr.size(); socket_id++) {
@@ -288,7 +290,7 @@ NV_NVDLA_conv_base::weight_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_tim
 }
 
 inline void
-NV_NVDLA_conv_base::weight_mask_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_time& delay)
+NV_NVDLA_conv_base::weight_mask_addr_b_transport(nvdla_ram_rd_addr_t* payload, sc_core::sc_time& delay)
 {
     weight_mask_addr_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < weight_mask_addr.size(); socket_id++) {

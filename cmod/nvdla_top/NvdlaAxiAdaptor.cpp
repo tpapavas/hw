@@ -12,12 +12,10 @@
 #include "log.h"
 #include "gp_mm.h"
 SCSIM_NAMESPACE_START(cmod)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NvdlaAxiAdaptor::NvdlaAxiAdaptor( sc_module_name module_name )
-	: sc_module(module_name),
+
+NvdlaAxiAdaptor::NvdlaAxiAdaptor( sc_core::sc_module_name module_name )
+	: sc_core::sc_module(module_name),
       m_peq(module_name)
 {
     m_perf = 0;
@@ -29,8 +27,8 @@ NvdlaAxiAdaptor::NvdlaAxiAdaptor( sc_module_name module_name )
 	customized_rd_req.register_b_transport(this, &NvdlaAxiAdaptor::customized_rd_req_b_transport);
     standard_axi.register_nb_transport_bw(this, &NvdlaAxiAdaptor::axi_nb_transport_bw_cb);
 
-    axi_rd_req_fifo_ = new sc_fifo <tlm_generic_payload*> (1);
-    axi_wr_req_fifo_ = new sc_fifo <tlm_generic_payload*> (1);
+    axi_rd_req_fifo_ = new sc_core::sc_fifo <tlm_generic_payload*> (1);
+    axi_wr_req_fifo_ = new sc_core::sc_fifo <tlm_generic_payload*> (1);
 
     SC_THREAD(axi_rd_wr_thread);
     sensitive  << axi_rd_req_fifo_->data_written_event()  << axi_wr_req_fifo_->data_written_event();
@@ -44,7 +42,7 @@ void NvdlaAxiAdaptor::nb_resp_thread()
         tlm_generic_payload* gp = 0;
         while( (gp = m_peq.get_next_transaction()) != 0 ) {
             tlm_phase phase = tlm::END_RESP;
-            sc_time delay = sc_time(1, SC_NS);
+            sc_core::sc_time delay = sc_core::sc_time(1, SC_NS);
             standard_axi->nb_transport_fw( *gp, phase, delay);
             done_request( *gp, delay );
             cslDebug(( 50, "%s send END_RESP, tran = %p\n", basename(), gp ));
@@ -52,13 +50,15 @@ void NvdlaAxiAdaptor::nb_resp_thread()
     }
 }
 
+
 void NvdlaAxiAdaptor::axi_rd_wr_thread()
 {
     tlm_generic_payload *tlm_gp;
-    sc_time delay = sc_core::SC_ZERO_TIME;
+    sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
     while (true) {
         if((axi_rd_req_fifo_->num_available()==0) && (axi_wr_req_fifo_->num_available()==0)) {
             cslDebug((50, "NvdlaAxiAdaptor::axi_rd_wr_thread, no pending request, waiting.\n"));
+            
             wait();
             cslDebug((50, "NvdlaAxiAdaptor::axi_rd_wr_thread, get new request, wake up.\n"));
         }
@@ -101,7 +101,7 @@ void NvdlaAxiAdaptor::axi_rd_wr_thread()
 }
 
 
-tlm_sync_enum NvdlaAxiAdaptor::axi_nb_transport_bw_cb(int ID, tlm_generic_payload& tlm_gp, tlm_phase& phase, sc_time& delay)
+tlm_sync_enum NvdlaAxiAdaptor::axi_nb_transport_bw_cb(int ID, tlm_generic_payload& tlm_gp, tlm_phase& phase, sc_core::sc_time& delay)
 {
     switch( phase ) {
         case tlm::END_REQ:
@@ -113,9 +113,13 @@ tlm_sync_enum NvdlaAxiAdaptor::axi_nb_transport_bw_cb(int ID, tlm_generic_payloa
             break;
         default: FAIL(( "Illegal TLM phase transition!" ));
     }
-    m_end_req.notify( SC_ZERO_TIME ); // MC doesn't send END_REQ
+    m_end_req.notify( sc_core::SC_ZERO_TIME ); // MC doesn't send END_REQ
     return tlm::TLM_ACCEPTED;
 }
+    
+
+ 
+
 
 static void deep_copy_gp( tlm_generic_payload& copied, const tlm_generic_payload& origin )
 {
@@ -149,8 +153,8 @@ static void deep_copy_gp( tlm_generic_payload& copied, const tlm_generic_payload
 
     copied.deep_copy_from(origin);
 }
-
-void NvdlaAxiAdaptor::axi_nb_transport_fw(tlm_generic_payload& tran, sc_time& delay)
+    
+void NvdlaAxiAdaptor::axi_nb_transport_fw(tlm_generic_payload& tran, sc_core::sc_time& delay)
 {
     delay = sc_core::SC_ZERO_TIME;
     tlm_phase phase = tlm::BEGIN_REQ;
@@ -193,8 +197,10 @@ void NvdlaAxiAdaptor::axi_nb_transport_fw(tlm_generic_payload& tran, sc_time& de
         default: assert( 0 );
     }
 }
+   
 
-void NvdlaAxiAdaptor::done_request(tlm_generic_payload& tlm_gp, sc_time& delay)
+
+void NvdlaAxiAdaptor::done_request(tlm_generic_payload& tlm_gp, sc_core::sc_time& delay)
 {
     if( tlm_gp.is_response_error() ) {
         FAIL(( "payload response error: %u", tlm_gp.get_response_status() ));
@@ -206,8 +212,10 @@ void NvdlaAxiAdaptor::done_request(tlm_generic_payload& tlm_gp, sc_time& delay)
     }
     tlm_gp.release();
 }
+    
 
-void NvdlaAxiAdaptor::customized_wr_req_b_transport(tlm_generic_payload& tlm_gp, sc_time& delay)
+
+void NvdlaAxiAdaptor::customized_wr_req_b_transport(tlm_generic_payload& tlm_gp, sc_core::sc_time& delay)
 {
     tlm_generic_payload * new_tlm_gp = new tlm_generic_payload();
     deep_copy_gp(*new_tlm_gp, tlm_gp);
@@ -217,7 +225,8 @@ void NvdlaAxiAdaptor::customized_wr_req_b_transport(tlm_generic_payload& tlm_gp,
     cslDebug(( 50, "after NvdlaAxiAdaptor::customized_wr_req_b_transport\n" ));
 }
 
-void NvdlaAxiAdaptor::customized_rd_req_b_transport(tlm_generic_payload& tlm_gp, sc_time& delay)
+
+void NvdlaAxiAdaptor::customized_rd_req_b_transport(tlm_generic_payload& tlm_gp, sc_core::sc_time& delay)
 {
     tlm_generic_payload * new_tlm_gp = new tlm_generic_payload();
     deep_copy_gp(*new_tlm_gp, tlm_gp);
@@ -226,6 +235,7 @@ void NvdlaAxiAdaptor::customized_rd_req_b_transport(tlm_generic_payload& tlm_gp,
     axi_rd_req_fifo_->write(new_tlm_gp);
     cslDebug(( 50, "after NvdlaAxiAdaptor::customized_rd_req_b_transport\n" ));
 }
+    
 
 SCSIM_NAMESPACE_END()
 

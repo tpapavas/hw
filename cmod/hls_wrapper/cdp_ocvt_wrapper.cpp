@@ -13,7 +13,8 @@
 #include "log.h"
 #include "cdp_ocvt.h"
 #include "vlibs.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

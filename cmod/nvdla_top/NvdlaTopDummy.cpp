@@ -14,14 +14,14 @@ USING_SCSIM_NAMESPACE(clib)
 using namespace tlm;
 using namespace sc_core;
 
-NvdlaTopDummy::NvdlaTopDummy( sc_module_name module_name )
-	: sc_module(module_name),
+NvdlaTopDummy::NvdlaTopDummy( sc_core::sc_module_name module_name )
+	: sc_core::sc_module(module_name),
       m_target("dummy_target")
 {
 	m_target.register_b_transport(this, &NvdlaTopDummy::dummy_b_transport);
 }
 
-void NvdlaTopDummy::dummy_b_transport(int ID, tlm::tlm_generic_payload& gp, sc_time& delay) 
+void NvdlaTopDummy::dummy_b_transport(int ID, tlm::tlm_generic_payload& gp, sc_core::sc_time& delay) 
 {
     gp.set_response_status(tlm::TLM_OK_RESPONSE);
 }

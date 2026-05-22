@@ -11,7 +11,8 @@
 #ifndef _CSC_REG_MODEL_H_
 #define _CSC_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -35,8 +36,8 @@ class csc_reg_model {
         CNVDLA_CSC_REGSET *csc_register_group_0;
         CNVDLA_CSC_REGSET *csc_register_group_1;
 
-        sc_event event_csc_reg_group_0_operation_enable;
-        sc_event event_csc_reg_group_1_operation_enable;
+        sc_core::sc_event event_csc_reg_group_0_operation_enable;
+        sc_core::sc_event event_csc_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *csc_lut;
         uint32_t csc_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -51,7 +52,7 @@ class csc_reg_model {
         uint8_t   csc_consumer_;
         uint8_t   csc_op_en_;
         uint8_t   csc_conv_mode_;
-        uint8_t   csc_in_precision_;
+        uint8_t   sc_in_precision_;
         uint8_t   csc_proc_precision_;
         uint8_t   csc_data_reuse_;
         uint8_t   csc_weight_reuse_;
@@ -89,7 +90,7 @@ class csc_reg_model {
         uint32_t  csc_cya_;
 
         // CSB request target socket
-        // void csb2csc_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2csc_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void CscSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

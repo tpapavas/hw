@@ -53,7 +53,7 @@ public:
     tlm_utils::simple_target_socket< Socket2Signal<T> > m_socket;
 
 protected:
-    virtual void transport( tlm::tlm_generic_payload &gp, sc_time &delay ) = 0;
+    virtual void transport( tlm::tlm_generic_payload &gp, sc_core::sc_time &delay ) = 0;
 };
 
 

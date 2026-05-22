@@ -30,9 +30,7 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 // DELETME, const static uint32_t MPCORE2MC_MAX_DATA_LEN = 4; // mpcore 2 mc request will be 32b each time.
 const static uint32_t CSB_DATA_LEN = 1;     // CSB data length is always 1
@@ -66,17 +64,17 @@ enum PDP_OPERATION_MODE_ALIAS {
 //  + : affected by one config space
 //  * : affected by more than one config space
 
-NV_NVDLA_pdp::NV_NVDLA_pdp( sc_module_name module_name ):
+NV_NVDLA_pdp::NV_NVDLA_pdp( sc_core::sc_module_name module_name ):
     NV_NVDLA_pdp_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     spd2pdp_fifo_ = new sc_core::sc_fifo <uint8_t *> (SDP2PDP_FIFO_ENTRY_NUM);
-    rdma_buffer_  = new sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
-    wdma_buffer_  = new sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
-    pdp_ack_fifo_     = new sc_fifo <pdp_ack_info*> (2);
+    rdma_buffer_  = new sc_core::sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
+    wdma_buffer_  = new sc_core::sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
+    pdp_ack_fifo_     = new sc_core::sc_fifo <pdp_ack_info*> (2);
     for(int i=0; i < PDP_LINE_BUFFER_ENTRY_NUM; i++)
     {
         line_buffer_usage_free_[i]  = new sc_core::sc_fifo<uint8_t> (1);
@@ -1132,12 +1130,12 @@ void NV_NVDLA_pdp::Reset()
     PdpRdmaRegReset();
     is_there_ongoing_csb2pdp_response_      = false;
     is_there_ongoing_csb2pdp_rdma_response_ = false;
-    dma_delay_ = SC_ZERO_TIME;
-    csb_delay_ = SC_ZERO_TIME;
+    dma_delay_ = sc_core::SC_ZERO_TIME;
+    csb_delay_ = sc_core::SC_ZERO_TIME;
     pdp_rdma_operation_mode_                = SPLIT_WIDTH_DIS_COMMON;
     pdp_operation_mode_                     = SPLIT_WIDTH_DIS_COMMON;
     pdp_ready_to_receive_data_              = false;
-    b_transport_delay_ = SC_ZERO_TIME;
+    b_transport_delay_ = sc_core::SC_ZERO_TIME;
     //PDP interrupt wires to GLB
     pdp2glb_done_intr[0].initialize(false);
     pdp2glb_done_intr[1].initialize(false);
@@ -1182,7 +1180,7 @@ void NV_NVDLA_pdp::WaitUntilWdmaBufferAvailableSizeGreaterThan(uint32_t num) {
 #pragma CTC ENDSKIP
 
 // Send DMA read request
-void NV_NVDLA_pdp::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_pdp::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     if (NVDLA_PDP_RDMA_D_SRC_RAM_CFG_0_SRC_RAM_TYPE_MC== pdp_rdma_src_ram_type_) {
         cslDebug((50, "NV_NVDLA_pdp::SendDmaReadRequest to MC, payload_addr=0x%lx payload_atom_num=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size+1));
         NV_NVDLA_pdp_base::pdp2mcif_rd_req_b_transport(payload, dma_delay_);
@@ -1329,7 +1327,7 @@ void NV_NVDLA_pdp::SendDmaWriteRequest(uint64_t payload_addr, uint32_t payload_s
     if (ack_required) pdp_done_.notify();
 }
 
-void NV_NVDLA_pdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, bool ack_required) {
+void NV_NVDLA_pdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, bool ack_required) {
     if (NVDLA_PDP_D_DST_RAM_CFG_0_DST_RAM_TYPE_MC == pdp_dst_ram_type_) {
         if (TAG_CMD == payload->tag) {
             if (ack_required) {
@@ -1865,7 +1863,7 @@ void NV_NVDLA_pdp::int_sign_extend(T_IN original_value, uint8_t sign_bit_idx, ui
 }
 
 #pragma CTC SKIP
-NV_NVDLA_pdp * NV_NVDLA_pdpCon(sc_module_name name) {
+NV_NVDLA_pdp * NV_NVDLA_pdpCon(sc_core::sc_module_name name) {
     return new NV_NVDLA_pdp(name);
 }
 #pragma CTC ENDSKIP

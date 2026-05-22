@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CBUF_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -46,16 +47,16 @@ class NV_NVDLA_cbuf:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cbuf);
-        NV_NVDLA_cbuf( sc_module_name module_name );
+        NV_NVDLA_cbuf( sc_core::sc_module_name module_name );
         ~NV_NVDLA_cbuf();
         // Overload for pure virtual TLM target functions
         // # CDMA 2 CBUF: data and weight
-        void cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_time& delay);
-        void cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_time& delay);
+        void cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_core::sc_time& delay);
+        void cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_core::sc_time& delay);
         // # CSC 2 CBUF: activation, weight and WMB
-        void sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay);
-        void sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay);
-        void sc2buf_wmb_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_8_RDATA_1024_t* payload, sc_time& delay);
+        void sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_core::sc_time& delay);
+        void sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_core::sc_time& delay);
+        void sc2buf_wmb_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_8_RDATA_1024_t* payload, sc_core::sc_time& delay);
 
     private:
         // Variables
@@ -80,7 +81,7 @@ class NV_NVDLA_cbuf:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_cbuf * NV_NVDLA_cbufCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_cbuf * NV_NVDLA_cbufCon(sc_core::sc_module_name module_name);
 
 #endif
 

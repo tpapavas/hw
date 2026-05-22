@@ -22,11 +22,9 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_mcif::NV_NVDLA_mcif( sc_module_name module_name, bool headless_ntb_env_in, uint8_t nvdla_id_in):
+
+NV_NVDLA_mcif::NV_NVDLA_mcif( sc_core::sc_module_name module_name, bool headless_ntb_env_in, uint8_t nvdla_id_in):
     NV_NVDLA_mcif_base(module_name),
     headless_ntb_env(headless_ntb_env_in),
     nvdla_id(nvdla_id_in),
@@ -35,9 +33,9 @@ NV_NVDLA_mcif::NV_NVDLA_mcif( sc_module_name module_name, bool headless_ntb_env_
     mcif2ext_rd_req ("mcif2ext_rd_req"),
     ext2mcif_wr_rsp ("ext2mcif_wr_rsp"),
     ext2mcif_rd_rsp ("ext2mcif_rd_rsp"),
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    axi_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    axi_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
 
@@ -278,7 +276,7 @@ NV_NVDLA_mcif::~NV_NVDLA_mcif() {
 
 // DMA read request target sockets
 
-void NV_NVDLA_mcif::bdma2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::bdma2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -461,7 +459,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2bdma() {
     }
 }
 
-void NV_NVDLA_mcif::sdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::sdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -644,7 +642,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2sdp() {
     }
 }
 
-void NV_NVDLA_mcif::pdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::pdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -827,7 +825,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2pdp() {
     }
 }
 
-void NV_NVDLA_mcif::cdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::cdp2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1010,7 +1008,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2cdp() {
     }
 }
 
-void NV_NVDLA_mcif::rbk2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::rbk2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1193,7 +1191,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2rbk() {
     }
 }
 
-void NV_NVDLA_mcif::sdp_b2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::sdp_b2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1376,7 +1374,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2sdp_b() {
     }
 }
 
-void NV_NVDLA_mcif::sdp_n2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::sdp_n2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1559,7 +1557,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2sdp_n() {
     }
 }
 
-void NV_NVDLA_mcif::sdp_e2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::sdp_e2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1742,7 +1740,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2sdp_e() {
     }
 }
 
-void NV_NVDLA_mcif::cdma_dat2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::cdma_dat2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -1925,7 +1923,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2cdma_dat() {
     }
 }
 
-void NV_NVDLA_mcif::cdma_wt2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::cdma_wt2mcif_rd_req_b_transport(int ID, nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay) {
     // DMA request size unit is 32 bytes
     uint64_t base_addr;
     uint64_t first_base_addr;
@@ -2110,7 +2108,7 @@ void NV_NVDLA_mcif::ReadResp_mcif2cdma_wt() {
 
 // DMA read request target sockets
 
-void NV_NVDLA_mcif::bdma2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::bdma2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay) {
     uint32_t packet_id;
     uint8_t  *dma_payload_data_ptr;
     uint8_t  *data_ptr;
@@ -2141,7 +2139,7 @@ void NV_NVDLA_mcif::bdma2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* pay
     } else {
         dma_payload_data_ptr = reinterpret_cast <uint8_t *> (payload->pd.dma_write_data.data);
         rest_size = bdma_wr_req_size_ - bdma_wr_req_got_size_;
-        incoming_size = min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
+        incoming_size = std::min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
         data_ptr = new uint8_t[DMA_TRANSACTION_ATOM_SIZE];
         memcpy(data_ptr, dma_payload_data_ptr, DMA_TRANSACTION_ATOM_SIZE);
         cslDebug((50, "write to bdma2mcif_wr_data_fifo_, num_free:%d\x0A", bdma2mcif_wr_data_fifo_->num_free()));
@@ -2307,7 +2305,7 @@ void NV_NVDLA_mcif::WriteRequest_bdma2mcif() {
     }
 }
 
-void NV_NVDLA_mcif::sdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::sdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay) {
     uint32_t packet_id;
     uint8_t  *dma_payload_data_ptr;
     uint8_t  *data_ptr;
@@ -2338,7 +2336,7 @@ void NV_NVDLA_mcif::sdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payl
     } else {
         dma_payload_data_ptr = reinterpret_cast <uint8_t *> (payload->pd.dma_write_data.data);
         rest_size = sdp_wr_req_size_ - sdp_wr_req_got_size_;
-        incoming_size = min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
+        incoming_size = std::min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
         data_ptr = new uint8_t[DMA_TRANSACTION_ATOM_SIZE];
         memcpy(data_ptr, dma_payload_data_ptr, DMA_TRANSACTION_ATOM_SIZE);
         cslDebug((50, "write to sdp2mcif_wr_data_fifo_, num_free:%d\x0A", sdp2mcif_wr_data_fifo_->num_free()));
@@ -2504,7 +2502,7 @@ void NV_NVDLA_mcif::WriteRequest_sdp2mcif() {
     }
 }
 
-void NV_NVDLA_mcif::pdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::pdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay) {
     uint32_t packet_id;
     uint8_t  *dma_payload_data_ptr;
     uint8_t  *data_ptr;
@@ -2535,7 +2533,7 @@ void NV_NVDLA_mcif::pdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payl
     } else {
         dma_payload_data_ptr = reinterpret_cast <uint8_t *> (payload->pd.dma_write_data.data);
         rest_size = pdp_wr_req_size_ - pdp_wr_req_got_size_;
-        incoming_size = min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
+        incoming_size = std::min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
         data_ptr = new uint8_t[DMA_TRANSACTION_ATOM_SIZE];
         memcpy(data_ptr, dma_payload_data_ptr, DMA_TRANSACTION_ATOM_SIZE);
         cslDebug((50, "write to pdp2mcif_wr_data_fifo_, num_free:%d\x0A", pdp2mcif_wr_data_fifo_->num_free()));
@@ -2701,7 +2699,7 @@ void NV_NVDLA_mcif::WriteRequest_pdp2mcif() {
     }
 }
 
-void NV_NVDLA_mcif::cdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::cdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay) {
     uint32_t packet_id;
     uint8_t  *dma_payload_data_ptr;
     uint8_t  *data_ptr;
@@ -2732,7 +2730,7 @@ void NV_NVDLA_mcif::cdp2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payl
     } else {
         dma_payload_data_ptr = reinterpret_cast <uint8_t *> (payload->pd.dma_write_data.data);
         rest_size = cdp_wr_req_size_ - cdp_wr_req_got_size_;
-        incoming_size = min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
+        incoming_size = std::min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
         data_ptr = new uint8_t[DMA_TRANSACTION_ATOM_SIZE];
         memcpy(data_ptr, dma_payload_data_ptr, DMA_TRANSACTION_ATOM_SIZE);
         cslDebug((50, "write to cdp2mcif_wr_data_fifo_, num_free:%d\x0A", cdp2mcif_wr_data_fifo_->num_free()));
@@ -2898,7 +2896,7 @@ void NV_NVDLA_mcif::WriteRequest_cdp2mcif() {
     }
 }
 
-void NV_NVDLA_mcif::rbk2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_time& delay) {
+void NV_NVDLA_mcif::rbk2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay) {
     uint32_t packet_id;
     uint8_t  *dma_payload_data_ptr;
     uint8_t  *data_ptr;
@@ -2929,7 +2927,7 @@ void NV_NVDLA_mcif::rbk2mcif_wr_req_b_transport(int ID, nvdla_dma_wr_req_t* payl
     } else {
         dma_payload_data_ptr = reinterpret_cast <uint8_t *> (payload->pd.dma_write_data.data);
         rest_size = rbk_wr_req_size_ - rbk_wr_req_got_size_;
-        incoming_size = min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
+        incoming_size = std::min(rest_size, uint32_t (DMA_TRANSACTION_MAX_SIZE));
         data_ptr = new uint8_t[DMA_TRANSACTION_ATOM_SIZE];
         memcpy(data_ptr, dma_payload_data_ptr, DMA_TRANSACTION_ATOM_SIZE);
         cslDebug((50, "write to rbk2mcif_wr_data_fifo_, num_free:%d\x0A", rbk2mcif_wr_data_fifo_->num_free()));
@@ -3096,7 +3094,7 @@ void NV_NVDLA_mcif::WriteRequest_rbk2mcif() {
 }
 
 
-void NV_NVDLA_mcif::ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+void NV_NVDLA_mcif::ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
     uint32_t            dma_sent_size;
     // uint64_t            axi_address;
     uint8_t*            axi_data_ptr;
@@ -3296,7 +3294,7 @@ void NV_NVDLA_mcif::ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload
     tlm_gp.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
-void NV_NVDLA_mcif::ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+void NV_NVDLA_mcif::ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
     uint8_t             axi_id;
     nvdla_dbb_extension *nvdla_dbb_ext = NULL;
     cslDebug((50, "NV_NVDLA_mcif::ext2mcif_wr_rsp_b_transport.\x0A"));
@@ -3397,7 +3395,7 @@ void NV_NVDLA_mcif::ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload
             FAIL(("NV_NVDLA_mcif::ext2mcif_wr_rsp_b_transport, unexpected AXI ID"));
 #pragma CTC ENDSKIP
     }
-    wait( SC_ZERO_TIME );
+    wait( sc_core::SC_ZERO_TIME );
     tlm_gp.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
@@ -3799,7 +3797,7 @@ void NV_NVDLA_mcif::Reset() {
     // mcif2ext_rd_req_payload = NULL;
 }
 
-//NV_NVDLA_mcif * NV_NVDLA_mcifCon(sc_module_name name, uint8_t nvdla_id_in)
+//NV_NVDLA_mcif * NV_NVDLA_mcifCon(sc_core::sc_module_name name, uint8_t nvdla_id_in)
 //{
 //    return new NV_NVDLA_mcif(name, nvdla_id_in);
 //}

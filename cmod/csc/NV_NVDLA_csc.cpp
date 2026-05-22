@@ -29,9 +29,7 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 const static bool USE_LUT = true;
 const static bool NOT_USE_LUT = false;
@@ -60,12 +58,12 @@ enum CSC_WEIGHT_LOAD_MODE_ALIAS {
     WEIGHT_LOAD_MODE_WINOGRAD_CONV
 };
 
-NV_NVDLA_csc::NV_NVDLA_csc( sc_module_name module_name ):
+NV_NVDLA_csc::NV_NVDLA_csc( sc_core::sc_module_name module_name ):
     NV_NVDLA_csc_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
     // csc2cbuf_data_payload_ = new nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t;
@@ -76,9 +74,9 @@ NV_NVDLA_csc::NV_NVDLA_csc( sc_module_name module_name ):
     // For converting active operation to a passive operation
     act_data_read_rsp_fifo_ = new sc_core::sc_fifo <uint8_t*> (MAX_MEM_TRANSACTION_SIZE/ATOM_CUBE_SIZE);
     // For converting active operation to a passive operation
-    cbuf_data_read_ = new sc_core::sc_fifo <sc_uint<64>*> (1);
-    cbuf_weight_read_ = new sc_core::sc_fifo <sc_uint<64>*> (1);
-    cbuf_wmb_read_ = new sc_core::sc_fifo <sc_uint<64>*> (1);
+    cbuf_data_read_ = new sc_core::sc_fifo <sc_dt::sc_uint<64>*> (1);
+    cbuf_weight_read_ = new sc_core::sc_fifo <sc_dt::sc_uint<64>*> (1);
+    cbuf_wmb_read_ = new sc_core::sc_fifo <sc_dt::sc_uint<64>*> (1);
     cdma_updated_cbuf_data_fifo_ = new sc_core::sc_fifo <uint32_t> (16384);
 
     // Reset
@@ -528,7 +526,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
     uint32_t pad_left;
     uint32_t pad_top;
     uint16_t batch_num;
-    sc_uint<16> pad_value;
+    sc_dt::sc_uint<16> pad_value;
     uint32_t kernel_width;
     uint32_t kernel_height;
     uint32_t kernel_stride_w;
@@ -571,7 +569,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
     // Temp variables
     int32_t  idx;
     uint64_t *read_payload_data_ptr;
-    sc_uint<64> *read_data_ptr;
+    sc_dt::sc_uint<64> *read_data_ptr;
     bool     last_super_channel;
     uint32_t packed_channel_iter;   // For packed store in cbuf, it points to the needed data in a cbuf entry
 
@@ -579,7 +577,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
                                   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
     cslInfo(("NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon, start\n"));
-    read_data_ptr = new sc_uint<64> [CBUF_ENTRY_SIZE/8];
+    read_data_ptr = new sc_dt::sc_uint<64> [CBUF_ENTRY_SIZE/8];
 
     // Copy from register value to local config variables, similar with RTL connection
     cube_in_width           = csc_datain_width_ext_ + 1;
@@ -597,7 +595,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
     kernel_stride_h         = csc_conv_y_stride_ext_ + 1;
     x_dilation_ext          = csc_x_dilation_ext_ + 1;
     y_dilation_ext          = csc_y_dilation_ext_ + 1;
-    pad_value               = sc_uint<16>(csc_pad_value_);
+    pad_value               = sc_dt::sc_uint<16>(csc_pad_value_);
     cbuf_entry_for_data     = (csc_data_bank_+1) * CBUF_ENTRY_PER_BANK;
     batch_num               = csc_batches_ + 1;
 
@@ -741,9 +739,9 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
                                     case DATA_FORMAT_INT8:
                                         for (channel_iter=0; channel_iter < PARALLEL_CHANNEL_NUM; channel_iter++) {
                                             if(last_super_channel && (channel_iter >= last_super_channel_element_num))
-                                                sc2mac_a_dat_payload.data[channel_iter] = 0;   //type of sc2mac_a_dat_payload.data[0]: sc_int<10>
+                                                sc2mac_a_dat_payload.data[channel_iter] = 0;   //type of sc2mac_a_dat_payload.data[0]: sc_dt::sc_int<10>
                                             else
-                                                sc2mac_a_dat_payload.data[channel_iter] = pad_value.range(7,0);   //type of sc2mac_a_dat_payload.data[0]: sc_int<10>
+                                                sc2mac_a_dat_payload.data[channel_iter] = pad_value.range(7,0);   //type of sc2mac_a_dat_payload.data[0]: sc_dt::sc_int<10>
                                             // Duplicate 64B for int8
                                             sc2mac_a_dat_payload.data[channel_iter + PARALLEL_CHANNEL_NUM] = sc2mac_a_dat_payload.data[channel_iter];
                                         }
@@ -886,7 +884,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
                                 case DATA_FORMAT_INT8:
                                     for (idx=CBUF_ENTRY_SIZE-1; idx >= 0; idx--) {
                                         // sc2mac_a_dat_payload.mask is per element
-                                        // type of sc2mac_a_dat_payload.data[i] is sc_int<10>
+                                        // type of sc2mac_a_dat_payload.data[i] is sc_dt::sc_int<10>
                                         // If the data[i] is 0, then RTL code will not assign value to the registers to reduce toggle and save power
                                         uint8_t element_mask_bit = (sc2mac_a_dat_payload.data[idx] != 0)? 1: 0;
                                         if(idx<64)
@@ -897,7 +895,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
                                     break;
                                 case DATA_FORMAT_INT16:
                                     for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                        sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                        sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                         uint8_t element_mask_bit = (tmp_v != 0)? 3: 0;
                                         if(idx<32)
                                             sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -907,7 +905,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon() {
                                     break;
                                 case DATA_FORMAT_FP16:
                                     for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                        sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                        sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                         uint8_t element_mask_bit = ((tmp_v != 0) && (tmp_v!=0x8000UL))? 3: 0;   // Both +0 and -0 have to be involved for FP16
                                         if(idx<32)
                                             sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -1195,7 +1193,7 @@ void NV_NVDLA_csc::SendWeightToMacSequencerDirectConvCommon() {
                             if (NVDLA_CSC_D_WEIGHT_FORMAT_0_WEIGHT_FORMAT_COMPRESSED==weight_format) {
                                 get_decompressed_weight(read_data_curr_ptr, input_atom_channel_num);    // For INT8, read_data_curr_ptr is different in compress and non-compress modes
                                 // Prepare CSC2MAC weight payload, from C0 to C64, C0 is aligned with 0
-                                if (DATA_FORMAT_INT8 == precision) {    // sc2mac_a_wt_payload.data[0] is sc_int<8>
+                                if (DATA_FORMAT_INT8 == precision) {    // sc2mac_a_wt_payload.data[0] is sc_dt::sc_int<8>
                                     for (sc2mac_element_iter=ELEMENT_PER_INPUT_ATOM*(kernel_iter%2); sc2mac_element_iter< ELEMENT_PER_INPUT_ATOM*(kernel_iter%2) + input_atom_channel_num; sc2mac_element_iter++) {
                                         sc2mac_a_wt_payload.data[sc2mac_element_iter] = read_data_curr_ptr[sc2mac_element_iter - ELEMENT_PER_INPUT_ATOM*(kernel_iter%2)];
 //                                        cslDebug((70, "kernel_iter=%d sc2mac_element_iter=%d read_data_curr_ptr[]=0x%x sc2mac_a_wt_payload.data[]=0x%x\n", kernel_iter, sc2mac_element_iter, read_data_curr_ptr[sc2mac_element_iter - ELEMENT_PER_INPUT_ATOM*(kernel_iter%2)], sc2mac_a_wt_payload.data[sc2mac_element_iter].to_int()));
@@ -1452,7 +1450,7 @@ void NV_NVDLA_csc::SendWeightToMacSequencerDirectConvCommon() {
                                 }
                             } else {
                                 for (idx=(CBUF_ENTRY_SIZE/2 - 1); idx>=0; idx--) {
-                                    sc_uint<16> tmp_v = (sc2mac_a_wt_payload.data[idx*2+1].range(7,0), sc2mac_a_wt_payload.data[idx*2].range(7,0));
+                                    sc_dt::sc_uint<16> tmp_v = (sc2mac_a_wt_payload.data[idx*2+1].range(7,0), sc2mac_a_wt_payload.data[idx*2].range(7,0));
                                     uint8_t element_mask_bit;
                                     if (DATA_FORMAT_FP16 == precision)
                                         element_mask_bit = ((tmp_v != 0) && (tmp_v!=0x8000UL))? 3: 0;   // Both +0 and -0 have to be involved for FP16
@@ -1598,12 +1596,12 @@ void NV_NVDLA_csc::SendImageDataToMacSequencerConvCommon() {
     // Temp variables
     int      idx;
     bool     last_super_channel;
-    sc_uint<64> *read_data_ptr;
+    sc_dt::sc_uint<64> *read_data_ptr;
     uint8_t  read_data_ptr_tmp[CBUF_ENTRY_SIZE];
     uint8_t  read_data_ptr_tmp0[CBUF_ENTRY_SIZE], read_data_ptr_tmp1[CBUF_ENTRY_SIZE], read_data_ptr_tmp2[CBUF_ENTRY_SIZE], read_data_ptr_tmp3[CBUF_ENTRY_SIZE];
     uint64_t *read_data_ptr_tmp_64;
     cslInfo(("NV_NVDLA_csc::SendDataToMacSequencerDirectConvCommon, start\n"));
-    read_data_ptr   = new sc_uint<64> [CBUF_ENTRY_SIZE/8];
+    read_data_ptr   = new sc_dt::sc_uint<64> [CBUF_ENTRY_SIZE/8];
 
     // Copy from register value to local config variables, similar with RTL connection
     cube_in_height          = csc_datain_height_ext_ + 1;
@@ -1790,7 +1788,7 @@ void NV_NVDLA_csc::SendImageDataToMacSequencerConvCommon() {
                                 }
                             }
 
-                            // Convert to sc_uint<64>
+                            // Convert to sc_dt::sc_uint<64>
                             read_data_ptr_tmp_64 = reinterpret_cast <uint64_t*> (read_data_ptr_tmp);
                             for (read_payload_gran_iter=0;read_payload_gran_iter<CBUF_ENTRY_SIZE/8;read_payload_gran_iter++) {
                                 read_data_ptr[read_payload_gran_iter] = read_data_ptr_tmp_64[read_payload_gran_iter];
@@ -1822,7 +1820,7 @@ void NV_NVDLA_csc::SendImageDataToMacSequencerConvCommon() {
                                 case DATA_FORMAT_INT8:
                                     for (idx=CBUF_ENTRY_SIZE-1; idx >= 0; idx--) {
                                         // sc2mac_a_dat_payload.mask is per element
-                                        // type of sc2mac_a_dat_payload.data[i] is sc_int<10>
+                                        // type of sc2mac_a_dat_payload.data[i] is sc_dt::sc_int<10>
                                         // If the data[i] is 0, then RTL code will not assign value to the registers to reduce toggle and save power
                                         uint8_t element_mask_bit = (sc2mac_a_dat_payload.data[idx] != 0)? 1: 0;
                                         if(idx<64)
@@ -1833,7 +1831,7 @@ void NV_NVDLA_csc::SendImageDataToMacSequencerConvCommon() {
                                     break;
                                 case DATA_FORMAT_INT16:
                                     for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                        sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                        sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                         uint8_t element_mask_bit = (tmp_v != 0)? 3: 0;
                                         if(idx<32)
                                             sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -1843,7 +1841,7 @@ void NV_NVDLA_csc::SendImageDataToMacSequencerConvCommon() {
                                     break;
                                 case DATA_FORMAT_FP16:
                                     for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                        sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                        sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                         uint8_t element_mask_bit = ((tmp_v != 0) && (tmp_v!=0x8000UL))? 3: 0;   // Both +0 and -0 have to be involved for FP16
                                         if(idx<32)
                                             sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -2231,7 +2229,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerWinoConvCommon() {
                         case DATA_FORMAT_INT8:
                             for (idx=CBUF_ENTRY_SIZE-1; idx >= 0; idx--) {
                                 // sc2mac_a_dat_payload.mask is per element
-                                // type of sc2mac_a_dat_payload.data[i] is sc_int<10>
+                                // type of sc2mac_a_dat_payload.data[i] is sc_dt::sc_int<10>
                                 // If the data[i] is 0, then RTL code will not assign value to the registers to reduce toggle and save power
                                 // mask[0]: Byte64~Byte127, [31]-B127, ... [0]-B64
                                 // mask[1]: Byte0~Byte63, [31]-B63, ... [0]-B0
@@ -2244,7 +2242,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerWinoConvCommon() {
                             break;
                         case DATA_FORMAT_INT16:
                             for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                 uint8_t element_mask_bit = (tmp_v != 0)? 3: 0;
                                 if(idx<32)
                                     sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -2254,7 +2252,7 @@ void NV_NVDLA_csc::SendDataToMacSequencerWinoConvCommon() {
                             break;
                         case DATA_FORMAT_FP16:
                             for (idx=CBUF_ENTRY_SIZE/2-1; idx >= 0; idx--) {
-                                sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
+                                sc_dt::sc_uint<16> tmp_v = (sc2mac_a_dat_payload.data[idx*2+1].range(7,0), sc2mac_a_dat_payload.data[idx*2].range(7,0));
                                 uint8_t element_mask_bit = ((tmp_v != 0) && (tmp_v!=0x8000UL))? 3: 0;   // Both +0 and -0 have to be involved for FP16
                                 if(idx<32)
                                     sc2mac_a_dat_payload.mask[1] = (sc2mac_a_dat_payload.mask[1]<<2) | element_mask_bit;
@@ -2351,8 +2349,8 @@ void NV_NVDLA_csc::SendWeightToMacSequencerWinoConvCommon() {
     int32_t  comp_released_wmb_entries;
 
     // Temperal variables
-    sc_uint<64> *read_data_curr_ptr;
-    sc_uint<64> *read_data_reorder;
+    sc_dt::sc_uint<64> *read_data_curr_ptr;
+    sc_dt::sc_uint<64> *read_data_reorder;
     uint64_t    *read_payload_data_ptr;
 
     // Copy from register value to local config variables, similar with RTL connection
@@ -2417,8 +2415,8 @@ void NV_NVDLA_csc::SendWeightToMacSequencerWinoConvCommon() {
     kernel_group_num      = (kernel_num + kernel_per_group_ideal - 1)/kernel_per_group_ideal;
     stripe_operation_per_block_operation = 1;
 
-    read_data_curr_ptr = new sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
-    read_data_reorder  = new sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
+    read_data_curr_ptr = new sc_dt::sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
+    read_data_reorder  = new sc_dt::sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
     read_payload_data_ptr = reinterpret_cast <uint64_t*> (sc2buf_wt_rd_payload.nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1.data);
     
     if (is_skip_weight_rls_mode) {
@@ -2517,7 +2515,7 @@ void NV_NVDLA_csc::SendWeightToMacSequencerWinoConvCommon() {
                             read_data_curr_ptr_int8 = new uint8_t [CBUF_ENTRY_SIZE];
                             get_decompressed_weight(read_data_curr_ptr_int8, 4*4*input_atom_channel_num);
                             // Prepare CSC2MAC weight payload, from C0 to C64, C0 is aligned with 0
-                            if (DATA_FORMAT_INT8 == precision) {    // sc2mac_a_wt_payload.data[0] is sc_int<8>
+                            if (DATA_FORMAT_INT8 == precision) {    // sc2mac_a_wt_payload.data[0] is sc_dt::sc_int<8>
                                 for (sc2mac_element_iter=ELEMENT_PER_INPUT_ATOM*(kernel_iter%2); sc2mac_element_iter< ELEMENT_PER_INPUT_ATOM*(kernel_iter%2) + 4*4*input_atom_channel_num; sc2mac_element_iter++) {
                                     sc2mac_a_wt_payload.data[sc2mac_element_iter] = read_data_curr_ptr_int8[sc2mac_element_iter - ELEMENT_PER_INPUT_ATOM*(kernel_iter%2)];
                                     cslDebug((70, "kernel_iter=%d sc2mac_element_iter=%d read_data_curr_ptr_int8[]=0x%x sc2mac_a_wt_payload.data[]=0x%x\n", kernel_iter, sc2mac_element_iter, read_data_curr_ptr_int8[sc2mac_element_iter - ELEMENT_PER_INPUT_ATOM*(kernel_iter%2)], sc2mac_a_wt_payload.data[sc2mac_element_iter].to_int()));
@@ -2643,7 +2641,7 @@ void NV_NVDLA_csc::SendWeightToMacSequencerWinoConvCommon() {
                             }
                         } else {
                             for (int idx=(super_atom_size/2-1); idx>=0; idx--) {
-                                sc_uint<16> tmp_v = (sc2mac_a_wt_payload.data[idx*2+1].range(7,0), sc2mac_a_wt_payload.data[idx*2].range(7,0));
+                                sc_dt::sc_uint<16> tmp_v = (sc2mac_a_wt_payload.data[idx*2+1].range(7,0), sc2mac_a_wt_payload.data[idx*2].range(7,0));
                                 uint8_t element_mask_bit;
                                 if (DATA_FORMAT_FP16 == precision)
                                     element_mask_bit = ((tmp_v != 0) && (tmp_v!=0x8000UL))? 3: 0;   // Both +0 and -0 have to be involved for FP16
@@ -2800,7 +2798,7 @@ void NV_NVDLA_csc::WaitStripeBeginHasSent() {
 
 // Target sockets
 // # CDMA->CSC status update
-void NV_NVDLA_csc::dat_up_cdma2sc_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_time& delay){
+void NV_NVDLA_csc::dat_up_cdma2sc_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_core::sc_time& delay){
     slice_idx_dma_fetched_mutex_.lock();
     slice_idx_available_+= payload->dat_slices;
     slice_idx_dma_fetched_mutex_.unlock();
@@ -2811,7 +2809,7 @@ void NV_NVDLA_csc::dat_up_cdma2sc_b_transport(int ID, nvdla_dat_info_update_t* p
     cdma_updated_cbuf_data_fifo_->write(payload->dat_entries);
 }
 
-void NV_NVDLA_csc::wt_up_cdma2sc_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_time& delay){
+void NV_NVDLA_csc::wt_up_cdma2sc_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_core::sc_time& delay){
     weight_kernel_num_available_ +=  payload->wt_kernels;
     weight_entry_idx_available_  +=  payload->wt_entries;
     wmb_entry_idx_available_     +=  payload->wmb_entries;
@@ -2831,30 +2829,30 @@ uint32_t NV_NVDLA_csc::evaluate_channel_operation_num(uint32_t total_atom_num, u
 
 #pragma CTC SKIP
 // CBUF->CSC read data return
-void NV_NVDLA_csc::sc2buf_dat_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay){
-    sc_uint<64> *data;
+void NV_NVDLA_csc::sc2buf_dat_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay){
+    sc_dt::sc_uint<64> *data;
     uint32_t    gran_iter;
-    data = new sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
+    data = new sc_dt::sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
     for (gran_iter=0; gran_iter < CBUF_ENTRY_CMOD_GRANULARITY_NUM; gran_iter++) {
         data[gran_iter] = payload->data[gran_iter];
     }
     cbuf_data_read_->write(data);
 }
 
-void NV_NVDLA_csc::sc2buf_wt_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay){
-    sc_uint<64> *data;
+void NV_NVDLA_csc::sc2buf_wt_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay){
+    sc_dt::sc_uint<64> *data;
     uint32_t    gran_iter;
-    data = new sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
+    data = new sc_dt::sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
     for (gran_iter=0; gran_iter < CBUF_ENTRY_CMOD_GRANULARITY_NUM; gran_iter++) {
         data[gran_iter] = payload->data[gran_iter];
     }
     cbuf_weight_read_->write(data);
 }
 
-void NV_NVDLA_csc::sc2buf_wmb_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay){
-    sc_uint<64> *data;
+void NV_NVDLA_csc::sc2buf_wmb_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay){
+    sc_dt::sc_uint<64> *data;
     uint32_t    gran_iter;
-    data = new sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
+    data = new sc_dt::sc_uint<64> [CBUF_ENTRY_CMOD_GRANULARITY_NUM];
     for (gran_iter=0; gran_iter < CBUF_ENTRY_CMOD_GRANULARITY_NUM; gran_iter++) {
         data[gran_iter] = payload->data[gran_iter];
     }
@@ -2863,7 +2861,7 @@ void NV_NVDLA_csc::sc2buf_wmb_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1
 #pragma CTC ENDSKIP
 
 // CACC->CSC entry info credit target socket
-void NV_NVDLA_csc::accu2sc_credit_b_transport (int ID, nvdla_cc_credit_t* payload, sc_time& delay){
+void NV_NVDLA_csc::accu2sc_credit_b_transport (int ID, nvdla_cc_credit_t* payload, sc_core::sc_time& delay){
     cacc_free_entry_num_ += payload->size;
     cslDebug((50, "NV_NVDLA_csc::accu2sc_credit_b_transport size=0x%x cacc_free_entry_num_=%lu\n", (uint32_t)(payload->size), cacc_free_entry_num_));
     accu_free_entry_num_update_.notify();
@@ -2888,7 +2886,7 @@ void NV_NVDLA_csc::csc_read_one_image_entry(uint8_t post_y_extension, uint32_t p
             case DATA_FORMAT_INT8:
                 for (i=0; i < PARALLEL_CHANNEL_NUM; i++) {
                     if(last_super_channel && (i >= last_super_channel_element_num))
-                        read_data_ptr[i] = 0;   //type of sc2mac_a_dat_payload.data[0]: sc_int<10>
+                        read_data_ptr[i] = 0;   //type of sc2mac_a_dat_payload.data[0]: sc_dt::sc_int<10>
                     else
                         read_data_ptr[i] = pad_value & 0xff;   // Only use 8bits for INT8
                     // Duplicate 64B for int8
@@ -3150,8 +3148,8 @@ void NV_NVDLA_csc::get_decompressed_weight(uint8_t *read_data_curr_ptr, uint32_t
 #pragma CTC SKIP
 void pra_int8(uint16_t* read_data_ptr_int8, uint8_t pra_truncate, uint16_t* pra_out_int16) {
     // Perform PRA in unit of INT8
-    sc_int<18> pra_tmp_4x4[4][4];
-    sc_int<18> pra_tmp_d;
+    sc_dt::sc_int<18> pra_tmp_4x4[4][4];
+    sc_dt::sc_int<18> pra_tmp_d;
     int32_t  idx_i, idx_j, idx_k, idx_c;
 
     int16_t pra_c_t[4][4] = {{1,0,0,0}, {0,1,-1,1},{-1,1,1,0},{0,0,0,-1}};
@@ -3174,7 +3172,7 @@ void pra_int8(uint16_t* read_data_ptr_int8, uint8_t pra_truncate, uint16_t* pra_
                     pra_tmp_d += pra_tmp_4x4[idx_i][idx_k]*pra_c[idx_k][idx_j];
                 }
                 // truncate
-                sc_int<18> pra_d_high = pra_tmp_d.range(17, pra_truncate);
+                sc_dt::sc_int<18> pra_d_high = pra_tmp_d.range(17, pra_truncate);
                 if(pra_d_high > 32767 /*INT16_MAX*/)
                     pra_out_int16[idx_i*4*4+idx_j*4+idx_c] = 32767 /*INT16_MAX*/;
                 else if(pra_d_high < (-32767-1) /*INT16_MIN*/)
@@ -3188,8 +3186,8 @@ void pra_int8(uint16_t* read_data_ptr_int8, uint8_t pra_truncate, uint16_t* pra_
 
 void pra_int16(uint16_t* read_data_ptr_int16, uint8_t pra_truncate, uint16_t* pra_out_int16) {
     // Perform PRA in unit of INT16
-    sc_int<32> pra_tmp_4x4[4][4];
-    sc_int<32> pra_tmp_d;
+    sc_dt::sc_int<32> pra_tmp_4x4[4][4];
+    sc_dt::sc_int<32> pra_tmp_d;
     int32_t  idx_i, idx_j, idx_k, idx_c;
 
     int16_t pra_c_t[4][4] = {{1,0,0,0}, {0,1,-1,1},{-1,1,1,0},{0,0,0,-1}};
@@ -3210,7 +3208,7 @@ void pra_int16(uint16_t* read_data_ptr_int16, uint8_t pra_truncate, uint16_t* pr
                     pra_tmp_d += pra_tmp_4x4[idx_i][idx_k]*pra_c[idx_k][idx_j];
                 }
                 // truncate
-                sc_int<18> pra_d_high = pra_tmp_d.range(17, pra_truncate);
+                sc_dt::sc_int<18> pra_d_high = pra_tmp_d.range(17, pra_truncate);
                 if(pra_d_high > 32767 /*INT16_MAX*/)
                     pra_out_int16[idx_i*4*4+idx_j*4+idx_c] = 32767 /*INT16_MAX*/;
                 else if(pra_d_high < (-32767-1) /*INT16_MIN*/)
@@ -3258,7 +3256,7 @@ void NV_NVDLA_csc::save_info_kernel_group() {
 // }
 
 #pragma CTC SKIP
-NV_NVDLA_csc * NV_NVDLA_cscCon(sc_module_name name)
+NV_NVDLA_csc * NV_NVDLA_cscCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_csc(name);
 }

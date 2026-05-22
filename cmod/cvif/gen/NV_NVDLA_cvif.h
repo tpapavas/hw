@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CVIF_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -21,7 +22,7 @@
 #include "scsim_common.h"
 #include "nvdla_dbb_extension.h"
 #include "dla_b_transport_payload.h"
-#include "systemc.h"
+//#include "systemc.h"
 
 #include "NV_NVDLA_cvif_base.h"
 
@@ -69,7 +70,7 @@ class NV_NVDLA_cvif:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cvif);
-        NV_NVDLA_cvif( sc_module_name module_name, bool headless_ntb_env_in, uint8_t nvdla_id_in );
+        NV_NVDLA_cvif( sc_core::sc_module_name module_name, bool headless_ntb_env_in, uint8_t nvdla_id_in );
         ~NV_NVDLA_cvif();
 
         bool             headless_ntb_env;
@@ -90,11 +91,11 @@ class NV_NVDLA_cvif:
         // Target Socket
         // # AXI Write response
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_cvif, 512>      ext2cvif_wr_rsp;
-        virtual void ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        virtual void ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
 
         // # AXI Read response
         tlm_utils::multi_passthrough_target_socket<NV_NVDLA_cvif, 512>      ext2cvif_rd_rsp;
-        virtual void ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay);
+        virtual void ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay);
 
         // Overload virtual target functions in base class
         void bdma2cvif_rd_req_b_transport   (int ID, nvdla_dma_rd_req_t*, sc_core::sc_time&);
@@ -378,7 +379,7 @@ class NV_NVDLA_cvif:
 
 SCSIM_NAMESPACE_END()
 
-//extern "C" scsim::cmod::NV_NVDLA_cvif * NV_NVDLA_cvifCon(sc_module_name module_name, uint8_t nvdla_id_in);
+//extern "C" scsim::cmod::NV_NVDLA_cvif * NV_NVDLA_cvifCon(sc_core::sc_module_name module_name, uint8_t nvdla_id_in);
 
 #endif
 

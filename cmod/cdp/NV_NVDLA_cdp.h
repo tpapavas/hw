@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CDP_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -25,7 +26,7 @@
 #include "cdp_reg_model.h"
 #include "cdp_rdma_reg_model.h"
 // #include "NvdlaLut.h"
-#include "systemc.h"
+//#include "systemc.h"
 
 #define MEM_BUSWIDTH_IN_BIT                 64
 #define PADDING_NONE                        0
@@ -74,6 +75,13 @@ SCSIM_NAMESPACE_END()
 
 SCSIM_NAMESPACE_START(cmod)
 
+using namespace sc_core;
+using namespace sc_dt;
+using namespace sc_gem5;
+using namespace sc_unnamed;
+using namespace std;
+
+
 class CdpConfig {
     public:
         uint16_t  cdp_rdma_width_;
@@ -95,18 +103,18 @@ class NV_NVDLA_cdp:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cdp);
-        NV_NVDLA_cdp( sc_module_name module_name );
+        NV_NVDLA_cdp( sc_core::sc_module_name module_name );
         ~NV_NVDLA_cdp();
         // Overload for pure virtual TLM target functions
         // # CSB request transport implementation shall in generated code
-        void csb2cdp_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
-        void csb2cdp_rdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2cdp_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
+        void csb2cdp_rdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // # MC/CV_SRAM read response
         void mcif2cdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
         void cvif2cdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
 
         // Port has no flow: bdma2glb_done_intr
-        sc_vector< sc_out<bool> > cdp2glb_done_intr;
+        sc_core::sc_vector< sc_core::sc_out<bool> > cdp2glb_done_intr;
 
     private:
         sc_core::sc_fifo          <CdpConfig *> *cdp_fifo_cfg_dp_, *cdp_fifo_cfg_wdma_;
@@ -127,12 +135,12 @@ class NV_NVDLA_cdp:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event cdp_rdma_kickoff_;
-        sc_event cdp_kickoff_;
-        sc_event cdp_rdma_done_;
-        sc_event cdp_done_;
-        sc_event cdp_mc_ack_;
-        sc_event cdp_cv_ack_;
+        sc_core::sc_event cdp_rdma_kickoff_;
+        sc_core::sc_event cdp_kickoff_;
+        sc_core::sc_event cdp_rdma_done_;
+        sc_core::sc_event cdp_done_;
+        sc_core::sc_event cdp_mc_ack_;
+        sc_core::sc_event cdp_cv_ack_;
         bool     is_mc_ack_done_;
         bool     is_cv_ack_done_;
 
@@ -202,9 +210,9 @@ class NV_NVDLA_cdp:
         void WaitUntilWdmaBufferFreeSizeGreaterThan(uint32_t num);
         void WaitUntilWdmaBufferAvailableSizeGreaterThan(uint32_t num);
 
-        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type);
+        void SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay, uint8_t src_ram_type);
         void ExtractRdmaResponsePayload(nvdla_dma_rd_rsp_t* payload);
-        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, uint8_t dst_ram_type, bool ack_required = false);
+        void SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, uint8_t dst_ram_type, bool ack_required = false);
         void CdpSendCsbResponse(uint8_t type, uint32_t data, uint8_t error_id);
         void CdpRdmaSendCsbResponse(uint8_t type, uint32_t data, uint8_t error_id);
 
@@ -235,7 +243,7 @@ class NV_NVDLA_cdp:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_cdp * NV_NVDLA_cdpCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_cdp * NV_NVDLA_cdpCon(sc_core::sc_module_name module_name);
 
 #endif
 

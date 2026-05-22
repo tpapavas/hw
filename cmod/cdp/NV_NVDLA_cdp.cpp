@@ -35,36 +35,34 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 const static bool USE_LUT = true;
 const static bool NOT_USE_LUT = false;
 
-NV_NVDLA_cdp::NV_NVDLA_cdp( sc_module_name module_name ):
+NV_NVDLA_cdp::NV_NVDLA_cdp( sc_core::sc_module_name module_name ):
     NV_NVDLA_cdp_base(module_name),
     cdp2glb_done_intr("cdp2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
     dp_calc_buffer      = new int8_t [8*ATOM_CUBE_SIZE*2];    // 256B*2
     post_calc_buffer    = new int8_t [CDP_PRE_CALC_BUFFER_ATOM_NUM*32];
-    rdma_fifo_          = new sc_fifo <int8_t *> (CDP_RDMA_SIZE);
-    hls_out_fifo_       = new sc_fifo <int16_t *> (1024);
-    rdma_atom_num_fifo_ = new sc_fifo <uint32_t> (1024);
-    hls_atom_num_fifo_  = new sc_fifo <uint32_t> (1024);
-    cdp_ack_fifo_     = new sc_fifo <cdp_ack_info*> (2);
+    rdma_fifo_          = new sc_core::sc_fifo <int8_t *> (CDP_RDMA_SIZE);
+    hls_out_fifo_       = new sc_core::sc_fifo <int16_t *> (1024);
+    rdma_atom_num_fifo_ = new sc_core::sc_fifo <uint32_t> (1024);
+    hls_atom_num_fifo_  = new sc_core::sc_fifo <uint32_t> (1024);
+    cdp_ack_fifo_     = new sc_core::sc_fifo <cdp_ack_info*> (2);
     dma_wr_req_cmd_payload_ = new nvdla_dma_wr_req_t;
     dma_wr_req_cmd_payload_->tag = TAG_CMD;
     dma_wr_req_data_payload_= new nvdla_dma_wr_req_t;
     dma_wr_req_data_payload_->tag = TAG_DATA;
     dma_rd_req_payload_     = new nvdla_dma_rd_req_t;
-    cdp_fifo_cfg_dp_        = new sc_fifo <CdpConfig *>  (1);
-    cdp_fifo_cfg_wdma_      = new sc_fifo <CdpConfig *>  (1);
+    cdp_fifo_cfg_dp_        = new sc_core::sc_fifo <CdpConfig *>  (1);
+    cdp_fifo_cfg_wdma_      = new sc_core::sc_fifo <CdpConfig *>  (1);
     is_mc_ack_done_ = false;
     is_cv_ack_done_ = false;
     txn_r = 0;
@@ -297,7 +295,7 @@ void NV_NVDLA_cdp::CdpRdmaSequence_0() {
         while (atom_sent < atom_num) {
             // For READPHILE
             /*if(atom_sent == 0) {    // First request
-                payload_size     = min((uint64_t)cube_width*ATOM_CUBE_SIZE, MAX_MEM_TRANSACTION_SIZE - surf0_payload_addr%MAX_MEM_TRANSACTION_SIZE);
+                payload_size     = std::min((uint64_t)cube_width*ATOM_CUBE_SIZE, MAX_MEM_TRANSACTION_SIZE - surf0_payload_addr%MAX_MEM_TRANSACTION_SIZE);
             }
             else if ((atom_num - atom_sent) <= MAX_MEM_TRANSACTION_SIZE/ATOM_CUBE_SIZE) {     // Last request
                 payload_size     = (atom_num - atom_sent)*ATOM_CUBE_SIZE;
@@ -921,7 +919,7 @@ void NV_NVDLA_cdp::WaitUntilWdmaBufferAvailableSizeGreaterThan(uint32_t num) {
 #pragma CTC ENDSKIP
 
 // Send DMA read request
-void NV_NVDLA_cdp::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type) {
+void NV_NVDLA_cdp::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay, uint8_t src_ram_type) {
     cslDebug((50, "NV_NVDLA_cdp::SendDmaReadRequest, start.\n"));
     if ( (NVDLA_CDP_RDMA_D_SRC_DMA_CFG_0_SRC_RAM_TYPE_MC) == src_ram_type ) {
         NV_NVDLA_cdp_base::cdp2mcif_rd_req_b_transport(payload, dma_delay_);
@@ -1026,7 +1024,7 @@ void NV_NVDLA_cdp::cvif2cdp_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* paylo
     ExtractRdmaResponsePayload(payload);
 }
 
-void NV_NVDLA_cdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, uint8_t dst_ram_type,bool ack_required) {
+void NV_NVDLA_cdp::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, uint8_t dst_ram_type,bool ack_required) {
     if ( (NVDLA_CDP_D_DST_DMA_CFG_0_DST_RAM_TYPE_MC) == dst_ram_type) {
         if (TAG_CMD == payload->tag) {
             if (ack_required) {
@@ -1211,17 +1209,17 @@ void NV_NVDLA_cdp::lookup_lut_int8(int8_t *data_in, int parallel_num)
     int16_t  le_slope_oflow_scale;
     int16_t  lo_slope_uflow_scale;
     int16_t  lo_slope_oflow_scale;
-    sc_int<8> cvt_in_offset;
-    sc_int<5> shift;
-    sc_int<16> cvt_in_scale;
+    sc_dt::sc_int<8> cvt_in_offset;
+    sc_dt::sc_int<5> shift;
+    sc_dt::sc_int<16> cvt_in_scale;
     sc_uint<5> cvt_in_shifter;
-    sc_int<32> cvt_out_offset;
-    sc_int<16> cvt_out_scale;
+    sc_dt::sc_int<32> cvt_out_offset;
+    sc_dt::sc_int<16> cvt_out_scale;
     sc_uint<6> cvt_out_shifter;
 
-    sc_int<9> data_cvt_in_2[16];
-    sc_int<26> data_cvt_in_3[16];
-    sc_int<22> square_sum;
+    sc_dt::sc_int<9> data_cvt_in_2[16];
+    sc_dt::sc_int<26> data_cvt_in_3[16];
+    sc_dt::sc_int<22> square_sum;
     int16_t    log_sum;
     int16_t    index;
 
@@ -1234,9 +1232,9 @@ void NV_NVDLA_cdp::lookup_lut_int8(int8_t *data_in, int parallel_num)
     int64_t    density_index_tmp, density_index;
     int64_t    result_density;
 
-    sc_int<16> lut_result;
+    sc_dt::sc_int<16> lut_result;
 
-    sc_int<25> data_cvt_out_0[8];
+    sc_dt::sc_int<25> data_cvt_out_0[8];
 
     bool       le_underflow;
     bool       le_overflow;
@@ -1265,11 +1263,11 @@ void NV_NVDLA_cdp::lookup_lut_int8(int8_t *data_in, int parallel_num)
     le_slope_oflow_scale = (int16_t)cdp_lut_le_slope_oflow_scale_;
     lo_slope_uflow_scale = (int16_t)cdp_lut_lo_slope_uflow_scale_;
     lo_slope_oflow_scale = (int16_t)cdp_lut_lo_slope_oflow_scale_;
-    cvt_in_offset   = sc_int<8>(cdp_datin_offset_);
-    cvt_in_scale    = sc_int<16>(cdp_datin_scale_);
+    cvt_in_offset   = sc_dt::sc_int<8>(cdp_datin_offset_);
+    cvt_in_scale    = sc_dt::sc_int<16>(cdp_datin_scale_);
     cvt_in_shifter  = sc_uint<5>(cdp_datin_shifter_);
-    cvt_out_offset  = sc_int<25>(cdp_datout_offset_&0x1ffffff);
-    cvt_out_scale   = sc_int<16>(cdp_datout_scale_);
+    cvt_out_offset  = sc_dt::sc_int<25>(cdp_datout_offset_&0x1ffffff);
+    cvt_out_scale   = sc_dt::sc_int<16>(cdp_datout_scale_);
     cvt_out_shifter = sc_uint<5>(cdp_datout_shifter_);
 
 #pragma CTC SKIP
@@ -1557,36 +1555,36 @@ void NV_NVDLA_cdp::lookup_lut(int16_t *data_in, int parallel_num)
     bool     lut_uflow_priority;
     bool     lut_oflow_priority;
     bool     lut_hybrid_priority;
-    sc_int<38> raw_start;
+    sc_dt::sc_int<38> raw_start;
     int32_t raw_frac_bits;
-    sc_int<38> density_start;
+    sc_dt::sc_int<38> density_start;
     int32_t density_frac_bits;
     int8_t   le_index_offset;
-    sc_int<38> raw_end;
-    sc_int<38> density_end;
+    sc_dt::sc_int<38> raw_end;
+    sc_dt::sc_int<38> density_end;
     int16_t  le_slope_uflow_scale;
     int16_t  le_slope_oflow_scale;
     int16_t  lo_slope_uflow_scale;
     int16_t  lo_slope_oflow_scale;
-    sc_int<16> cvt_in_offset;
-    sc_int<16> cvt_in_scale;
+    sc_dt::sc_int<16> cvt_in_offset;
+    sc_dt::sc_int<16> cvt_in_scale;
     sc_uint<5> cvt_in_shifter;
-    sc_int<32> cvt_out_offset;
-    sc_int<16> cvt_out_scale;
+    sc_dt::sc_int<32> cvt_out_offset;
+    sc_dt::sc_int<16> cvt_out_scale;
     sc_uint<6> cvt_out_shifter;
-    sc_int<5> shift;
+    sc_dt::sc_int<5> shift;
     // Input data
 #ifndef USE_HLS
-    sc_int<16> data[12];
+    sc_dt::sc_int<16> data[12];
 
     // Variables
-    sc_int<17> data_cvt_in_0[12];
-    sc_int<33> data_cvt_in_1[12];
-    sc_int<33> data_cvt_in_2_tmp[12];
+    sc_dt::sc_int<17> data_cvt_in_0[12];
+    sc_dt::sc_int<33> data_cvt_in_1[12];
+    sc_dt::sc_int<33> data_cvt_in_2_tmp[12];
 #endif
-    sc_int<17> data_cvt_in_2[12];
+    sc_dt::sc_int<17> data_cvt_in_2[12];
     sc_uint<33> data_cvt_in_3[12];
-    sc_int<38> square_sum;
+    sc_dt::sc_int<38> square_sum;
     int16_t    log_sum;
     int16_t    index;
 
@@ -1599,14 +1597,14 @@ void NV_NVDLA_cdp::lookup_lut(int16_t *data_in, int parallel_num)
     int64_t    density_index_tmp, density_index;
     int64_t    result_density;
 
-    sc_int<16> lut_result;
+    sc_dt::sc_int<16> lut_result;
 
-    sc_int<33> data_cvt_out_0[4];
+    sc_dt::sc_int<33> data_cvt_out_0[4];
 #ifndef USE_HLS
-    sc_int<34> data_cvt_out_1[4];
-    sc_int<50> data_cvt_out_2[4];
-    sc_int<50> data_cvt_out_3_tmp[4];
-    sc_int<16> data_cvt_out_3[4];
+    sc_dt::sc_int<34> data_cvt_out_1[4];
+    sc_dt::sc_int<50> data_cvt_out_2[4];
+    sc_dt::sc_int<50> data_cvt_out_3_tmp[4];
+    sc_dt::sc_int<16> data_cvt_out_3[4];
 #endif
 
     bool       le_underflow;
@@ -1636,11 +1634,11 @@ void NV_NVDLA_cdp::lookup_lut(int16_t *data_in, int parallel_num)
     le_slope_oflow_scale = (int16_t)cdp_lut_le_slope_oflow_scale_;
     lo_slope_uflow_scale = (int16_t)cdp_lut_lo_slope_uflow_scale_;
     lo_slope_oflow_scale = (int16_t)cdp_lut_lo_slope_oflow_scale_;
-    cvt_in_offset   = sc_int<16>(cdp_datin_offset_);
-    cvt_in_scale    = sc_int<16>(cdp_datin_scale_);
+    cvt_in_offset   = sc_dt::sc_int<16>(cdp_datin_offset_);
+    cvt_in_scale    = sc_dt::sc_int<16>(cdp_datin_scale_);
     cvt_in_shifter  = sc_uint<5>(cdp_datin_shifter_);
-    cvt_out_offset  = sc_int<32>(cdp_datout_offset_);
-    cvt_out_scale   = sc_int<16>(cdp_datout_scale_);
+    cvt_out_offset  = sc_dt::sc_int<32>(cdp_datout_offset_);
+    cvt_out_scale   = sc_dt::sc_int<16>(cdp_datout_scale_);
     cvt_out_shifter = sc_uint<5>(cdp_datout_shifter_);
 
     if (DATA_FORMAT_IS_FP16==cdp_input_data_type_) {
@@ -1655,7 +1653,7 @@ void NV_NVDLA_cdp::lookup_lut(int16_t *data_in, int parallel_num)
     // Input Converter
     for(i=0; i<parallel_num+8; i++) {
 #ifndef USE_HLS
-        data[i] = sc_int<16>(data_in[i]);
+        data[i] = sc_dt::sc_int<16>(data_in[i]);
         data_cvt_in_0[i] = data[i] - cvt_in_offset;
         data_cvt_in_1[i] = data_cvt_in_0[i] * cvt_in_scale;
         data_cvt_in_2_tmp[i] = data_cvt_in_1[i] >> cvt_in_shifter;
@@ -1933,7 +1931,7 @@ void NV_NVDLA_cdp::lookup_lut(int16_t *data_in, int parallel_num)
 }
 
 #pragma CTC SKIP
-NV_NVDLA_cdp * NV_NVDLA_cdpCon(sc_module_name name)
+NV_NVDLA_cdp * NV_NVDLA_cdpCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_cdp(name);
 }

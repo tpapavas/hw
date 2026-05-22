@@ -18,11 +18,9 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_core::NV_NVDLA_core( sc_module_name module_name, uint8_t nvdla_id_in ):
+
+NV_NVDLA_core::NV_NVDLA_core( sc_core::sc_module_name module_name, uint8_t nvdla_id_in ):
     NV_NVDLA_core_base(module_name),
     nvdla_id(nvdla_id_in),
     mcif2ext_wr_req("mcif2ext_wr_req"),
@@ -60,7 +58,7 @@ NV_NVDLA_core::NV_NVDLA_core( sc_module_name module_name, uint8_t nvdla_id_in ):
     Initialize();
 }
 #pragma CTC SKIP
-NV_NVDLA_core::NV_NVDLA_core( sc_module_name module_name ):
+NV_NVDLA_core::NV_NVDLA_core( sc_core::sc_module_name module_name ):
     NV_NVDLA_core_base(module_name),
     mcif2ext_wr_req("mcif2ext_wr_req"),
     ext2mcif_wr_rsp("ext2mcif_wr_rsp"),
@@ -530,25 +528,25 @@ NV_NVDLA_core::~NV_NVDLA_core() {
 #pragma CTC ENDSKIP
 // Target socket hierarchical call, begin
 // # CSB_MASTER
-// void NV_NVDLA_core::nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay){
+// void NV_NVDLA_core::nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay){
 //     csb_master->nvdla2csb_b_transport(ID, payload, delay);
 // }
 
 // # MCIF
-// void NV_NVDLA_core::ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+// void NV_NVDLA_core::ext2mcif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
 //     mcif->ext2mcif_wr_rsp_b_transport(ID, tlm_gp, delay);
 // }
 // 
-// void NV_NVDLA_core::ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+// void NV_NVDLA_core::ext2mcif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
 //     mcif->ext2mcif_rd_rsp_b_transport(ID, tlm_gp, delay);
 // }
 
 // # CVIF
-// void NV_NVDLA_core::ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+// void NV_NVDLA_core::ext2cvif_wr_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
 //     cvif->ext2cvif_wr_rsp_b_transport(ID, tlm_gp, delay);
 // }
 // 
-// void NV_NVDLA_core::ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_time& delay) {
+// void NV_NVDLA_core::ext2cvif_rd_rsp_b_transport(int ID, tlm::tlm_generic_payload& tlm_gp, sc_core::sc_time& delay) {
 //     cvif->ext2cvif_rd_rsp_b_transport(ID, tlm_gp, delay);
 // }
 // Target socket hierarchical call, end
@@ -557,7 +555,7 @@ NV_NVDLA_core::~NV_NVDLA_core() {
 // {
 // }
 
-// NV_NVDLA_core * NV_NVDLA_coreCon(sc_module_name name)
+// NV_NVDLA_core * NV_NVDLA_coreCon(sc_core::sc_module_name name)
 // {
 //     return new NV_NVDLA_core(name);
 // }

@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CACC_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+////#include "systemc/ext/systemc"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -107,7 +107,11 @@
  * Is truncation configurable
  * Output throughputs change from 8 elements to 32 elements
 **************************************************/
-
+using namespace sc_core;
+using namespace sc_dt;
+using namespace sc_gem5;
+using namespace sc_unnamed;
+using namespace std;
 
 SCSIM_NAMESPACE_START(clib)
 // clib class forward declaration
@@ -130,7 +134,7 @@ class CaccConfig {
         uint32_t cacc_consumer_;
 };
 
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 inline std::ostream& operator<<(std::ostream& out, const CaccConfig & obj) {
     return out << "Just to fool compiler" << endl;
 }
@@ -141,17 +145,17 @@ class NV_NVDLA_cacc:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cacc);
-        NV_NVDLA_cacc( sc_module_name module_name );
+        NV_NVDLA_cacc( sc_core::sc_module_name module_name );
         ~NV_NVDLA_cacc();
         // Overload for pure virtual TLM target functions
         // # CSB request transport implementation shall in generated code
-        void csb2cacc_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2cacc_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // # CMAC to CACCU
-        void mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay);
-        void mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay);
+        void mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay);
+        void mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay);
 
         // Port has no flow: cacc2glb_done_intr
-        sc_vector< sc_out<bool> > cacc2glb_done_intr;
+        sc_core::sc_vector< sc_core::sc_out<bool> > cacc2glb_done_intr;
 
     private:
         // Variable shall be in register config
@@ -183,8 +187,8 @@ class NV_NVDLA_cacc:
         int32_t delivery_sram_group_idx_fetched_;
         // uint8_t *assembly_sram_group_;
         // uint8_t *delivery_sram_group_;
-        sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> *assembly_sram_group_;
-        sc_int<ACCU_DELIVERY_BIT_WIDTH_INT16> *delivery_sram_group_;
+        sc_dt::sc_int<ACCU_ASSEMBLY_BIT_WIDTH_INT16> *assembly_sram_group_;
+        sc_dt::sc_int<ACCU_DELIVERY_BIT_WIDTH_INT16> *delivery_sram_group_;
         uint32_t *assembly_sram_group_mask_bits_;
         uint8_t *assembly_sram_group_layer_end_bit_;
         uint32_t *delivery_sram_group_mask_bits_;
@@ -199,8 +203,8 @@ class NV_NVDLA_cacc:
 
         uint32_t    saturation_num_perlayer_; //stepheng.20170724 
 
-        sc_fifo <nvdla_mac2accu_data_if_t*> *mac_a2acc_fifo_;
-        sc_fifo <nvdla_mac2accu_data_if_t*> *mac_b2acc_fifo_;
+        sc_core::sc_fifo <nvdla_mac2accu_data_if_t*> *mac_a2acc_fifo_;
+        sc_core::sc_fifo <nvdla_mac2accu_data_if_t*> *mac_b2acc_fifo_;
         nvdla_mac2accu_data_concat_if_t mac2accu_payload;
 
         // Delay
@@ -209,19 +213,19 @@ class NV_NVDLA_cacc:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event cacc_kickoff_;
-        sc_event cacc_done_;
-        sc_event assembly_sram_group_idx_available_incr_;
-        sc_event delivery_sram_group_idx_available_incr_;
+        sc_core::sc_event cacc_kickoff_;
+        sc_core::sc_event cacc_done_;
+        sc_core::sc_event assembly_sram_group_idx_available_incr_;
+        sc_core::sc_event delivery_sram_group_idx_available_incr_;
 
         // FIFOs
         // # ACCU buffers
         // sc_core::sc_fifo <uint8_t *>  *assembly_sram_group_;
         // sc_core::sc_fifo <uint8_t *>  *delivery_sram_group_;
-        sc_core::sc_fifo <sc_int<32> *>  *to_sdp_fifo_;
-        sc_fifo <CaccConfig *>        *assembly2reshape_config_fifo_;
-        sc_fifo <CaccConfig *>        *assembly2delivery_config_fifo_;
-        sc_fifo <CaccConfig *>        *assembly2send_config_fifo_;
+        sc_core::sc_fifo <sc_dt::sc_int<32> *>  *to_sdp_fifo_;
+        sc_core::sc_fifo <CaccConfig *>        *assembly2reshape_config_fifo_;
+        sc_core::sc_fifo <CaccConfig *>        *assembly2delivery_config_fifo_;
+        sc_core::sc_fifo <CaccConfig *>        *assembly2send_config_fifo_;
 
         // Operation mode
         uint32_t    cacc_operation_mode_;
@@ -234,7 +238,7 @@ class NV_NVDLA_cacc:
         void ReshapeSequenceThread();
         void DeliverSequenceThread();
         void SendToSDPThread();
-        void mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payload, sc_time& delay);
+        void mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payload, sc_core::sc_time& delay);
 
 
         // Sequencers
@@ -251,13 +255,13 @@ class NV_NVDLA_cacc:
         void WaitUntilThereIsAvaliableDataInAssemblyGroup();
         void WaitUntilThereIsAvaliableDataInDeliveryGroup();
         void cacc_fp16_add(sc_uint<FP16_ALEN> *fp16_accu_data, sc_uint<44> fp16_mac_data);
-        void cacc_fp48_to_fp32(sc_int<32> *fp32_to_sdp, sc_uint<FP16_ALEN> fp16_accu_data);
+        void cacc_fp48_to_fp32(sc_dt::sc_int<32> *fp32_to_sdp, sc_uint<FP16_ALEN> fp16_accu_data);
 
 };
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_cacc * NV_NVDLA_caccCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_cacc * NV_NVDLA_caccCon(sc_core::sc_module_name module_name);
 
 #endif
 

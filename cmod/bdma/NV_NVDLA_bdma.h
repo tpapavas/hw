@@ -12,7 +12,8 @@
 #define _NV_NVDLA_BDMA_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -36,7 +37,7 @@ SCSIM_NAMESPACE_START(cmod)
 
 class BdmaCoreConfig;
 class BdmaCoreInt;
-// Operator for being a SC_FIFO payload
+// Operator for being a sc_core::sc_fifo payload
 // std::ostream& operator<<(std::ostream& out, const BdmaCoreConfig & obj) {
 //     return out << "Just to fool compiler" << endl;
 // }
@@ -48,15 +49,15 @@ class NV_NVDLA_bdma:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_bdma);
-        NV_NVDLA_bdma( sc_module_name module_name );
+        NV_NVDLA_bdma( sc_core::sc_module_name module_name );
         ~NV_NVDLA_bdma();
         // Target sockets
         // CSB request transport implementation shall in generated code
-        void csb2bdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2bdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         void mcif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
         void cvif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t*, sc_core::sc_time&);
-        // void bdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay) {NV_NVDLA_bdma_base::bdma2csb_resp_b_transport(payload, delay);}
-        // void bdma_rdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay) {NV_NVDLA_bdma_base::bdma2csb_resp_b_transport(payload, delay);}
+        // void bdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay) {NV_NVDLA_bdma_base::bdma2csb_resp_b_transport(payload, delay);}
+        // void bdma_rdma2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay) {NV_NVDLA_bdma_base::bdma2csb_resp_b_transport(payload, delay);}
 
     private:
         // Variables
@@ -66,13 +67,13 @@ class NV_NVDLA_bdma:
         sc_core::sc_time b_transport_delay_;
 
         // # Events
-        // sc_event    bdma_core_config_fifo_write_event;
-        // sc_event    bdma_core_config_fifo_read_event;
+        // sc_core::sc_event    bdma_core_config_fifo_write_event;
+        // sc_core::sc_event    bdma_core_config_fifo_read_event;
         // # Signals
-        sc_signal <bool> reset;
-        sc_signal <bool> bdma_core_reset_done;
-        sc_signal <bool> core_is_idle;
-        sc_signal <bool> core_notify_get_config;
+        sc_core::sc_signal <bool> reset;
+        sc_core::sc_signal <bool> bdma_core_reset_done;
+        sc_core::sc_signal <bool> core_is_idle;
+        sc_core::sc_signal <bool> core_notify_get_config;
         // # FIFOs
         // ##   Configuration fifos
         sc_core::sc_fifo <BdmaCoreConfig>   *bdma_core_config_fifo_;
@@ -102,7 +103,7 @@ class NV_NVDLA_bdma:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_bdma * NV_NVDLA_bdmaCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_bdma * NV_NVDLA_bdmaCon(sc_core::sc_module_name module_name);
 
 #endif
 

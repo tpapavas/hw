@@ -17,16 +17,14 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_cbuf::NV_NVDLA_cbuf( sc_module_name module_name ):
+
+NV_NVDLA_cbuf::NV_NVDLA_cbuf( sc_core::sc_module_name module_name ):
     NV_NVDLA_cbuf_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    // csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(sc_core::SC_ZERO_TIME),
+    // csb_delay_(sc_core::SC_ZERO_TIME),
+    b_transport_delay_(sc_core::SC_ZERO_TIME)
 {
     // Memory allocation
     cbuf_ram_ = new uint8_t [CBUF_BANK_NUM * CBUF_ENTRY_PER_BANK * CBUF_ENTRY_CMOD_GRAN_PER_ENTRY];
@@ -47,7 +45,7 @@ void NV_NVDLA_cbuf::Reset()
     // Clear register and internal states
 }
 
-void NV_NVDLA_cbuf::cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_time& delay){
+void NV_NVDLA_cbuf::cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_core::sc_time& delay){
     uint8_t *payload_data_ptr;
     uint32_t idx;
     uint32_t cbuf_ram_byte_addr;
@@ -66,7 +64,7 @@ void NV_NVDLA_cbuf::cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, CBUF_HALF_ENTRY_SIZE);
 }
 
-void NV_NVDLA_cbuf::cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_time& delay){
+void NV_NVDLA_cbuf::cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t* payload, sc_core::sc_time& delay){
     uint8_t *payload_data_ptr;
     uint32_t idx;
     uint32_t cbuf_ram_byte_addr;
@@ -88,7 +86,7 @@ void NV_NVDLA_cbuf::cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_1
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, CBUF_HALF_ENTRY_SIZE);
 }
 
-void NV_NVDLA_cbuf::sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay){
+void NV_NVDLA_cbuf::sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_core::sc_time& delay){
     uint8_t *payload_data_ptr;
     uint32_t payload_addr;
     uint32_t idx;
@@ -108,7 +106,7 @@ void NV_NVDLA_cbuf::sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RA
     }
 }
 
-void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay){
+void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_core::sc_time& delay){
     uint8_t *payload_data_ptr;
     uint32_t payload_addr;
     uint32_t idx;
@@ -133,7 +131,7 @@ void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RAD
 
 #pragma CTC SKIP
 // NV_NVDLA_cbuf::sc2buf_wmb_rd_b_transport is never used
-void NV_NVDLA_cbuf::sc2buf_wmb_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_8_RDATA_1024_t* payload, sc_time& delay){
+void NV_NVDLA_cbuf::sc2buf_wmb_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_8_RDATA_1024_t* payload, sc_core::sc_time& delay){
     uint8_t *payload_data_ptr;
     uint32_t payload_addr;
     uint32_t idx;
@@ -153,7 +151,7 @@ void NV_NVDLA_cbuf::sc2buf_wmb_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RA
     }
 }
 
-NV_NVDLA_cbuf * NV_NVDLA_cbufCon(sc_module_name name)
+NV_NVDLA_cbuf * NV_NVDLA_cbufCon(sc_core::sc_module_name name)
 {
     return new NV_NVDLA_cbuf(name);
 }

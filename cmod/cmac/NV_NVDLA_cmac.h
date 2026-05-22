@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CMAC_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -70,9 +71,9 @@ public:
         winograd_op_            = false;
     }
     // Following are for hookup with externel module
-    sc_int<DATA_OPERAND_BIT_WIDTH_INT8>     *data_operand_ptr_;
-    sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_ptr_;
-    sc_int<OUTPUT_BIT_WIDTH_INT8>           *result_ptr_;
+    sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8>     *data_operand_ptr_;
+    sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_ptr_;
+    sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8>           *result_ptr_;
     uint64_t                                *wt_mask_ptr_;
     uint64_t                                *dat_mask_ptr_;
 
@@ -80,15 +81,15 @@ public:
     bool mac_cell_enable_;
     bool winograd_op_;
 
-    void calculation_int8(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
+    void calculation_int8(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
         uint32_t    channel_iter, kernel_iter, result_iter;
-        sc_int<DATA_OPERAND_BIT_WIDTH_INT8>   data;
-        sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> weight;
-        sc_int<OUTPUT_BIT_WIDTH_INT8> product;
-        sc_int<OUTPUT_BIT_WIDTH_INT8> accu;
-        sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase1[16];
-        sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase2[8];
-        sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase3[4];
+        sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8>   data;
+        sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> weight;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> product;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> accu;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase1[16];
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase2[8];
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> accu_wino_phase3[4];
         int8_t wt_mask_k0;
         int8_t wt_mask_k1;
         int8_t dat_mask_k0;
@@ -198,13 +199,13 @@ public:
         }
     }
 
-    void calculation_int16(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
-        sc_int<DATA_OPERAND_BIT_WIDTH_INT16>   data;
-        sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT16> weight;
-        sc_int<OUTPUT_BIT_WIDTH_INT16> accu;
-        sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase1[16];
-        sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase2[8];
-        sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase3[4];
+    void calculation_int16(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
+        sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT16>   data;
+        sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT16> weight;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16> accu;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase1[16];
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase2[8];
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16> accu_wino_phase3[4];
         uint32_t    channel_iter, result_iter;
         int         i;
         int16_t     data_array[4][4][4], weight_array[4][4][4];
@@ -298,10 +299,10 @@ public:
         }
     }
 
-    void cal_fp16_nan(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_int<OUTPUT_BIT_WIDTH_INT16> *nan_value, uint32_t* nan_flag) {
+    void cal_fp16_nan(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16> *nan_value, uint32_t* nan_flag) {
         uint32_t    ch_iter;
-        sc_int<FP16_EXP_BIT_WIDTH>      fp16_exp;
-        sc_int<FP16_FRA_BIT_WIDTH>      fp16_fra;
+        sc_dt::sc_int<FP16_EXP_BIT_WIDTH>      fp16_exp;
+        sc_dt::sc_int<FP16_FRA_BIT_WIDTH>      fp16_fra;
         uint32_t    nan_idx, cur_idx;
 
 #ifdef DEBUG_CHECK
@@ -384,7 +385,7 @@ public:
         return;
     }
 
-    void cal_fp16_exp(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, uint32_t* dat_exp_sft, uint32_t* wt_exp_sft, uint32_t* sum_exp_sft, uint32_t* max_exp) {
+    void cal_fp16_exp(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, uint32_t* dat_exp_sft, uint32_t* wt_exp_sft, uint32_t* sum_exp_sft, uint32_t* max_exp) {
         int32_t     i, j;
         uint32_t    exp_iter;
         uint32_t    dat_exp, wt_exp;
@@ -588,10 +589,10 @@ public:
         *mts_product = sum;
     }
 
-    void cal_fp16_mul(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand,
+    void cal_fp16_mul(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand,
                       uint32_t* dat_exp_sft, uint32_t* wt_exp_sft, uint32_t* sum_exp_sft, int32_t* mts_product) {
         uint32_t    ch_iter;
-        sc_int<DATA_OPERAND_BIT_WIDTH_INT16>    fp16_mts;
+        sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT16>    fp16_mts;
         uint32_t    res_sign;
         uint32_t    dat_mts, wt_mts;
         int32_t     i, j;
@@ -666,10 +667,10 @@ public:
     }
 
 
-    void calculation_fp16(uint64_t* wt_mask, uint64_t* dat_mask, sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
-        sc_int<DATA_OPERAND_BIT_WIDTH_INT16>   data;
-        sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT16> weight;
-        sc_int<OUTPUT_BIT_WIDTH_INT16>         nan_value;
+    void calculation_fp16(uint64_t* wt_mask, uint64_t* dat_mask, sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8> *data_operand, sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8> *weight_operand, sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8> *result){
+        sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT16>   data;
+        sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT16> weight;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT16>         nan_value;
         uint32_t    nan_flag;
         uint32_t    result_iter;
         uint32_t    max_exp;
@@ -678,11 +679,11 @@ public:
         uint32_t    sum_exp_sft[PARALLEL_CHANNEL_NUM];
         int32_t     mts_product[PARALLEL_CHANNEL_NUM];
         uint32_t    i;
-        sc_int<FP16_MUL_BIT_WIDTH>             pp_phase1[16];
-        sc_int<FP16_MUL_BIT_WIDTH>             pp_phase2[8];
-        sc_int<FP16_MUL_BIT_WIDTH>             pp_phase3[4];
-        sc_int<FP16_OEXP_BIT_WIDTH>            exp_dc;
-        sc_int<FP16_OEXP_BIT_WIDTH>            exp_wg;
+        sc_dt::sc_int<FP16_MUL_BIT_WIDTH>             pp_phase1[16];
+        sc_dt::sc_int<FP16_MUL_BIT_WIDTH>             pp_phase2[8];
+        sc_dt::sc_int<FP16_MUL_BIT_WIDTH>             pp_phase3[4];
+        sc_dt::sc_int<FP16_OEXP_BIT_WIDTH>            exp_dc;
+        sc_dt::sc_int<FP16_OEXP_BIT_WIDTH>            exp_wg;
 
 #ifdef DEBUG_ERROR_CHECK
         //using namespace half_float::detail;
@@ -859,24 +860,24 @@ class NV_NVDLA_cmac:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_cmac);
-        NV_NVDLA_cmac( sc_module_name module_name );
+        NV_NVDLA_cmac( sc_core::sc_module_name module_name );
         ~NV_NVDLA_cmac();
         // Overload for pure virtual TLM target functions
         // # CSB request transport implementation shall in generated code
-        void csb2cmac_a_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2cmac_a_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // # CSC-CMAC
-        void sc2mac_dat_b_transport(int ID, nvdla_sc2mac_data_if_t* payload, sc_time& delay);
-        void sc2mac_wt_b_transport(int ID, nvdla_sc2mac_weight_if_t* payload, sc_time& delay);
+        void sc2mac_dat_b_transport(int ID, nvdla_sc2mac_data_if_t* payload, sc_core::sc_time& delay);
+        void sc2mac_wt_b_transport(int ID, nvdla_sc2mac_weight_if_t* payload, sc_core::sc_time& delay);
         
 
     private:
         // Variables
         bool is_there_ongoing_csb2cmac_a_response_;
         bool is_working_;
-        sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_shadow_;
-        sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_;
-        sc_int<DATA_OPERAND_BIT_WIDTH_INT8>     *data_operand_;
-        sc_int<OUTPUT_BIT_WIDTH_INT8>           *mac_result_;
+        sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_shadow_;
+        sc_dt::sc_int<WEIGHT_OPERAND_BIT_WIDTH_INT8>   *weight_operand_;
+        sc_dt::sc_int<DATA_OPERAND_BIT_WIDTH_INT8>     *data_operand_;
+        sc_dt::sc_int<OUTPUT_BIT_WIDTH_INT8>           *mac_result_;
         uint64_t                                 wt_mask[MAC_CELL_NUM][2];
         uint64_t                                 wt_mask_shadow[MAC_CELL_NUM][2];
         uint64_t                                 dat_mask[2];
@@ -890,8 +891,8 @@ class NV_NVDLA_cmac:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event cmac_kickoff_;
-        sc_event cmac_done_;
+        sc_core::sc_event cmac_kickoff_;
+        sc_core::sc_event cmac_done_;
 
         // Operation mode
         uint32_t    cmac_operation_mode_;
@@ -912,7 +913,7 @@ class NV_NVDLA_cmac:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_cmac * NV_NVDLA_cmacCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_cmac * NV_NVDLA_cmacCon(sc_core::sc_module_name module_name);
 
 #endif
 

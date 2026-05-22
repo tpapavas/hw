@@ -11,10 +11,20 @@
 #ifndef _NV_NVDLA_H_
 #define _NV_NVDLA_H_
 
+
 #include "NV_nvdla_top_base.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 
+namespace gem5 {
+    class ScNVDLA;
+}
+
+using namespace sc_core;
+using namespace sc_dt;
+using namespace sc_gem5;
+using namespace sc_unnamed;
 SCSIM_NAMESPACE_START(cmod)
 
 class NV_NVDLA_core;
@@ -26,11 +36,11 @@ class NV_nvdla : public NV_nvdla_base
 {
 public:
     SC_HAS_PROCESS(NV_nvdla);
-    NV_nvdla( sc_module_name module_name, uint8_t id=0, bool sctb_args=false );
+    NV_nvdla( sc_core::sc_module_name module_name, uint8_t id=0, bool sctb_args=false );
     virtual ~NV_nvdla();
+    
 
 private:
-
     // Subunit declaration
     NV_NVDLA_core   *nvdla_core;
     NvdlaCsbAdaptor *csb_adaptor;
@@ -43,7 +53,7 @@ private:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_nvdla * NV_nvdlaCon(sc_module_name module_name, uint8_t inst);
+extern "C" scsim::cmod::NV_nvdla * NV_nvdlaCon(sc_core::sc_module_name module_name, uint8_t inst);
 
 #endif
 

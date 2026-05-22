@@ -12,14 +12,16 @@
 #define _NV_NVDLA_GLB_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
 
 #include "scsim_common.h"
 #include "nvdla_dma_wr_req_iface.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_glb_base.h"
 #include "glb_reg_model.h"
@@ -40,11 +42,11 @@ class NV_NVDLA_glb:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_glb);
-        NV_NVDLA_glb( sc_module_name module_name );
+        NV_NVDLA_glb( sc_core::sc_module_name module_name );
         ~NV_NVDLA_glb();
         // CSB request transport implementation shall in generated code
-        void csb2glb_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
-        void csb2gec_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2glb_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
+        void csb2gec_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
 
     private:
         // Variables
@@ -57,7 +59,7 @@ class NV_NVDLA_glb:
 
         // Events
         // GLB config evaluation is done
-        sc_event event_glb_config_evaluation_done;
+        sc_core::sc_event event_glb_config_evaluation_done;
 
         // Function declaration 
         void UpdateBdmaIntrStatus_0();
@@ -103,7 +105,7 @@ class NV_NVDLA_glb:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_glb * NV_NVDLA_glbCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_glb * NV_NVDLA_glbCon(sc_core::sc_module_name module_name);
 
 #endif
 

@@ -17,24 +17,28 @@
 
 
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 
+using namespace sc_core;
+
 SCSIM_NAMESPACE_START(cmod)
 
+
 // Base SystemC class for module NV_nvdla
-class NV_nvdla_base : public sc_module
+class NV_nvdla_base : public sc_core::sc_module
 {
     public:
 
     // Constructor
-    NV_nvdla_base(const sc_module_name name);
+    NV_nvdla_base(const sc_core::sc_module_name name);
 
 
     // Port has no flow: nvdla_intr
-    sc_out<bool> nvdla_intr;
+    sc_core::sc_out<bool> nvdla_intr;
 
 
     // Initiator Socket (axi4): nvdla_core2cvsram_axi4
@@ -56,8 +60,8 @@ class NV_nvdla_base : public sc_module
 };
 
 // Constructor for base SystemC class for module NV_nvdla
-inline NV_nvdla_base::NV_nvdla_base(const sc_module_name name)
-    : sc_module(name),
+inline NV_nvdla_base::NV_nvdla_base(const sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
 
     nvdla_intr("nvdla_intr"),
 

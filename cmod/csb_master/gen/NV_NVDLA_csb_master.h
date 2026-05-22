@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CSB_MASTER_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -45,34 +46,34 @@ SCSIM_NAMESPACE_START(cmod)
 // class NV_NVDLA_csb_master_base;
 class NV_NVDLA_csb_master:public NV_NVDLA_csb_master_base {
     public:
-    NV_NVDLA_csb_master( sc_module_name module_name );
+    NV_NVDLA_csb_master( sc_core::sc_module_name module_name );
     ~NV_NVDLA_csb_master();
     // Socket function declaration
     // FIXME, hack for csb2nvdla write response initial socket
     tlm::tlm_generic_payload csb2nvdla_wr_hack_bp;
     NV_MSDEC_xx2csb_wr_erpt_t csb2nvdla_wr_hack_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_csb_master, 32, tlm::tlm_base_protocol_types, 0, sc_core::SC_ONE_OR_MORE_BOUND> csb2nvdla_wr_hack;
-    virtual void csb2nvdla_wr_hack_b_transport(NV_MSDEC_xx2csb_wr_erpt_t* payload, sc_time& delay);
+    virtual void csb2nvdla_wr_hack_b_transport(NV_MSDEC_xx2csb_wr_erpt_t* payload, sc_core::sc_time& delay);
     // nvdla2csb request target socket
-    virtual void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+    virtual void nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
     // CSB2NVDLA_CORE_Clients sockets
-    void glb2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void gec2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void mcif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cvif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void bdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void csc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cmac_a2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cmac_b2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cacc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void sdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void sdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void pdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void pdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void cdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
-    void rbk2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay);
+    void glb2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void gec2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void mcif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cvif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void bdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void csc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cmac_a2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cmac_b2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cacc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void sdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void sdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void pdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void pdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void cdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
+    void rbk2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
 
     private:
     uint32_t serving_client_id; 
@@ -80,7 +81,7 @@ class NV_NVDLA_csb_master:public NV_NVDLA_csb_master_base {
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_csb_master * NV_NVDLA_csb_masterCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_csb_master * NV_NVDLA_csb_masterCon(sc_core::sc_module_name module_name);
 
 #endif
 

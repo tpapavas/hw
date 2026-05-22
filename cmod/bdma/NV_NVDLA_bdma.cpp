@@ -24,11 +24,9 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
 
-NV_NVDLA_bdma::NV_NVDLA_bdma( sc_module_name module_name ):
+
+NV_NVDLA_bdma::NV_NVDLA_bdma( sc_core::sc_module_name module_name ):
     NV_NVDLA_bdma_base(module_name)
 {
     bdma_core_config_fifo_          = new sc_core::sc_fifo <BdmaCoreConfig> (BDMA_CONFIG_FIFO_DEPTH);
@@ -185,7 +183,7 @@ void NV_NVDLA_bdma::mcif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* pay
 void NV_NVDLA_bdma::cvif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay){
 }
 
-NV_NVDLA_bdma * NV_NVDLA_bdmaCon(sc_module_name name) {
+NV_NVDLA_bdma * NV_NVDLA_bdmaCon(sc_core::sc_module_name name) {
     return new NV_NVDLA_bdma(name);
 }
 #pragma CTC ENDSKIP

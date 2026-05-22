@@ -11,7 +11,8 @@
 #ifndef _CMAC_A_REG_MODEL_H_
 #define _CMAC_A_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -35,8 +36,8 @@ class cmac_a_reg_model {
         CNVDLA_CMAC_A_REGSET *cmac_a_register_group_0;
         CNVDLA_CMAC_A_REGSET *cmac_a_register_group_1;
 
-        sc_event event_cmac_a_reg_group_0_operation_enable;
-        sc_event event_cmac_a_reg_group_1_operation_enable;
+        sc_core::sc_event event_cmac_a_reg_group_0_operation_enable;
+        sc_core::sc_event event_cmac_a_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *cmac_a_lut;
         uint32_t cmac_a_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -54,7 +55,7 @@ class cmac_a_reg_model {
         uint8_t   cmac_a_proc_precision_;
 
         // CSB request target socket
-        // void csb2cmac_a_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2cmac_a_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void CmacASendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

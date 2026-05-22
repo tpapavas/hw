@@ -21,9 +21,7 @@
 
 USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
+
 
 enum BDMA_OPERATION_MODE_ALIAS {
     LINE_PACKED,
@@ -31,8 +29,8 @@ enum BDMA_OPERATION_MODE_ALIAS {
 };
 
 // Constructor for base SystemC class for module BdmaCore
-BdmaCore::BdmaCore(sc_module_name name)
-    : sc_module(name),
+BdmaCore::BdmaCore(sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
     interrupt("interrupt", 2),
     mcif2bdma_rd_rsp("mcif2bdma_rd_rsp"),
     bdma2mcif_rd_req_bp(),
@@ -47,24 +45,24 @@ BdmaCore::BdmaCore(sc_module_name name)
 {
     write_config_fifo_          = new sc_core::sc_fifo <BdmaCoreConfig> (BDMA_CONFIG_FIFO_DEPTH);
 #if 0
-    expected_wr_ack             = new sc_fifo <uint8_t> (2);
-    expected_wr_ack_mc          = new sc_fifo <uint8_t> (2);
-    expected_wr_ack_cv          = new sc_fifo <uint8_t> (2);
+    expected_wr_ack             = new sc_core::sc_fifo <uint8_t> (2);
+    expected_wr_ack_mc          = new sc_core::sc_fifo <uint8_t> (2);
+    expected_wr_ack_cv          = new sc_core::sc_fifo <uint8_t> (2);
 #endif
-    bdma_ack_fifo_              = new sc_fifo <bdma_ack_info*> (2);
+    bdma_ack_fifo_              = new sc_core::sc_fifo <bdma_ack_info*> (2);
 
     // DMA atom FIFO memory allocation
-//    dma_atom_fifo_              = new sc_fifo <DmaAtom> (BDMA_CORE_DMA_ATOM_FIFO_SIZE/DMA_ATOM_SIZE);
-    dma_atom_fifo_              = new sc_fifo <DmaAtom> (1024);
+//    dma_atom_fifo_              = new sc_core::sc_fifo <DmaAtom> (BDMA_CORE_DMA_ATOM_FIFO_SIZE/DMA_ATOM_SIZE);
+    dma_atom_fifo_              = new sc_core::sc_fifo <DmaAtom> (1024);
 #if 0
-    write_complete_interrupt_ptr_fifo_  = new sc_fifo <uint8_t> (BDMA_CORE_ONGOING_WRITE_COMPLETE_REQUEST);
+    write_complete_interrupt_ptr_fifo_  = new sc_core::sc_fifo <uint8_t> (BDMA_CORE_ONGOING_WRITE_COMPLETE_REQUEST);
 #endif
     rd_req_cmd_payload          = new nvdla_dma_rd_req_t;
     wr_req_cmd_payload          = new nvdla_dma_wr_req_t;
     wr_req_data_payload         = new nvdla_dma_wr_req_t;
     wr_req_cmd_payload->tag     = TAG_CMD;
     wr_req_data_payload->tag    = TAG_DATA;
-    dma_delay_                  = SC_ZERO_TIME;
+    dma_delay_                  = sc_core::SC_ZERO_TIME;
     src_ram_type_next_          = NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC;
     src_ram_type_curr_          = NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC;
     //read_credit_                = BDMA_MAX_ONGOING_READ_REQUEST;
@@ -223,7 +221,7 @@ void BdmaCore::ReadRequestSequenceGeneratorThread() {
     }
 }
 
-void BdmaCore::mcif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay) {
+void BdmaCore::mcif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay) {
     cslDebug((50, "BdmaCore::mcif2bdma_rd_rsp_b_transport, begin.\n"));
 #pragma CTC SKIP
     if ( NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC != src_ram_type_curr_ ) {
@@ -260,7 +258,7 @@ void BdmaCore::mcif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload,
     cslDebug((50, "BdmaCore::mcif2bdma_rd_rsp_b_transport, end.\n"));
 }
 
-void BdmaCore::cvif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_time& delay) {
+void BdmaCore::cvif2bdma_rd_rsp_b_transport(int ID, nvdla_dma_rd_rsp_t* payload, sc_core::sc_time& delay) {
 #pragma CTC SKIP
     if ( NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC == src_ram_type_curr_ ) {
         FAIL(("BdmaCore::cvif2bdma_rd_rsp_b_transport, src config is not CV_SRAM"));
@@ -364,7 +362,7 @@ void BdmaCore::WriteRequestSequenceGeneratorThread() {
 
                 payload_atom_num_sent = 0;
                 while (payload_atom_num_sent < payload_atom_num) {
-                    payload_atom_num_req = min(2, int32_t (payload_atom_num - payload_atom_num_sent));
+                    payload_atom_num_req = std::min(2, int32_t (payload_atom_num - payload_atom_num_sent));
                     //WaitUntilAtomFifoAvailableEntryGreaterThan(payload_atom_num_req);
                     PrepareWriteDataPayload(wr_req_data_payload, payload_atom_num_req);
                     // Send 64B data
@@ -410,11 +408,11 @@ void BdmaCore::WriteRequestSequenceGeneratorThread() {
                         payload_atom_num_sent = 0;
                         while (payload_atom_num_sent < payload_atom_num) {
                             cslDebug((50, "BdmaCore::WriteRequestSequenceGeneratorThread, payload_atom_num_sent=0x%x payload_atom_num=0x%x\n", payload_atom_num_sent, payload_atom_num));
-                            PrepareWriteDataPayload(wr_req_data_payload,min(2,int32_t(payload_atom_num-payload_atom_num_sent)));
+                            PrepareWriteDataPayload(wr_req_data_payload,std::min(2,int32_t(payload_atom_num-payload_atom_num_sent)));
                             cslDebug((50, "BdmaCore::WriteRequestSequenceGeneratorThread, PrepareWriteDataPayload done\n"));
                             SendDmaWriteRequest(wr_req_data_payload, dma_delay_, core_config.cfg_cmd_dst_ram_type_);
                             cslDebug((50, "BdmaCore::WriteRequestSequenceGeneratorThread, sent dma write request, data\n"));
-                            payload_atom_num_sent += min(2,int32_t(payload_atom_num-payload_atom_num_sent));
+                            payload_atom_num_sent += std::min(2,int32_t(payload_atom_num-payload_atom_num_sent));
                         }
                         payload_addr += payload_size;
                         line_size_sent += payload_size;
@@ -463,7 +461,7 @@ void BdmaCore::BdmaIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(1, sc_core::SC_NS);
         interrupt[ack->group_id].write(true);
     
         cslInfo(("BdmaCore::group %d interrupt %s\n", ack->group_id, ack->is_mc? "MC":"CV"));
@@ -517,7 +515,7 @@ void BdmaCore::PrepareWriteDataPayload(nvdla_dma_wr_req_t * payload, uint8_t num
 }
 
 // Send DMA read request
-void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type) {
+void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_core::sc_time& delay, uint8_t src_ram_type) {
     if ( NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC == src_ram_type ) {
         cslDebug((50, "BdmaCore::SendDmaReadRequest, send read request to MC Address=0x%lx Size=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size));
         bdma2mcif_rd_req_b_transport(payload, dma_delay_);
@@ -528,7 +526,7 @@ void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, u
 }
 
 // Send DMA write request
-void BdmaCore::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, uint8_t dst_ram_type) {
+void BdmaCore::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_core::sc_time& delay, uint8_t dst_ram_type) {
     if (NVDLA_BDMA_CFG_CMD_0_DST_RAM_TYPE_MC == dst_ram_type) {
         if(TAG_CMD == payload->tag) {
             cslDebug((50, "BdmaCore::SendDmaWriteRequest, send write request to MC command. Address=0x%lx Size=0x%x\n", payload->pd.dma_write_cmd.addr, payload->pd.dma_write_cmd.size));
@@ -547,7 +545,7 @@ void BdmaCore::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, 
 }
 
 #pragma CTC SKIP
-BdmaCore * BdmaCoreCon(sc_module_name name) {
+BdmaCore * BdmaCoreCon(sc_core::sc_module_name name) {
     return new BdmaCore(name);
 }
 #pragma CTC ENDSKIP

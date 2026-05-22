@@ -15,7 +15,7 @@
 
 typedef struct nvdla_sc2mac_weight_if_s {
     uint64_t mask [2];
-    sc_int<8> data[128];
+    sc_dt::sc_int<8> data[128];
     uint16_t sel ; 
 } nvdla_sc2mac_weight_if_t;
 

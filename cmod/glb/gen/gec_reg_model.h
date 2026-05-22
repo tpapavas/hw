@@ -11,7 +11,8 @@
 #ifndef _GEC_REG_MODEL_H_
 #define _GEC_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -28,8 +29,8 @@ class gec_reg_model {
     public:
         gec_reg_model();
         ~gec_reg_model();
-        sc_event operation_enable_event_;
-        sc_event intr_status_w;
+        sc_core::sc_event operation_enable_event_;
+        sc_core::sc_event intr_status_w;
     protected:
 //        bool is_there_ongoing_gec_csb_response_;
         CNVDLA_GEC_REGSET *gec_register_group;
@@ -582,7 +583,7 @@ class gec_reg_model {
         uint8_t   errslice2_counter_reload_err64_;
 
         // CSB request target socket
-        // void csb2gec_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2gec_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void GecSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

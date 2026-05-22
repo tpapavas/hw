@@ -11,6 +11,7 @@
     }\
     }
 
+
 #define USING_SCSIM_NAMESPACE(type) \
     using namespace scsim::type;
 

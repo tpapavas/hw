@@ -12,7 +12,8 @@
 #define _NV_NVDLA_CSC_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -105,20 +106,20 @@ class NV_NVDLA_csc:
 {
     public:
         SC_HAS_PROCESS(NV_NVDLA_csc);
-        NV_NVDLA_csc( sc_module_name module_name );
+        NV_NVDLA_csc( sc_core::sc_module_name module_name );
         ~NV_NVDLA_csc();
         // Overload for pure virtual TLM target functions
         // # CSB request transport implementation shall in generated code
-        void csb2csc_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        void csb2csc_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // # CSC-CDMA status update
-        void dat_up_cdma2sc_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_time& delay);
-        void wt_up_cdma2sc_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_time& delay);
+        void dat_up_cdma2sc_b_transport(int ID, nvdla_dat_info_update_t* payload, sc_core::sc_time& delay);
+        void wt_up_cdma2sc_b_transport(int ID, nvdla_wt_info_update_t* payload, sc_core::sc_time& delay);
         // # CBUF->CSC read data return
-        void sc2buf_dat_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay);
-        void sc2buf_wt_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay);
-        void sc2buf_wmb_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_time& delay);
+        void sc2buf_dat_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay);
+        void sc2buf_wt_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay);
+        void sc2buf_wmb_rd_nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_b_transport(int ID, nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_t* payload, sc_core::sc_time& delay);
         // # CACC-CSC
-        void accu2sc_credit_b_transport(int ID, nvdla_cc_credit_t* payload, sc_time& delay);
+        void accu2sc_credit_b_transport(int ID, nvdla_cc_credit_t* payload, sc_core::sc_time& delay);
 
     private:
         // Variables
@@ -148,19 +149,19 @@ class NV_NVDLA_csc:
         sc_core::sc_time b_transport_delay_;
 
         // Events
-        sc_event csc_kickoff_;
+        sc_core::sc_event csc_kickoff_;
         // Done signals are not DMA mapped
-        sc_event csc_data_fetch_done_;
-        sc_event csc_weight_fetch_done_;
+        sc_core::sc_event csc_data_fetch_done_;
+        sc_core::sc_event csc_weight_fetch_done_;
 
         // Sequence controller and DMA fetcher communication on CBuffer usage
-        sc_event cdma_updated_cbuf_data_usage_;
-        sc_event cdma_updated_cbuf_weight_usage_;
+        sc_core::sc_event cdma_updated_cbuf_data_usage_;
+        sc_core::sc_event cdma_updated_cbuf_weight_usage_;
         // ACCU update its free entry number
-        sc_event accu_free_entry_num_update_;
+        sc_core::sc_event accu_free_entry_num_update_;
         // kernel load and data load communication
-        sc_event kernel_switch_updated_;
-        sc_event stripe_begin_updated_;
+        sc_core::sc_event kernel_switch_updated_;
+        sc_core::sc_event stripe_begin_updated_;
 
 
         // Communication between CDMA and CSC
@@ -212,9 +213,9 @@ class NV_NVDLA_csc:
         // # DMA buffers
         sc_core::sc_fifo <uint8_t>  *csc_act_share_buffer_;
         sc_core::sc_fifo <uint8_t*> *act_data_read_rsp_fifo_;
-        sc_core::sc_fifo <sc_uint<64>*> *cbuf_data_read_;
-        sc_core::sc_fifo <sc_uint<64>*> *cbuf_weight_read_;
-        sc_core::sc_fifo <sc_uint<64>*> *cbuf_wmb_read_;
+        sc_core::sc_fifo <sc_dt::sc_uint<64>*> *cbuf_data_read_;
+        sc_core::sc_fifo <sc_dt::sc_uint<64>*> *cbuf_weight_read_;
+        sc_core::sc_fifo <sc_dt::sc_uint<64>*> *cbuf_wmb_read_;
         sc_core::sc_fifo <uint32_t> *cdma_updated_cbuf_data_fifo_;
 
         // Operation mode
@@ -258,7 +259,7 @@ class NV_NVDLA_csc:
 
 SCSIM_NAMESPACE_END()
 
-extern "C" scsim::cmod::NV_NVDLA_csc * NV_NVDLA_cscCon(sc_module_name module_name);
+extern "C" scsim::cmod::NV_NVDLA_csc * NV_NVDLA_cscCon(sc_core::sc_module_name module_name);
 
 #endif
 

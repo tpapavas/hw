@@ -2,28 +2,28 @@
  *                                                                        *
  *  Algorithmic C (tm) Datatypes                                          *
  *                                                                        *
- *  Software Version: 3.7                                                 *
+ *  Software Version: 2025.4                                              *
  *                                                                        *
- *  Release Date    : Wed Jun  1 13:21:52 PDT 2016                        *
+ *  Release Date    : Thu Dec 11 10:19:28 PST 2025                        *
  *  Release Type    : Production Release                                  *
- *  Release Build   : 3.7.0                                               *
+ *  Release Build   : 2025.4.1                                            *
  *                                                                        *
- *  Copyright 2004-2016, Mentor Graphics Corporation,                     *
+ *  Copyright 2004-2022 Siemens                                                *
  *                                                                        *
- *  All Rights Reserved.                                                  *
- *  
+ *                                                                        *
+ *                                                                        *
  **************************************************************************
  *  Licensed under the Apache License, Version 2.0 (the "License");       *
- *  you may not use this file except in compliance with the License.      * 
+ *  you may not use this file except in compliance with the License.      *
  *  You may obtain a copy of the License at                               *
  *                                                                        *
  *      http://www.apache.org/licenses/LICENSE-2.0                        *
  *                                                                        *
- *  Unless required by applicable law or agreed to in writing, software   * 
- *  distributed under the License is distributed on an "AS IS" BASIS,     * 
+ *  Unless required by applicable law or agreed to in writing, software   *
+ *  distributed under the License is distributed on an "AS IS" BASIS,     *
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or       *
- *  implied.                                                              * 
- *  See the License for the specific language governing permissions and   * 
+ *  implied.                                                              *
+ *  See the License for the specific language governing permissions and   *
  *  limitations under the License.                                        *
  **************************************************************************
  *                                                                        *
@@ -37,35 +37,35 @@
 //                    - unsigned integer of length W:  ac_int<W,false>
 //                    - signed integer of length W:  ac_int<W,true>
 //  Author:         Andres Takach, Ph.D.
-//  Notes: 
-//   - C++ Runtime: important to use optimization flag (for example -O3) 
+//  Notes:
+//   - C++ Runtime: important to use optimization flag (for example -O3)
 //
-//   - Compiler support: recent GNU compilers are required for correct 
+//   - Compiler support: recent GNU compilers are required for correct
 //     template compilation
 //
 //   - Most frequent migration issues:
 //      - need to cast to common type when using question mark operator:
 //          (a < 0) ? -a : a;  // a is ac_int<W,true>
-//        change to:
-//          (a < 0) ? -a : (ac_int<W+1,true>) a;   
+//        change :
+//          (a < 0) ? -a : (ac_int<W+1,true>) a;
 //        or
-//          (a < 0) ? (ac_int<W+1,false>) -a : (ac_int<W+1,false>) a;   
+//          (a < 0) ? (ac_int<W+1,false>) -a : (ac_int<W+1,false>) a;
 //
 //      - left shift is not arithmetic ("a<<n" has same bitwidth as "a")
-//          ac_int<W+1,false> b = a << 1;  // a is ac_int<W,false>  
-//        is not equivalent to b=2*a. In order to get 2*a behavior change to: 
-//          ac_int<W+1,false> b = (ac_int<W+1,false>)a << 1; 
+//          ac_int<W+1,false> b = a << 1;  // a is ac_int<W,false>
+//        is not equivalent to b=2*a. In order to get 2*a behavior change to:
+//          ac_int<W+1,false> b = (ac_int<W+1,false>)a << 1;
 //
 //      - only static length read/write slices are supported:
-//         - read:  x.slc<4>(k) => returns ac_int for 4-bit slice x(4+k-1 DOWNTO k) 
-//         - write: x.set_slc(k,y) = writes bits of y to x starting at index k    
+//         - read:  x.slc<4>(k) => returns ac_int for 4-bit slice x(4+k-1 DOWNTO k)
+//         - write: x.set_slc(k,y) = writes bits of y to x starting at index k
 */
 
 #ifndef __AC_INT_H
 #define __AC_INT_H
 
-#define AC_VERSION 3
-#define AC_VERSION_MINOR 7
+#define AC_VERSION 4
+#define AC_VERSION_MINOR 8
 
 #ifndef __cplusplus
 #error C++ is required to include this header file
@@ -85,20 +85,24 @@
 #endif
 
 // for safety
-#if (defined(N) || defined(N2))
-#error One or more of the following is defined: N, N2. Definition conflicts with their usage as template parameters. 
+#if (defined(N) || defined(N2) || defined(D) || defined(Q) || defined(R))
+#error One or more of the following is defined: N, N2, D, Q, R. Definition conflicts with their usage as template parameters.
 #error DO NOT use defines before including third party header files.
 #endif
 
 // for safety
 #if (defined(W) || defined(I) || defined(S) || defined(W2) || defined(I2) || defined(S2))
-#error One or more of the following is defined: W, I, S, W2, I2, S2. Definition conflicts with their usage as template parameters. 
+#error One or more of the following is defined: W, I, S, W2, I2, S2. Definition conflicts with their usage as template parameters.
 #error DO NOT use defines before including third party header files.
 #endif
 
-#if (defined(true) || defined(false))
-#error One or more of the following is defined: true, false. They are keywords in C++ of type bool. Defining them as 1 and 0, may result in subtle compilation problems. 
-#error DO NOT use defines before including third party header files.
+#if defined(true)
+#warning The C++ keyword true is defined which may result in subtle compilation problems. Undefining it.
+#undef true
+#endif
+#if defined(false)
+#warning The C++ keyword false is defined which may result in subtle compilation problems. Undefining it.
+#undef false
 #endif
 
 #ifndef __ASSERT_H__
@@ -112,11 +116,57 @@
 #include <ostream>
 #endif
 #include <math.h>
+#include <fstream>
 #include <string>
 
 #ifndef __SYNTHESIS__
 #ifndef __AC_INT_UTILITY_BASE
 #define __AC_INT_UTILITY_BASE
+#endif
+
+#endif
+
+#ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+#undef __AC_INT_NUMERICAL_ANALYSIS_BASE
+#endif
+
+// VRA-related includes and definitions.
+#ifdef __SYNTHESIS__
+
+// disable all class extensions when doing synthesis
+// void(0) is used as it is a compiler-safe no-op.
+// Refer to assert.h for an example of similar no-op usage.
+#define AC_INT_VRA_DISABLE(a) (void(0))
+#define AC_INT_VRA_ENABLE(a) (void(0))
+
+#else // VRA kicks in outside of HLS, if enabled.
+
+#ifdef AC_FIXED_VRA
+// Must un-define __AC_FIXED_NUMERICAL_ANALYSIS_BASE here rather than in ac_fixed.h, so that the
+// definition sticks around when ac_fixed.h is used.
+#ifdef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+#undef __AC_FIXED_NUMERICAL_ANALYSIS_BASE
+#endif
+
+#endif
+
+#if defined (AC_INT_VRA) || defined(AC_FIXED_VRA)
+// Note that the value range analysis feature of AC Int and AC Fixed is only available with a full
+// Catapult installation.
+
+// Regardless of whether you use ac_int or ac_fixed VRA, vra_instr.h will be included here to avoid
+// redefinition conflicts with ac_q_mode and ac_o_mode.
+#include "vra_instr.h"
+#endif
+
+#ifdef AC_INT_VRA
+#define AC_INT_VRA_DISABLE(a) a.disable_vra()
+#define AC_INT_VRA_ENABLE(a) a.enable_vra()
+#else
+// void(0) is used as it is a compiler-safe no-op.
+// Refer to assert.h for an example of similar no-op usage.
+#define AC_INT_VRA_DISABLE(a) (void(0))
+#define AC_INT_VRA_ENABLE(a) (void(0))
 #endif
 
 #endif
@@ -127,7 +177,7 @@ namespace __AC_NAMESPACE {
 
 #define AC_MAX(a,b) ((a) > (b) ? (a) : (b))
 #define AC_MIN(a,b) ((a) < (b) ? (a) : (b))
-#define AC_ABS(a) ((a) < 0 ? (-a) : (a))
+#define AC_ABS(a) ((a) < 0 ? -(a) : (a))
 
 #if defined(_MSC_VER)
 typedef unsigned __int64 Ulong;
@@ -148,22 +198,20 @@ namespace ac_private {
 #endif
 
   enum {long_w = std::numeric_limits<unsigned long>::digits};
+  const unsigned int all_ones = (unsigned) ~0;
+  const Ulong  all_ones64 = (Ulong) ~(Ulong)0;
 
   // PRIVATE FUNCTIONS in namespace: for implementing ac_int/ac_fixed
 
-#ifndef __SYNTHESIS__
   inline double mgc_floor(double d) { return floor(d); }
-#else
-  inline double mgc_floor(double d) { return 0.0; }
-#endif
 
-  #define AC_ASSERT(cond, msg) ac_private::ac_assert(cond, __FILE__, __LINE__, msg) 
+  #define AC_ASSERT(cond, msg) ac_private::ac_assert(cond, __FILE__, __LINE__, msg)
   inline void ac_assert(bool condition, const char *file=0, int line=0, const char *msg=0) {
   #ifndef __SYNTHESIS__
     #ifndef AC_USER_DEFINED_ASSERT
     if(!condition) {
       std::cerr << "Assert";
-      if(file) 
+      if(file)
         std::cerr << " in file " << file << ":" << line;
       if(msg)
         std::cerr << " " << msg;
@@ -182,29 +230,27 @@ namespace ac_private {
   struct s_N {
     template<unsigned X>
     struct s_X {
-      enum {
-        X2 = X >> N,
-        N_div_2 = N >> 1,
-        nbits = X ? (X2 ? N + (int) s_N<N_div_2>::template s_X<X2>::nbits : (int) s_N<N_div_2>::template s_X<X>::nbits) : 0
-      };
+      static const int X2 = static_cast<int>(X >> N);
+      static const unsigned char N_div_2 = (N >> 1);
+      static const int nbits = X ? (X2 ? N + (int) s_N<N_div_2>::template s_X<X2>::nbits : (int) s_N<N_div_2>::template s_X<X>::nbits) : 0;
     };
   };
   template<> struct s_N<0> {
     template<unsigned X>
     struct s_X {
-      enum {nbits = !!X };
+      static const int nbits = static_cast<int>(!!X);
     };
   };
-                                                                                                                     
+
   template<int N>
   inline double ldexpr32(double d) {
     double d2 = d;
-    if(N < 0) 
+    if(N < 0)
       for(int i=0; i < -N; i++)
         d2 /= (Ulong) 1 << 32;
     else
       for(int i=0; i < N; i++)
-        d2 *= (Ulong) 1 << 32;  
+        d2 *= (Ulong) 1 << 32;
     return d2;
   }
   template<> inline double ldexpr32<0>(double d) { return d; }
@@ -230,7 +276,7 @@ namespace ac_private {
     r[0] = op[0];
     r[1] = op[1];
   }
-  
+
   template<int N>
   inline bool iv_equal_zero(const int *op){
     for(int i=0; i < N; i++)
@@ -245,7 +291,7 @@ namespace ac_private {
   template<> inline bool iv_equal_zero<2>(const int *op) {
     return !(op[0] || op[1]);
   }
-  
+
   template<int N>
   inline bool iv_equal_ones(const int *op){
     for(int i=0; i < N; i++)
@@ -260,7 +306,7 @@ namespace ac_private {
   template<> inline bool iv_equal_ones<2>(const int *op) {
     return !(~op[0] || ~op[1]);
   }
-  
+
   template<int N1, int N2>
   inline bool iv_equal(const int *op1, const int *op2){
     const int M1 = AC_MAX(N1,N2);
@@ -283,7 +329,7 @@ namespace ac_private {
   template<int B, int N>
   inline bool iv_equal_ones_from(const int *op){
     if((B >= 32*N && op[N-1] >= 0) || (B&31 && ~(op[B/32] >> (B&31))))
-      return false; 
+      return false;
     return iv_equal_ones<N-(B+31)/32>(&op[(B+31)/32]);
   }
   template<> inline bool  iv_equal_ones_from<0,1>(const int *op){
@@ -296,7 +342,7 @@ namespace ac_private {
   template<int B, int N>
   inline bool iv_equal_zeros_from(const int *op){
     if((B >= 32*N && op[N-1] < 0) || (B&31 && (op[B/32] >> (B&31))))
-      return false; 
+      return false;
     return iv_equal_zero<N-(B+31)/32>(&op[(B+31)/32]);
   }
   template<> inline bool  iv_equal_zeros_from<0,1>(const int *op){
@@ -308,8 +354,8 @@ namespace ac_private {
 
   template<int B, int N>
   inline bool iv_equal_ones_to(const int *op){
-    if((B >= 32*N && op[N-1] >= 0) || (B&31 && ~(op[B/32] | (~0 << (B&31)))))
-      return false; 
+    if((B >= 32*N && op[N-1] >= 0) || (B&31 && ~(op[B/32] | (all_ones << (B&31)))))
+      return false;
     return iv_equal_ones<B/32>(op);
   }
   template<> inline bool  iv_equal_ones_to<0,1>(const int *op){
@@ -321,8 +367,8 @@ namespace ac_private {
 
   template<int B, int N>
   inline bool iv_equal_zeros_to(const int *op){
-    if((B >= 32*N && op[N-1] < 0) || (B&31 && (op[B/32] & ~(~0 << (B&31)))))
-      return false; 
+    if((B >= 32*N && op[N-1] < 0) || (B&31 && (op[B/32] & ~(all_ones << (B&31)))))
+      return false;
     return iv_equal_zero<B/32>(op);
   }
   template<> inline bool  iv_equal_zeros_to<0,1>(const int *op){
@@ -331,7 +377,7 @@ namespace ac_private {
   template<> inline bool  iv_equal_zeros_to<0,2>(const int *op){
     return iv_equal_zero<2>(op);
   }
-  
+
   template<int N1, int N2, bool greater>
   inline bool iv_compare(const int *op1, const int *op2){
     const int M1 = AC_MAX(N1,N2);
@@ -341,15 +387,15 @@ namespace ac_private {
     const bool b = (N1 >= N2) == greater;
     int ext = OP2[M2-1] < 0 ? ~0 : 0;
     int i2 = M1 > M2 ? ext : OP2[M1-1];
-    if(OP1[M1-1] != i2) 
-      return b ^ (OP1[M1-1] < i2); 
+    if(OP1[M1-1] != i2)
+      return b ^ (OP1[M1-1] < i2);
     for(int i=M1-2; i >= M2; i--) {
       if((unsigned) OP1[i] != (unsigned) ext)
-        return b ^ ((unsigned) OP1[i] < (unsigned) ext); 
+        return b ^ ((unsigned) OP1[i] < (unsigned) ext);
     }
     for(int i=M2-1; i >= 0; i--) {
       if((unsigned) OP1[i] != (unsigned) OP2[i])
-        return b ^ ((unsigned) OP1[i] < (unsigned) OP2[i]); 
+        return b ^ ((unsigned) OP1[i] < (unsigned) OP2[i]);
     }
     return false;
   }
@@ -359,23 +405,23 @@ namespace ac_private {
   template<> inline bool iv_compare<1,1,false>(const int *op1, const int *op2) {
     return op1[0] < op2[0];
   }
-  
+
   template<int N>
   inline void iv_extend(int *r, int ext) {
     for(int i=0; i < N; i++)
       r[i] = ext;
-  } 
+  }
   template<> inline void iv_extend<-2>(int * /*r*/, int /*ext*/) { }
   template<> inline void iv_extend<-1>(int * /*r*/, int /*ext*/) { }
   template<> inline void iv_extend<0>(int * /*r*/, int /*ext*/) { }
   template<> inline void iv_extend<1>(int *r, int ext) {
     r[0] = ext;
-  } 
+  }
   template<> inline void iv_extend<2>(int *r, int ext) {
     r[0] = ext;
     r[1] = ext;
-  } 
-  
+  }
+
   template<int Nr>
   inline void iv_assign_int64(int *r, Slong l) {
     r[0] = (int) l;
@@ -383,7 +429,7 @@ namespace ac_private {
       r[1] = (int) (l >> 32);
       iv_extend<Nr-2>(r+2, (r[1] < 0) ? ~0 : 0);
     }
-  } 
+  }
   template<> inline void iv_assign_int64<1>(int *r, Slong l) {
     r[0] = (int) l;
   }
@@ -399,7 +445,7 @@ namespace ac_private {
       r[1] = (int) (l >> 32);
       iv_extend<Nr-2>(r+2, 0);
     }
-  } 
+  }
   template<> inline void iv_assign_uint64<1>(int *r, Ulong l) {
     r[0] = (int) l;
   }
@@ -407,7 +453,7 @@ namespace ac_private {
     r[0] = (int) l;
     r[1] = (int) (l >> 32);
   }
-  
+
   inline Ulong mult_u_u(int a, int b) {
     return (Ulong) (unsigned) a * (Ulong) (unsigned) b;
   }
@@ -421,21 +467,21 @@ namespace ac_private {
     return (Slong) (signed) a * (Slong) (signed) b;
   }
   inline void accumulate(Ulong a, Ulong &l1, Slong &l2) {
-    l1 += (Ulong) (unsigned) a; 
+    l1 += (Ulong) (unsigned) a;
     l2 += a >> 32;
   }
   inline void accumulate(Slong a, Ulong &l1, Slong &l2) {
-    l1 += (Ulong) (unsigned) a; 
+    l1 += (Ulong) (unsigned) a;
     l2 += a >> 32;
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_mult(const int *op1, const int *op2, int *r) {
     if(Nr==1)
       r[0] = op1[0] * op2[0];
     else if(N1==1 && N2==1)
       iv_assign_int64<Nr>(r, ((Slong) op1[0]) * ((Slong) op2[0]));
-    else { 
+    else {
       const int M1 = AC_MAX(N1,N2);
       const int M2 = AC_MIN(N1,N2);
       const int *OP1 = N1 >= N2 ? op1 : op2;
@@ -443,14 +489,14 @@ namespace ac_private {
       const int T1 = AC_MIN(M2-1,Nr);
       const int T2 = AC_MIN(M1-1,Nr);
       const int T3 = AC_MIN(M1+M2-2,Nr);
-  
+
       Ulong l1 = 0;
       Slong l2 = 0;
       for(int k=0; k < T1; k++) {
         for(int i=0; i < k+1; i++)
           accumulate(mult_u_u(OP1[k-i], OP2[i]), l1, l2);
         l2 += (Ulong) (unsigned) (l1 >> 32);
-        r[k] = (int) l1; 
+        r[k] = (int) l1;
         l1 = (unsigned) l2;
         l2 >>= 32;
       }
@@ -459,7 +505,7 @@ namespace ac_private {
         for(int i=0; i < M2-1; i++)
           accumulate(mult_u_u(OP1[k-i], OP2[i]), l1, l2);
         l2 += (Ulong) (unsigned) (l1 >> 32);
-        r[k] = (int) l1; 
+        r[k] = (int) l1;
         l1 = (unsigned) l2;
         l2 >>= 32;
       }
@@ -469,13 +515,13 @@ namespace ac_private {
           accumulate(mult_u_u(OP1[k-i], OP2[i]), l1, l2);
         accumulate(mult_s_u(OP1[M1-1], OP2[k-M1+1]), l1, l2);
         l2 += (Ulong) (unsigned) (l1 >> 32);
-        r[k] = (int) l1; 
+        r[k] = (int) l1;
         l1 = (unsigned) l2;
         l2 >>= 32;
       }
       if(Nr >= M1+M2-1) {
         accumulate(mult_s_s(OP1[M1-1], OP2[M2-1]), l1, l2);
-        r[M1+M2-2] = (int) l1; 
+        r[M1+M2-2] = (int) l1;
         if(Nr >= M1+M2) {
           l2 += (Ulong) (unsigned) (l1 >> 32);
           r[M1+M2-1] = (int) l2;
@@ -507,7 +553,7 @@ namespace ac_private {
     r[0] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N>
   inline bool iv_add_int_carry(const int *op1, int op2, bool carry, int *r) {
     if(N==0)
@@ -535,12 +581,12 @@ namespace ac_private {
     r[0] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N>
   inline bool iv_uadd_n(const int *op1, const int *op2, int *r) {
     Ulong l = 0;
     for(int i=0; i < N; i++) {
-      l += (Ulong)(unsigned) op1[i] + (Ulong)(unsigned) op2[i]; 
+      l += (Ulong)(unsigned) op1[i] + (Ulong)(unsigned) op2[i];
       r[i] = (int) l;
       l >>= 32;
     }
@@ -549,22 +595,22 @@ namespace ac_private {
   template<> inline bool iv_uadd_n<0>(const int * /*op1*/, const int * /*op2*/, int * /*r*/) { return false; }
   template<> inline bool iv_uadd_n<1>(const int *op1, const int *op2, int *r) {
     Ulong l = (Ulong) (unsigned) op1[0] + (Ulong) (unsigned) op2[0];
-    r[0] = (int) l; 
+    r[0] = (int) l;
     return (l >> 32) & 1;
   }
   template<> inline bool iv_uadd_n<2>(const int *op1, const int *op2, int *r) {
     Ulong l = (Ulong) (unsigned) op1[0] + (Ulong) (unsigned) op2[0];
-    r[0] = (int) l; 
+    r[0] = (int) l;
     l >>= 32;
     l += (Ulong) (unsigned) op1[1] + (Ulong) (unsigned) op2[1];
     r[1] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_add(const int *op1, const int *op2, int *r) {
     if(Nr==1)
-      r[0] = op1[0] + op2[0];
+      r[0] = (unsigned) op1[0] + (unsigned) op2[0];
     else {
       const int M1 = AC_MAX(N1,N2);
       const int M2 = AC_MIN(N1,N2);
@@ -572,19 +618,19 @@ namespace ac_private {
       const int *OP2 = N1 >= N2 ? op2 : op1;
       const int T1 = AC_MIN(M2-1,Nr);
       const int T2 = AC_MIN(M1,Nr);
-  
+
       bool carry = iv_uadd_n<T1>(OP1, OP2, r);
       carry = iv_add_int_carry<T2-T1>(OP1+T1, OP2[T1], carry, r+T1);
       iv_extend<Nr-T2>(r+T2, carry ? ~0 : 0);
     }
   }
   template<> inline void iv_add<1,1,1>(const int *op1, const int *op2, int *r) {
-    r[0] = op1[0] + op2[0];
+    r[0] = (unsigned) op1[0] + (unsigned) op2[0];
   }
   template<> inline void iv_add<1,1,2>(const int *op1, const int *op2, int *r) {
     iv_assign_int64<2>(r, (Slong) op1[0] + (Slong) op2[0]);
   }
-  
+
   template<int N>
   inline bool iv_sub_int_borrow(const int *op1, int op2, bool borrow, int *r) {
     if(N==1) {
@@ -610,7 +656,7 @@ namespace ac_private {
     r[0] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N>
   inline bool iv_sub_int_borrow(int op1, const int *op2, bool borrow, int *r) {
     if(N==1) {
@@ -636,12 +682,12 @@ namespace ac_private {
     r[0] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N>
   inline bool iv_usub_n(const int *op1, const int *op2, int *r) {
     Slong l = 0;
     for(int i=0; i < N; i++) {
-      l += (Ulong)(unsigned) op1[i] - (Ulong)(unsigned) op2[i]; 
+      l += (Ulong)(unsigned) op1[i] - (Ulong)(unsigned) op2[i];
       r[i] = (int) l;
       l >>= 32;
     }
@@ -649,22 +695,22 @@ namespace ac_private {
   }
   template<> inline bool iv_usub_n<1>(const int *op1, const int *op2, int *r) {
     Ulong l = (Ulong) (unsigned) op1[0] - (Ulong) (unsigned) op2[0];
-    r[0] = (int) l; 
+    r[0] = (int) l;
     return (l >> 32) & 1;
   }
   template<> inline bool iv_usub_n<2>(const int *op1, const int *op2, int *r) {
     Slong l = (Ulong) (unsigned) op1[0] - (Ulong) (unsigned) op2[0];
-    r[0] = (int) l; 
+    r[0] = (int) l;
     l >>= 32;
     l += (Ulong) (unsigned) op1[1] - (Ulong) (unsigned) op2[1];
-    r[1] = (int) l; 
+    r[1] = (int) l;
     return (l >> 32) & 1;
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_sub(const int *op1, const int *op2, int *r) {
     if(Nr==1)
-      r[0] = op1[0] - op2[0];
+      r[0] = (unsigned) op1[0] - (unsigned) op2[0];
     else {
       const int M1 = AC_MAX(N1,N2);
       const int M2 = AC_MIN(N1,N2);
@@ -679,7 +725,7 @@ namespace ac_private {
     }
   }
   template<> inline void iv_sub<1,1,1>(const int *op1, const int *op2, int *r) {
-    r[0] = op1[0] - op2[0];
+    r[0] = (unsigned) op1[0] - (unsigned) op2[0];
   }
   template<> inline void iv_sub<1,1,2>(const int *op1, const int *op2, int *r) {
     iv_assign_int64<2>(r, (Slong) op1[0] - (Slong) op2[0]);
@@ -695,7 +741,7 @@ namespace ac_private {
   }
   template<> inline bool iv_all_bits_same<0>(const int * /*op*/, bool /*bit*/) { return true; }
   template<> inline bool iv_all_bits_same<1>(const int *op, bool bit) {
-    return op[0] == (bit ? ~0 : 0); 
+    return op[0] == (bit ? ~0 : 0);
   }
 
   template <int N, int Nr>
@@ -748,7 +794,13 @@ namespace ac_private {
     int n_mss = 2*n_msi + n_mss_odd;
     if(n_mss < d_mss) {
       // q already initialized to 0
-      // r already initialized to n
+      if(R) {
+        int r_msi = AC_MIN(R-1, n_msi);
+        for(int j = 0; j <= r_msi; j++)
+          r[j] = n[j];
+        for(int j = r_msi+1; j < R; j++)
+          r[j] = 0;
+      }
     } else {
       uw2 r1[N+1];
       r1[n_msi+1] = 0;
@@ -761,7 +813,7 @@ namespace ac_private {
         uw4 n1 = odd ?
           (uw4) ((r1[k_msi+1] << w1_length) | (r1[k_msi] >> w1_length)) << w2_length | ((r1[k_msi] << w1_length) | (r1m1 >> w1_length)) :
           (uw4) r1[k_msi] << w2_length | r1m1;
-        uw2 q1 = n1/d1;
+        uw2 q1 = ((uw2) (n1/d1));
         if(q1 >> w1_length)
           q1--;
         AC_ASSERT(!(q1 >> w1_length), "Problem detected in long division algorithm, Please report");
@@ -780,7 +832,7 @@ namespace ac_private {
           r1[k2_i + j] = (uw2) l;
           l >>= w2_length;
           if(ov1)
-            l |= ((sw4) -1 << w2_length);
+            l |= ((uw4) -1 << w2_length);
           if(ov2)
             l ^= ((sw4) 1 << w2_length);
         }
@@ -817,38 +869,41 @@ namespace ac_private {
     }
   }
 
+  inline Slong conv_to_Slong(const int *x) {
+    return (Slong) ( ((Ulong) x[1] << 32) | (unsigned) x[0] );
+  }
+
   template<int N1, int Num_s, int N2, int Den_s, int Nr>
   inline void iv_div(const int *op1, const int *op2, int *r) {
-    enum { N1_over = N1+(Den_s && (Num_s==2)) }; 
+    enum { N1_over = N1+(Den_s && (Num_s==2)) };
     if(N1_over==1 && N2==1) {
       r[0] = op1[0] / op2[0];
       iv_extend<Nr-N1>(r+1, ((Num_s || Den_s) && (r[0] < 0)) ? ~0 : 0);
     }
     else if(N1_over==1 && N2==2)
-      iv_assign_int64<Nr>(r, ( (Slong) op1[0]) / (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+      iv_assign_int64<Nr>(r, ((Slong) op1[0]) / conv_to_Slong(op2) );
     else if(N1_over==2 && N2==1)
       if(N1 == 1)
-        iv_assign_int64<Nr>(r, ( (Slong) op1[0]) / ( (Slong) op2[0]) );
+        iv_assign_int64<Nr>(r, ((Slong) op1[0]) / ((Slong) op2[0]) );
       else
-        iv_assign_int64<Nr>(r, (((Slong) op1[1] << 32) | (unsigned) op1[0]) / ( (Slong) op2[0]) );
+        iv_assign_int64<Nr>(r, conv_to_Slong(op1) / ((Slong) op2[0]) );
     else if(N1_over==2 && N2==2)
       if(N1 == 1)
-        iv_assign_int64<Nr>(r, ( (Slong) op1[0]) / (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+        iv_assign_int64<Nr>(r, ((Slong) op1[0]) / conv_to_Slong(op2) );
       else
-        iv_assign_int64<Nr>(r, (((Slong) op1[1] << 32) | (unsigned) op1[0]) / (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+        iv_assign_int64<Nr>(r, conv_to_Slong(op1) / conv_to_Slong(op2) );
     else if(!Num_s && !Den_s) {
-      iv_udiv<N1,N2,N1,0,int,unsigned,Slong,Ulong,16>(op1, op2, r, 0);
-      iv_extend<Nr-N1>(r+N1, 0);
+      iv_udiv<N1,N2,Nr,0,int,unsigned,Slong,Ulong,16>(op1, op2, r, 0);
     }
     else {
-      enum { N1_neg = N1+(Num_s==2), N2_neg = N2+(Den_s==2)}; 
+      enum { N1_neg = N1+(Num_s==2), N2_neg = N2+(Den_s==2)};
       int numerator[N1_neg];
       int denominator[N2_neg];
       int quotient[N1_neg];
       iv_abs<N1, (bool) Num_s, N1_neg>(op1, numerator);
       iv_abs<N2, (bool) Den_s, N2_neg>(op2, denominator);
       iv_udiv<N1_neg,N2_neg,N1_neg,0,int,unsigned,Slong,Ulong,16>(numerator, denominator, quotient, 0);
-      if( (Num_s && op1[N1-1] < 0) ^ (Den_s && op2[N2-1] < 0) )  
+      if( (Num_s && op1[N1-1] < 0) ^ (Den_s && op2[N2-1] < 0) )
         iv_neg<N1_neg, Nr>(quotient, r);
       else {
         iv_copy<AC_MIN(N1_neg,Nr)>(quotient, r);
@@ -859,26 +914,25 @@ namespace ac_private {
 
   template<int N1, int Num_s, int N2, int Den_s, int Nr>
   inline void iv_rem(const int *op1, const int *op2, int *r) {
-    enum { N1_over = N1+(Den_s && (Num_s==2)) };   // N1_over corresponds to the division 
+    enum { N1_over = N1+(Den_s && (Num_s==2)) };   // N1_over corresponds to the division
     if(N1_over==1 && N2==1) {
       r[0] = op1[0] % op2[0];
       iv_extend<Nr-1>(r+1, Num_s && r[0] < 0 ? ~0 : 0);
     }
     else if(N1_over==1 && N2==2)
-      iv_assign_int64<Nr>(r, ( (Slong) op1[0]) % (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+      iv_assign_int64<Nr>(r, ((Slong) op1[0]) % conv_to_Slong(op2) );
     else if(N1_over==2 && N2==1)
       if(N1 == 1)
-        iv_assign_int64<Nr>(r, ( (Slong) op1[0]) % ( (Slong) op2[0]) );
+        iv_assign_int64<Nr>(r, ((Slong) op1[0]) % ((Slong) op2[0]) );
       else
-        iv_assign_int64<Nr>(r, (((Slong) op1[1] << 32) | (unsigned) op1[0]) % ( (Slong) op2[0]) );
+        iv_assign_int64<Nr>(r, conv_to_Slong(op1) % ((Slong) op2[0]) );
     else if(N1_over==2 && N2==2)
       if(N1 == 1)
-        iv_assign_int64<Nr>(r, ( (Slong) op1[0]) % (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+        iv_assign_int64<Nr>(r, ((Slong) op1[0]) % conv_to_Slong(op2) );
       else
-        iv_assign_int64<Nr>(r, (((Slong) op1[1] << 32) | (unsigned) op1[0]) % (((Slong) op2[1] << 32) | (unsigned) op2[0]) );
+        iv_assign_int64<Nr>(r, conv_to_Slong(op1) % conv_to_Slong(op2) );
     else if(!Num_s && !Den_s) {
-      iv_udiv<N1,N2,0,N2,int,unsigned,Slong,Ulong,16>(op1, op2, 0, r);
-      iv_extend<Nr-N2>(r+N2, 0);
+      iv_udiv<N1,N2,0,Nr,int,unsigned,Slong,Ulong,16>(op1, op2, 0, r);
     }
     else {
       enum { N1_neg = N1+(Num_s==2), N2_neg = N2+(Den_s==2)};
@@ -896,7 +950,7 @@ namespace ac_private {
       }
     }
   }
-  
+
   template<int N>
   inline void iv_bitwise_complement_n(const int *op, int *r) {
     for(int i=0; i < N; i++)
@@ -909,14 +963,14 @@ namespace ac_private {
     r[0] = ~op[0];
     r[1] = ~op[1];
   }
-  
+
   template<int N, int Nr>
   inline void iv_bitwise_complement(const int *op, int *r) {
     const int M = AC_MIN(N,Nr);
     iv_bitwise_complement_n<M>(op, r);
     iv_extend<Nr-M>(r+M, (r[M-1] < 0) ? ~0 : 0);
   }
-  
+
   template<int N>
   inline void iv_bitwise_and_n(const int *op1, const int *op2, int *r) {
     for(int i=0; i < N; i++)
@@ -929,14 +983,14 @@ namespace ac_private {
     r[0] = op1[0] & op2[0];
     r[1] = op1[1] & op2[1];
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_bitwise_and(const int *op1, const int *op2, int *r) {
     const int M1 = AC_MIN(AC_MAX(N1,N2), Nr);
     const int M2 = AC_MIN(AC_MIN(N1,N2), Nr);
     const int *OP1 = N1 > N2 ? op1 : op2;
     const int *OP2 = N1 > N2 ? op2 : op1;
-  
+
     iv_bitwise_and_n<M2>(op1, op2, r);
     if(OP2[M2-1] < 0)
       iv_copy<M1-M2>(OP1+M2, r+M2);
@@ -944,7 +998,7 @@ namespace ac_private {
       iv_extend<M1-M2>(r+M2, 0);
     iv_extend<Nr-M1>(r+M1, (r[M1-1] < 0) ? ~0 : 0);
   }
-  
+
   template<int N>
   inline void iv_bitwise_or_n(const int *op1, const int *op2, int *r) {
     for(int i=0; i < N; i++)
@@ -957,14 +1011,14 @@ namespace ac_private {
     r[0] = op1[0] | op2[0];
     r[1] = op1[1] | op2[1];
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_bitwise_or(const int *op1, const int *op2, int *r) {
     const int M1 = AC_MIN(AC_MAX(N1,N2), Nr);
     const int M2 = AC_MIN(AC_MIN(N1,N2), Nr);
     const int *OP1 = N1 >= N2 ? op1 : op2;
     const int *OP2 = N1 >= N2 ? op2 : op1;
-  
+
     iv_bitwise_or_n<M2>(op1, op2, r);
     if(OP2[M2-1] < 0)
       iv_extend<M1-M2>(r+M2, ~0);
@@ -972,7 +1026,7 @@ namespace ac_private {
       iv_copy<M1-M2>(OP1+M2, r+M2);
     iv_extend<Nr-M1>(r+M1, (r[M1-1] < 0) ? ~0 : 0);
   }
-  
+
   template<int N>
   inline void iv_bitwise_xor_n(const int *op1, const int *op2, int *r) {
     for(int i=0; i < N; i++)
@@ -985,14 +1039,14 @@ namespace ac_private {
     r[0] = op1[0] ^ op2[0];
     r[1] = op1[1] ^ op2[1];
   }
-  
+
   template<int N1, int N2, int Nr>
   inline void iv_bitwise_xor(const int *op1, const int *op2, int *r) {
     const int M1 = AC_MIN(AC_MAX(N1,N2), Nr);
     const int M2 = AC_MIN(AC_MIN(N1,N2), Nr);
     const int *OP1 = N1 >= N2 ? op1 : op2;
     const int *OP2 = N1 >= N2 ? op2 : op1;
-  
+
     iv_bitwise_xor_n<M2>(op1, op2, r);
     if(OP2[M2-1] < 0)
       iv_bitwise_complement_n<M1-M2>(OP1+M2, r+M2);
@@ -1000,23 +1054,37 @@ namespace ac_private {
       iv_copy<M1-M2>(OP1+M2, r+M2);
     iv_extend<Nr-M1>(r+M1, (r[M1-1] < 0) ? ~0 : 0);
   }
-  
+
   template<int N, int Nr>
   inline void iv_shift_l(const int *op1, unsigned op2, int *r) {
-    AC_ASSERT(Nr <= N, "iv_shift_l, incorrect usage Nr > N");
     unsigned s31 = op2 & 31;
     unsigned ishift = (op2 >> 5) > Nr ? Nr : (op2 >> 5);
     if(s31 && ishift!=Nr) {
-      unsigned lw = 0; 
+      unsigned lw = 0;
       for(unsigned i=0; i < Nr; i++) {
-        unsigned hw = (i >= ishift) ? op1[i-ishift] : 0;
+        unsigned hw = (i >= ishift && i < N) ? op1[i-ishift] : 0;
         r[i] = (hw << s31) | (lw >> (32-s31));
         lw = hw;
       }
     } else {
       for(unsigned i=0; i < Nr ; i++)
-        r[i] = (i >= ishift) ? op1[i-ishift] : 0;
+        r[i] = (i >= ishift && i < N) ? op1[i-ishift] : 0;
     }
+  }
+  template<> inline void iv_shift_l<1,1>(const int *op1, unsigned op2, int *r) {
+    r[0] = op2 < 32 ? op1[0] << op2 : 0;
+  }
+  template<> inline void iv_shift_l<2,1>(const int *op1, unsigned op2, int *r) {
+    Ulong vop1 =
+        (static_cast<Ulong>(op1[1]) << 32) | static_cast<unsigned int>(op1[0]);
+    vop1 = op2 < 64 ? vop1 << op2 : (Ulong) 0;
+    r[0] = static_cast<int>(vop1);
+  }
+  template<> inline void iv_shift_l<2,2>(const int *op1, unsigned op2, int *r) {
+    Ulong vop1 =
+        (static_cast<Ulong>(op1[1]) << 32) | static_cast<unsigned int>(op1[0]);
+    vop1 = op2 < 64 ? vop1 << op2 : (Ulong) 0;
+    iv_assign_uint64<2>(r, vop1);
   }
 
   template<int N, int Nr>
@@ -1027,7 +1095,7 @@ namespace ac_private {
     if(s31 && ishift!=N) {
       unsigned lw = (ishift < N) ? op1[ishift] : ext;
       for(unsigned i=0; i < Nr; i++) {
-        unsigned hw = (i+ishift+1 < N) ? op1[i+ishift+1] : ext; 
+        unsigned hw = (i+ishift+1 < N) ? op1[i+ishift+1] : ext;
         r[i] = (lw >> s31) | (hw << (32-s31));
         lw = hw;
       }
@@ -1036,39 +1104,54 @@ namespace ac_private {
         r[i] = (i+ishift < N) ? op1[i+ishift] : ext;
     }
   }
-  
+  template<> inline void iv_shift_r<1,1>(const int *op1, unsigned op2, int *r) {
+    r[0] = (op2 < 32) ? (op1[0] >> op2) : (op1[0] >> 31);
+  }
+  template<> inline void iv_shift_r<2,1>(const int *op1, unsigned op2, int *r) {
+    Slong vop1 =
+        (static_cast<Ulong>(op1[1]) << 32) | static_cast<unsigned int>(op1[0]);
+    vop1 = (op2 < 64) ? (vop1 >> op2) : (vop1 >> 63);
+    r[0] = static_cast<int>(vop1);
+  }
+  template<> inline void iv_shift_r<2,2>(const int *op1, unsigned op2, int *r) {
+    Slong vop1 =
+        (static_cast<Ulong>(op1[1]) << 32) | static_cast<unsigned int>(op1[0]);
+    vop1 = (op2 < 64) ? (vop1 >> op2) : (vop1 >> 63);
+    iv_assign_int64<2>(r, vop1);
+  }
+
   template<int N, int Nr, bool S>
   inline void iv_shift_l2(const int *op1, signed op2, int *r) {
     if(S && op2 < 0)
-      iv_shift_r<N,Nr>(op1, -op2, r); 
-    else 
-      iv_shift_l<N,Nr>(op1, op2, r); 
+      iv_shift_r<N,Nr>(op1, -op2, r);
+    else
+      iv_shift_l<N,Nr>(op1, op2, r);
   }
 
   template<> inline void iv_shift_l2<1,1,false>(const int *op1, signed op2, int *r) {
-    r[0] = (op2 < 32) ? (op1[0] << op2) : 0;
+    r[0] = (op2 < 32) ? ( (unsigned) op1[0] << op2) : 0;
   }
   template<> inline void iv_shift_l2<1,1,true>(const int *op1, signed op2, int *r) {
-    r[0] = (op2 >= 0) ? 
-      (op2 < 32) ? (op1[0] << op2) : 0 :
+    r[0] = (op2 >= 0) ?
+      (op2 < 32) ? ( (unsigned) op1[0] << op2) : 0 :
       (op2 > -32) ? (op1[0] >> -op2) : (op1[0] >> 31);
   }
-  
+
   template<int N, int Nr, bool S>
   inline void iv_shift_r2(const int *op1, signed op2, int *r) {
     if(S && op2 < 0)
-      iv_shift_l<N,Nr>(op1, -op2, r); 
-    else 
-      iv_shift_r<N,Nr>(op1, op2, r); 
+      iv_shift_l<N,Nr>(op1, -op2, r);
+    else
+      iv_shift_r<N,Nr>(op1, op2, r);
   }
 
   template<> inline void iv_shift_r2<1,1,false>(const int *op1, signed op2, int *r) {
     r[0] = (op2 < 32) ? (op1[0] >> op2) : (op1[0] >> 31);
   }
   template<> inline void iv_shift_r2<1,1,true>(const int *op1, signed op2, int *r) {
-    r[0] = (op2 >= 0) ? 
+    r[0] = (op2 >= 0) ?
       (op2 < 32) ? (op1[0] >> op2) : (op1[0] >> 31) :
-      (op2 > -32) ? (op1[0] << -op2) : 0;
+      (op2 > -32) ? ( (unsigned) op1[0] << -op2) : 0;
   }
 
   template<int N, int Nr, int B>
@@ -1081,22 +1164,22 @@ namespace ac_private {
     }
     else {
       const unsigned s31 = B & 31;
-      const unsigned ishift = (unsigned) (((B >> 5) > Nr) ? Nr : (B >> 5));
+      const int ishift = (((B >> 5) > Nr) ? Nr : (B >> 5));
       iv_extend<ishift>(r, 0);
-      const unsigned M1 = AC_MIN(N+ishift,Nr);
+      const int M1 = AC_MIN(N+ishift,Nr);
       if(s31) {
         unsigned lw = 0;
-        for(unsigned i=ishift; i < M1; i++) {
+        for(int i=ishift; i < M1; i++) {
           unsigned hw = op1[i-ishift];
           r[i] = (hw << s31) | (lw >> ((32-s31)&31));  // &31 is to quiet compilers
           lw = hw;
         }
         if(Nr > M1) {
-          r[M1] = (signed) lw >> ((32-s31)&31);  // &31 is to quiet compilers 
+          r[M1] = (signed) lw >> ((32-s31)&31);  // &31 is to quiet compilers
           iv_extend<Nr-M1-1>(r+M1+1, r[M1] < 0 ? ~0 : 0);
         }
       } else {
-        for(unsigned i=ishift; i < M1 ; i++)
+        for(int i=ishift; i < M1 ; i++)
           r[i] = op1[i-ishift];
         iv_extend<Nr-M1>(r+M1, r[M1-1] < 0 ? -1 : 0);
       }
@@ -1114,21 +1197,21 @@ namespace ac_private {
     if(!B) {
       const int M1 = AC_MIN(N,Nr);
       iv_copy<M1>(op1, r);
-      iv_extend<Nr-M1>(r+M1, r[M1-1] < 0 ? -1 : 0);
+      iv_extend<Nr-M1>(r+M1, r[M1-1] < 0 ? ~0 : 0);
     }
     else {
       const unsigned s31 = B & 31;
-      const unsigned ishift = (unsigned) (((B >> 5) > N) ? N : (B >> 5));
+      const int ishift = (((B >> 5) > N) ? N : (B >> 5));
       int ext = op1[N-1] < 0 ? ~0 : 0;
       if(s31 && ishift!=N) {
         unsigned lw = (ishift < N) ? op1[ishift] : ext;
-        for(unsigned i=0; i < Nr; i++) {
+        for(int i=0; i < Nr; i++) {
           unsigned hw = (i+ishift+1 < N) ? op1[i+ishift+1] : ext;
           r[i] = (lw >> s31) | (hw << ((32-s31)&31));  // &31 is to quiet compilers
           lw = hw;
         }
       } else {
-        for(unsigned i=0; i < Nr ; i++)
+        for(int i=0; i < Nr ; i++)
           r[i] = (i+ishift < N) ? op1[i+ishift] : ext;
       }
     }
@@ -1141,7 +1224,7 @@ namespace ac_private {
   }
 
   template<int N>
-  inline void iv_conv_from_fraction(double d, int *r, bool *qb, bool *rbits, bool *o) { 
+  inline void iv_conv_from_fraction(double d, int *r, bool *qb, bool *rbits, bool *o) {
     bool b = d < 0;
     double d2 = b ? -d : d;
     double dfloor = mgc_floor(d2);
@@ -1166,20 +1249,24 @@ namespace ac_private {
   template<ac_base_mode b>
   inline int to_str(int *v, int w, bool left_just, char *r) {
     const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-    const unsigned char B = b==AC_BIN ? 1 : (b==AC_OCT ? 3 : (b==AC_HEX ? 4 : 0)); 
+    const unsigned char B = b==AC_BIN ? 1 : (b==AC_OCT ? 3 : (b==AC_HEX ? 4 : 0));
     int k = (w+B-1)/B;
     int n = (w+31) >> 5;
-    int bits = 0; 
+    int bits = 0;
     if(b != AC_BIN && left_just) {
       if( (bits = -(w % B)) )
         r[--k] = 0;
     }
     for(int i = 0; i < n; i++) {
-      if (b != AC_BIN && bits < 0)
-        r[k] += (unsigned char) ((v[i] << (B+bits)) & (b-1)); 
+      if (b != AC_BIN && bits < 0) {
+        // This is a roundabout way to do the accumulation but it also prevents conversion warnings
+        // from showing up when using certain compilers.
+        unsigned char add_val = (unsigned char) (( (unsigned) v[i] << (B+bits)) & (b-1));
+        r[k] = (char) (r[k] + add_val);
+      }
       unsigned int m = (unsigned) v[i] >> -bits;
       for(bits += 32; bits > 0 && k; bits -= B) {
-        r[--k] = (char) (m & (b-1)); 
+        r[--k] = (char) (m & (b-1));
         m >>= B;
       }
     }
@@ -1187,23 +1274,23 @@ namespace ac_private {
       r[i] = digits[(int)r[i]];
     return (w+B-1)/B;
   }
-  template<> inline int to_str<AC_DEC>(int *v, int w, bool left_just, char *r) { 
+  template<> inline int to_str<AC_DEC>(int *v, int w, bool left_just, char *r) {
     int k = 0;
     int msw = (w-1) >> 5;
     if(left_just) {
       unsigned bits_msw = w & 31;
       if(bits_msw) {
-        unsigned left_shift = 32 - bits_msw; 
+        unsigned left_shift = 32 - bits_msw;
         for(int i=msw; i > 0; i--)
-          v[i] = v[i] << left_shift | (unsigned) v[i-1] >> bits_msw; 
-        v[0] = v[0] << left_shift;
+          v[i] = (unsigned) v[i] << left_shift | (unsigned) v[i-1] >> bits_msw;
+        v[0] = (unsigned) v[0] << left_shift;
       }
       int lsw = 0;
-      while(lsw < msw || v[msw] ) { 
-        Ulong l = 0; 
+      while(lsw < msw || v[msw] ) {
+        Ulong l = 0;
         for(int i=lsw; i <= msw; i++) {
           l += (Ulong) (unsigned) v[i] * 10;
-          v[i] = l;
+          v[i] = (int) l;
           l >>= 32;
           if(i==lsw && !v[i])
             lsw++;
@@ -1218,7 +1305,7 @@ namespace ac_private {
         for(int i = msw; i >= 0; i--) {
           nl <<= 32;
           nl |= (unsigned) v[i];
-          unsigned q = nl/d;
+          unsigned q = (unsigned) (nl/d);
           nl -= (Ulong) q * d;
           v[i] = q;
         }
@@ -1241,21 +1328,23 @@ namespace ac_private {
     return k;
   }
 
-  inline int to_string(int *v, int w, bool sign_mag, ac_base_mode base, bool left_just, char *r) {
-    int n = (w+31) >> 5;
-    bool neg = !sign_mag && v[n-1] < 0; 
-    if(!left_just) {
-      while(n-- && v[n] == (neg ? ~0 : 0)) {}  
-      w = 32*(n+1);
-      if(w) {
+  inline int to_string(int *v, int w, bool sign_mag, ac_base_mode base, bool left_just, bool pad_to_width, char *r) {
+    if(!left_just && !pad_to_width) {
+      int n = (w+31) >> 5;
+      bool neg = !sign_mag && v[n-1] < 0;
+      while(n-- && v[n] == (neg ? ~0 : 0)) {}
+      int w2 = 32*(n+1);
+      if(w2) {
         int m = v[n];
         for(int i = 16; i > 0; i >>= 1) {
           if((m >> i) == (neg ? ~0 : 0))
-            w -= i;
+            w2 -= i;
           else
             m >>= i;
         }
-      } 
+      }
+      if(w2 < w)
+        w = w2;
       w += !sign_mag;
     }
     if(base == AC_DEC)
@@ -1273,19 +1362,19 @@ namespace ac_private {
   inline unsigned iv_leading_bits(const int *op, bool bit);
 
   template<> inline unsigned iv_leading_bits<1>(const int *op, bool bit) {
-    const unsigned char tab[] = {4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0}; 
+    const unsigned char tab[] = {4, 3, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned t = bit ? ~*op : *op;
     unsigned cnt = 0;
     if(t >> 16)
-      t >>= 16; 
+      t >>= 16;
     else
       cnt += 16;
     if(t >> 8)
-      t >>= 8; 
+      t >>= 8;
     else
       cnt += 8;
     if(t >> 4)
-      t >>= 4; 
+      t >>= 4;
     else
       cnt += 4;
     cnt += tab[t];
@@ -1299,9 +1388,80 @@ namespace ac_private {
     for(k = N-1; k >= 0 && op[k] == ext_sign; k--) {}
     return 32*(N-1-k) + (k < 0 ? 0 : iv_leading_bits<1>(op+k, bit));
   }
-  
+
+  template<int W>
+  inline unsigned reverse_u(unsigned x) {
+    unsigned r = x;
+    if(W > 1) {
+      int mask = 0x55555555;
+      int shift = 1;
+      r = (mask & r) << shift | unsigned(~mask & r) >> shift;
+      if(W > 2) {
+        mask = 0x33333333;
+        shift = 2;
+        r = (mask & r) << shift | unsigned(~mask & r) >> shift;
+        if(W > 4) {
+          mask = 0x0f0f0f0f;
+          shift = 4;
+          r = (mask & r) << shift | unsigned(~mask & r) >> shift;
+          if(W > 8) {
+            mask = 0x00ff00ff;
+            shift = 8;
+            r = (mask & r) << shift | unsigned(~mask & r) >> shift;
+            if(W > 16) {
+              mask = 0x0000ffff;
+              shift = 16;
+              r = (mask & r) << shift | unsigned(~mask & r) >> shift;
+            }
+          }
+        }
+      }
+      r >>= shift*2-W;
+    }
+    return r;
+  }
+
+  template<int N>
+  inline void iv_reverse(const int *op, int *r) {
+    for(int k=0; k < N; k++)
+      r[k] = reverse_u<32>((unsigned) op[N-1-k]);
+  }
+  template<> inline void iv_reverse<1>(const int *op, int *r) {
+    r[0] = reverse_u<32>((unsigned) op[0]);
+  }
+  template<> inline void iv_reverse<2>(const int *op, int *r) {
+    r[0] = reverse_u<32>((unsigned) op[1]);
+    r[1] = reverse_u<32>((unsigned) op[0]);
+  }
+
+  inline int set_bits_int(int op, int lsb, int WS, int slc) {
+    // WS < 32, lsb+WS-1 < 32
+    // set the bits [pos+WS-1,pos] of op with the lower WS bits of slc
+    unsigned mask = ~(all_ones << WS);
+    unsigned r = op;
+    unsigned wslc = slc & mask;
+    wslc <<= lsb;
+    mask <<= lsb;
+    r &= ~mask;
+    r |= wslc;
+    return r;
+  }
+
+  inline Slong set_bits_int64(Slong op, int lsb, int WS, Slong slc) {
+    // WS < 64, lsb+WS-1 < 64
+    // set the bits [pos+WS-1,pos] of op with the lower WS bits of slc
+    Ulong mask = ~(all_ones64 << WS);
+    Ulong r = op;
+    Ulong wslc = slc & mask;
+    wslc <<= lsb;
+    mask <<= lsb;
+    r &= ~mask;
+    r |= wslc;
+    return r;
+  }
+
   //////////////////////////////////////////////////////////////////////////////
-  //  Integer Vector class: iv 
+  //  Integer Vector class: iv
   //////////////////////////////////////////////////////////////////////////////
   template<int N>
   class iv {
@@ -1349,24 +1509,24 @@ namespace ac_private {
       bool qb, rbits, o;
       iv_conv_from_fraction<N>(d2, v, &qb, &rbits, &o);
     }
-  
+
     // Explicit conversion functions to C built-in types -------------
     inline Slong to_int64() const { return N==1 ? v[0] : ((Ulong)v[1] << 32) | (Ulong) (unsigned) v[0]; }
     inline Ulong to_uint64() const { return N==1 ? (Ulong) v[0] : ((Ulong)v[1] << 32) | (Ulong) (unsigned) v[0]; }
     inline double to_double() const {
       double a = v[N-1];
-      for(int i=N-2; i >= 0; i--) { 
+      for(int i=N-2; i >= 0; i--) {
         a *= (Ulong) 1 << 32;
-        a += (unsigned) v[i]; 
-      } 
+        a += (unsigned) v[i];
+      }
       return a;
     }
-    inline void conv_from_fraction(double d, bool *qb, bool *rbits, bool *o) { 
+    inline void conv_from_fraction(double d, bool *qb, bool *rbits, bool *o) {
       iv_conv_from_fraction<N>(d, v, qb, rbits, o);
     }
-  
+
     template<int N2, int Nr>
-    inline void mult(const iv<N2> &op2, iv<Nr> &r) const { 
+    inline void mult(const iv<N2> &op2, iv<Nr> &r) const {
       iv_mult<N,N2,Nr>(v, op2.v, r.v);
     }
     template<int N2, int Nr>
@@ -1438,7 +1598,7 @@ namespace ac_private {
     template<int N2>
     bool equal(const iv<N2> &op2) const {
       return iv_equal<N,N2>(v, op2.v);
-    } 
+    }
     template<int N2>
     bool greater_than(const iv<N2> &op2) const {
       return iv_compare<N,N2,true>(v, op2.v);
@@ -1450,65 +1610,67 @@ namespace ac_private {
     bool equal_zero() const {
       return iv_equal_zero<N>(v);
     }
+
     template<int N2>
     void set_slc(unsigned lsb, int WS, const iv<N2> &op2) {
-      AC_ASSERT((31+WS)/32 == N2, "Bad usage: WS greater than length of slice"); 
+      AC_ASSERT((31+WS)/32 == N2, "Bad usage: WS greater than length of slice");
       unsigned msb = lsb+WS-1;
       unsigned lsb_v = lsb >> 5;
-      unsigned lsb_b = lsb & 31; 
+      unsigned lsb_b = lsb & 31;
       unsigned msb_v = msb >> 5;
-      unsigned msb_b = msb & 31; 
-      if(N2==1) { 
-        if(msb_v == lsb_v) 
-          v[lsb_v] ^= (v[lsb_v] ^ (op2.v[0] << lsb_b)) & (~(WS==32 ? 0 : ~0<<WS) << lsb_b);
-        else {
-          v[lsb_v] ^= (v[lsb_v] ^ (op2.v[0] << lsb_b)) & (~0 << lsb_b);
-          unsigned m = (((unsigned) op2.v[0] >> 1) >> (31-lsb_b));
-          v[msb_v] ^= (v[msb_v] ^ m) & ~((~0<<1)<<msb_b);
-        }
-      } else {
-        v[lsb_v] ^= (v[lsb_v] ^ (op2.v[0] << lsb_b)) & (~0 << lsb_b);
-        for(int i = 1; i < N2-1; i++)
-          v[lsb_v+i] = (op2.v[i] << lsb_b) | (((unsigned) op2.v[i-1] >> 1) >> (31-lsb_b)); 
-        unsigned t = (op2.v[N2-1] << lsb_b) | (((unsigned) op2.v[N2-2] >> 1) >> (31-lsb_b));
-        unsigned m;
-        if(msb_v-lsb_v == N2) {
-          v[msb_v-1] = t; 
-          m = (((unsigned) op2.v[N2-1] >> 1) >> (31-lsb_b));
-        } 
-        else
-          m = t;
-        v[msb_v] ^= (v[msb_v] ^ m) & ~((~0<<1)<<msb_b);
-      }
+      unsigned msb_b = msb & 31;
+      // Specializations are done for <N,N2>={<1,1>,<2,1>,<2,2>}
+
+      // Save head an tail bits to be kept on affected elements of v
+      unsigned mask_msb_kept = (all_ones << 1) << msb_b;  // bits left of msb_b
+      unsigned msb_v_kept = (unsigned) v[msb_v] & mask_msb_kept;
+      unsigned mask_lsb_kept = ~(all_ones << lsb_b);  // bits right of lsb_b
+      unsigned lsb_v_kept = (unsigned) v[lsb_v] & mask_lsb_kept;
+
+      // Copy over shifted version of op2 (by lsb_b) to this->v starting at v[lsb_v]
+      iv_shift_l<N2,N2>(op2.v, lsb_b, v+lsb_v);
+      if(msb_v-lsb_v == N2)  // slice crosses over iv boundary because of lsb_b
+        v[msb_v] = ((unsigned) op2.v[N2-1] >> 1) >> (31-lsb_b);   // equiv to << (lsb_b-32)
+
+      // Clear sign extension bits originating from op2
+      v[msb_v] &= ~mask_msb_kept;
+
+      // OR back kept lsb and msb bits
+      v[msb_v] |= msb_v_kept;
+      v[lsb_v] |= lsb_v_kept;
+    }
+
+    void reverse(iv<N> &r) const {
+      iv_reverse<N>(v, r.v);
     }
     unsigned leading_bits(bool bit) const {
       return iv_leading_bits<N>(v, bit);
     }
   };
-  
-  template<> inline Slong iv<1>::to_int64() const { return v[0]; } 
+
+  template<> inline Slong iv<1>::to_int64() const { return v[0]; }
   template<> inline Ulong iv<1>::to_uint64() const { return v[0]; }
-  
-  template<> inline Slong iv<2>::to_int64() const { 
+
+  template<> inline Slong iv<2>::to_int64() const {
     return ((Ulong)v[1] << 32) | (Ulong) (unsigned) v[0];
   }
   template<> inline Ulong iv<2>::to_uint64() const {
     return ((Ulong)v[1] << 32) | (Ulong) (unsigned) v[0];
   }
-  
+
   template<> template<> inline void iv<1>::set_slc(unsigned lsb, int WS, const iv<1> &op2) {
-    v[0] ^= (v[0] ^ (op2.v[0] << lsb)) & (~(WS==32 ? 0 : ~0<<WS) << lsb);
+    v[0] = WS==32 ? op2.v[0] : set_bits_int(v[0], lsb, WS, op2.v[0]);
   }
   template<> template<> inline void iv<2>::set_slc(unsigned lsb, int WS, const iv<1> &op2) {
     Ulong l = to_uint64();
     Ulong l2 = op2.to_uint64();
-    l ^= (l ^ (l2 << lsb)) & (~((~(Ulong)0)<<WS) << lsb);  // WS <= 32
+    l = set_bits_int64(l, lsb, WS, l2);  // WS <= 32, never full 64-bit assignment
     *this = l;
   }
   template<> template<> inline void iv<2>::set_slc(unsigned lsb, int WS, const iv<2> &op2) {
     Ulong l = to_uint64();
     Ulong l2 = op2.to_uint64();
-    l ^= (l ^ (l2 << lsb)) & (~(WS==64 ? (Ulong) 0 : ~(Ulong)0<<WS) << lsb);
+    l = WS==64 ? l2 : set_bits_int64(l, lsb, WS, l2);
     *this = l;
   }
 
@@ -1601,6 +1763,10 @@ namespace ac_private {
   C_ARITH(Ulong, int)
   C_ARITH(Ulong, unsigned)
 
+  template<typename T, typename T2>
+  struct rt_closed_T {
+  };
+
   template<typename T>
   struct map {
     typedef T t;
@@ -1651,7 +1817,7 @@ namespace ac_private {
       template<unsigned N>
       struct set {
         typedef c_prom_T sum;
-      }; 
+      };
     };
     template<typename T2>
     struct rt_T {
@@ -1746,28 +1912,28 @@ namespace ac {
   // compiler time constant for log2 like functions
   template<unsigned X>
   struct nbits {
-    enum { val = ac_private::s_N<16>::s_X<X>::nbits };
+    enum { val = X ? ac_private::s_N<16>::s_X<X>::nbits : 1 };
   };
-                                                                                                                     
+
   template<unsigned X>
   struct log2_floor {
     enum { val = nbits<X>::val - 1 };
   };
-                                                                                                                     
+
   // log2 of 0 is not defined: generate compiler error
   template<> struct log2_floor<0> {};
-                                                                                                                     
+
   template<unsigned X>
   struct log2_ceil {
     enum { lf = log2_floor<X>::val, val = (X == (1 << lf) ? lf : lf+1) };
   };
-                                                                                                                     
+
   // log2 of 0 is not defined: generate compiler error
   template<> struct log2_ceil<0> {};
 
   template<int LowerBound, int UpperBound>
   struct int_range {
-    enum { l_s = LowerBound < 0, u_s = UpperBound < 0, 
+    enum { l_s = (LowerBound < 0), u_s = (UpperBound < 0),
            signedness = l_s || u_s,
            l_nbits = nbits<AC_ABS(LowerBound+l_s)+l_s>::val,
            u_nbits = nbits<AC_ABS(UpperBound+u_s)+u_s>::val,
@@ -1775,22 +1941,89 @@ namespace ac {
          };
     typedef ac_int<nbits, signedness> type;
   };
+
+  template<int W, int P, bool Is_MSB, bool S>
+  class sliceref {
+# if defined(__SYNTHESIS__) && !defined(AC_IGNORE_BUILTINS)
+# pragma builtin
+# endif
+    int *d_iv;
+    template<int W2, int P2, bool Is_MSB2, bool S2> friend class sliceref;
+  public:
+    sliceref( int *iv ) : d_iv(iv) {}
+
+    inline const sliceref operator = ( const sliceref &val ) {
+      return operator=<P,Is_MSB,S>(val);
+    }
+
+    template<int P2, bool Is_MSB2, bool S2>
+    inline const sliceref operator = ( const sliceref<W,P2,Is_MSB2,S2> &val ) {
+      const int src_lsi = P2/32;
+      const int src_msi = (P2+W-1)/32;
+      const int trg_lsi = P/32;
+      const int trg_msi = (P+W-1)/32;
+      const int trg_lsb = P&31;
+      const int trg_msb = (P+W-1)&31;
+      const int N = src_msi-src_lsi+1;
+      const int Nr = trg_msi-trg_lsi+1;
+      const int rshift = (P2&31) - (P&31);
+      int shifted_src[Nr];
+      int *aligned_src = val.d_iv+src_lsi;
+      if(rshift) {
+        if(rshift < 0)
+          ac_private::iv_shift_l<N,Nr>(aligned_src, -rshift, shifted_src);
+        else
+          ac_private::iv_shift_r<N,Nr>(aligned_src, rshift, shifted_src);
+        aligned_src = shifted_src;
+      }
+      unsigned mask_lsi = ac_private::all_ones << trg_lsb;
+      unsigned mask_msi = ac_private::all_ones >> (31-trg_msb);
+      if(Nr==1)
+        mask_lsi &= mask_msi;
+      int *v = d_iv+trg_lsi;
+      v[0] ^= (v[0] ^ ((unsigned) aligned_src[0])) & mask_lsi;
+      for(int k=1; k < Nr-1; k++)
+        v[k] = aligned_src[k];
+      if(Nr > 1)
+        v[Nr-1] ^= (v[Nr-1] ^ ((unsigned) aligned_src[Nr-1])) & mask_msi;
+      if(Is_MSB) {
+        const unsigned rem = 31-trg_msb;
+        if(rem) {
+          v[Nr-1] =  S ? ((signed) ((unsigned) v[Nr-1]  << rem) >> rem)
+                       : ((unsigned) v[Nr-1]  << rem) >> rem;
+        } else if(!S) {
+          v[Nr] = 0;
+        }
+      }
+      return *this;
+    }
+  };
 }
 
+#ifndef _INCLUDED_VRA_INSTR_H_
+// If VRA instrumentation is used, these enums were already defined in vra_instr.h .
 enum ac_q_mode { AC_TRN, AC_RND, AC_TRN_ZERO, AC_RND_ZERO, AC_RND_INF, AC_RND_MIN_INF, AC_RND_CONV, AC_RND_CONV_ODD };
 enum ac_o_mode { AC_WRAP, AC_SAT, AC_SAT_ZERO, AC_SAT_SYM };
+#endif
 template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2> class ac_fixed;
 
 //////////////////////////////////////////////////////////////////////////////
-//  Arbitrary-Length Integer: ac_int  
+//  Arbitrary-Length Integer: ac_int
 //////////////////////////////////////////////////////////////////////////////
 
 template<int W, bool S=true>
-class ac_int : public ac_private::iv_conv<(W+31+!S)/32, S, W<=64> 
+class ac_int : public ac_private::iv_conv<(W+31+!S)/32, S, W<=64>
 #ifndef __SYNTHESIS__
-__AC_INT_UTILITY_BASE 
+__AC_INT_UTILITY_BASE
+#endif
+#ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+, public __AC_INT_NUMERICAL_ANALYSIS_BASE
 #endif
 {
+  #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+  typedef __AC_INT_NUMERICAL_ANALYSIS_BASE NumBase;
+  #endif
+
 #if defined(__SYNTHESIS__) && !defined(AC_IGNORE_BUILTINS)
 #pragma builtin
 #endif
@@ -1801,24 +2034,109 @@ __AC_INT_UTILITY_BASE
 
   inline void bit_adjust() {
     const unsigned rem = (32-W)&31;
-    Base::v[N-1] =  S ? ((Base::v[N-1]  << rem) >> rem) : (rem ? 
-                  ((unsigned) Base::v[N-1]  << rem) >> rem : 0); 
+    Base::v[N-1] =  S ? ((signed) ((unsigned) Base::v[N-1]  << rem) >> rem) : (rem ?
+                  ((unsigned) Base::v[N-1]  << rem) >> rem : 0);
   }
+
+  #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+  template <int W2, bool S2>
+  inline void bit_adjust_vra(const ac_int<W2, S2> &orig_in, int int_bits) {
+    bit_adjust();
+    bool overflow_seen = ovf_vra(orig_in);
+    NumBase::update(orig_in.to_double(), overflow_seen, int_bits);
+  }
+
+  inline void bit_adjust_vra(const double orig_in, int int_bits) {
+    bit_adjust();
+    NumBase::update(orig_in, ovf_vra(orig_in, int_bits), int_bits);
+  }
+
+  template <class T>
+  inline void bit_adjust_vra(const T orig_in, int int_bits = 0) {
+    bit_adjust();
+    double orig_double = (double)orig_in;
+    NumBase::update(orig_double, ovf_vra(orig_in), int_bits);
+  }
+
+  inline void this_update() {
+    NumBase::update(this->to_double(), false, ac_vra_ns::calc_int_bits(*this));
+  }
+
+  inline static ac_int get_max_vra() {
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    r.template set_val<AC_VAL_MAX>();
+    return r;
+  }
+
+  inline static ac_int get_min_vra() {
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    r.template set_val<AC_VAL_MIN>();
+    return r;
+  }
+
+  inline static bool ovf_vra(const double input, int extern_mbits) {
+    bool input_is_neg = (input < 0.0);
+    if (!S && input_is_neg) {
+      return true;
+    }
+
+    // Is the target signed and the input non-negative?
+    bool starget_nneg_input = (S && !input_is_neg);
+    return (extern_mbits > W - (int(starget_nneg_input)));
+  }
+
+  template <int W2, bool S2>
+  inline static bool ovf_vra(const ac_int<W2, S2> &input) {
+    if (S == S2 && W >= W2) {
+      return false;
+    }
+
+    if (S && !S2 && (W - 1 >= W2)) {
+      return false;
+    }
+
+    static const ac_int min_val = get_min_vra();
+    static const ac_int max_val = get_max_vra();
+
+    return (input < min_val || input > max_val);
+  }
+
+  template <class T>
+  inline static bool ovf_vra(T input) {
+    constexpr bool S2 = std::is_signed<T>::value;
+    constexpr int W2 = std::numeric_limits<T>::digits + int(S2);
+    constexpr int N2 = ac_int<W2, S2>::N;
+    typedef ac_private::iv<N2> Base2;
+    ac_int<W2, S2> input_(AC_VRA_STACK_NOT_TRACED);
+    input_.Base2::operator =(input);
+    return ovf_vra(input_);
+  }
+  
+  ac_int(ac_vra_stack_trace_modes strace_mode_) : NumBase(strace_mode_) {
+    #ifdef AC_DEFAULT_IN_RANGE
+    bit_adjust();
+    #endif
+  }
+  #endif
 
   inline bool is_neg() const { return S && Base::v[N-1] < 0; }
 
   // returns false if number is denormal
   template<int WE, bool SE>
-  bool normalize_private(ac_int<WE,SE> &exp, bool reserved_min_exp=false) { 
-    int expt = exp;
-    int lshift = leading_sign();
+  bool normalize_private(ac_int<WE,SE> &exp, bool reserved_min_exp=false) {
+    int expt = exp.to_int();
+    int lshift = leading_sign().to_int();
     bool fully_normalized = true;
-    ac_int<WE, SE> min_exp;  
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<WE, SE> min_exp(AC_VRA_STACK_NOT_TRACED);
+    #else
+    ac_int<WE, SE> min_exp;
+    #endif
     min_exp.template set_val<AC_VAL_MIN>();
-    int max_shift = exp - min_exp - reserved_min_exp;
+    int max_shift = (exp - min_exp - reserved_min_exp).to_int();
     if(lshift > max_shift) {
-      lshift = ac_int<WE,false>(max_shift);
-      expt = min_exp + reserved_min_exp;
+      lshift = (ac_int<WE,false>(max_shift)).to_int();
+      expt = (min_exp + reserved_min_exp).to_int();
       fully_normalized = false;
     } else {
       expt -= lshift;
@@ -1832,7 +2150,26 @@ __AC_INT_UTILITY_BASE
     Base::shift_l(lshift, r);
     Base::operator=(r);
     bit_adjust();
+    
     return fully_normalized;
+  }
+
+  template <class T_stream>
+  void write_to_fs_private(T_stream& fs) const {
+    #ifdef AC_VALID_FSTREAM
+    AC_ASSERT(fs.good(), "File stream is not good.");
+    #endif
+
+    fs.write(reinterpret_cast<const char*>(&Base::v[0]), sizeof(Base::v));
+  }
+
+  template <class T_stream>
+  void read_from_fs_private(T_stream& fs) {
+    #ifdef AC_VALID_FSTREAM
+    AC_ASSERT(fs.good(), "File stream is not good.");
+    #endif
+
+    fs.read(reinterpret_cast<char*>(&Base::v[0]), sizeof(Base::v));
   }
 
 public:
@@ -1846,7 +2183,7 @@ public:
   template<int W2, bool S2>
   struct rt {
     enum {
-      mult_w = W+W2, 
+      mult_w = W+W2,
       mult_s = S||S2,
       plus_w = AC_MAX(W+(S2&&!S),W2+(S&&!S2))+1,
       plus_s = S||S2,
@@ -1854,7 +2191,7 @@ public:
       minus_s = true,
       div_w = W+S2,
       div_s = S||S2,
-      mod_w = AC_MIN(W,W2+(!S2&&S)), 
+      mod_w = AC_MIN(W,W2+(!S2&&S)),
       mod_s = S,
       logic_w = AC_MAX(W+(S2&&!S),W2+(S&&!S2)),
       logic_s = S||S2
@@ -1903,6 +2240,23 @@ public:
     };
   };
 
+  #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+  friend ac_int<std::numeric_limits<double>::digits + 1, true> get_thresh_min();
+
+  friend ac_int<std::numeric_limits<double>::digits, false> get_thresh_max();
+
+  template <int W2, bool S2>
+  friend int ac_vra_ns::calc_int_bits(const ac_int<W2, S2> &op2);
+
+  template <class T>
+  friend int ac_vra_ns::calc_int_bits(const T op2);
+
+  // Make this a friend function so that you can access the ac_int constructor
+  // that bypasses stack tracing.
+  template<ac_special_val V, int W2, bool S2>
+  friend ac_int<W2,S2> value(ac_int<W2,S2>);
+  #endif
+
   template<int W2, bool S2> friend class ac_int;
   template<int W2, int I2, bool S2, ac_q_mode Q2, ac_o_mode O2> friend class ac_fixed;
   ac_int() {
@@ -1913,9 +2267,43 @@ public:
   template<int W2, bool S2>
   inline ac_int (const ac_int<W2,S2> &op) {
     Base::operator =(op);
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    bit_adjust_vra(op, ac_vra_ns::calc_int_bits(op));
+    #else
     bit_adjust();
+    #endif
   }
 
+  // Construct ac_int with file streams.
+  explicit inline ac_int(std::ifstream &ifs) {
+    read_from_fs_private(ifs);
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    this_update();
+    #endif
+  }
+
+  explicit inline ac_int(std::fstream &fs) {
+    read_from_fs_private(fs);
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    this_update();
+    #endif
+  }
+
+  #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE  
+  inline ac_int( bool b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( char b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( signed char b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( unsigned char b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( signed short b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( unsigned short b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( signed int b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( unsigned int b ) : ConvBase(b) { bit_adjust_vra(b); }
+  inline ac_int( signed long b ) : ConvBase(b) { bit_adjust_vra(b, ac_vra_ns::calc_int_bits(b)); }
+  inline ac_int( unsigned long b ) : ConvBase(b) { bit_adjust_vra(b, ac_vra_ns::calc_int_bits(b)); }
+  inline ac_int( Slong b ) : ConvBase(b) { bit_adjust_vra(b, ac_vra_ns::calc_int_bits(b)); }
+  inline ac_int( Ulong b ) : ConvBase(b) { bit_adjust_vra(b, ac_vra_ns::calc_int_bits(b)); }
+  inline ac_int( double d ) : ConvBase(d) { bit_adjust_vra(d, ac_vra_ns::calc_int_bits(d)); }
+  #else
   inline ac_int( bool b ) : ConvBase(b) { bit_adjust(); }
   inline ac_int( char b ) : ConvBase(b) { bit_adjust(); }
   inline ac_int( signed char b ) : ConvBase(b) { bit_adjust(); }
@@ -1929,7 +2317,7 @@ public:
   inline ac_int( Slong b ) : ConvBase(b) { bit_adjust(); }
   inline ac_int( Ulong b ) : ConvBase(b) { bit_adjust(); }
   inline ac_int( double d ) : ConvBase(d) { bit_adjust(); }
-
+  #endif
 
 #if (defined(_MSC_VER) && !defined(__EDG__))
 #pragma warning( push )
@@ -1940,31 +2328,44 @@ public:
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic push 
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
 #endif
   template<ac_special_val V>
   inline ac_int &set_val() {
+    const unsigned int all_ones = (unsigned) ~0;
     if(V == AC_VAL_DC) {
+      #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+      ac_int r(AC_VRA_STACK_NOT_TRACED);
+      #else
       ac_int r;
-      Base::operator =(r); 
+      #endif
+      Base::operator =(r);
       bit_adjust();
     }
     else if(V == AC_VAL_0 || V == AC_VAL_MIN || V == AC_VAL_QUANTUM) {
-      Base::operator =(0); 
+      Base::operator =(0);
       if(S && V == AC_VAL_MIN) {
         const unsigned int rem = (W-1)&31;
-        Base::v[N-1] = (-1 << rem); 
+        Base::v[N-1] = (all_ones << rem);
       } else if(V == AC_VAL_QUANTUM)
         Base::v[0] = 1;
     }
-    else if(AC_VAL_MAX) {
-      Base::operator =(-1); 
-      const unsigned int rem = (32-W - (unsigned) !S )&31;
-      Base::v[N-1] = ((unsigned) (-1) >> 1) >> rem; 
+    else {  // AC_VAL_MAX
+      Base::operator =(-1);
+      const unsigned int rem = (32-W - !S )&31;
+      Base::v[N-1] = (all_ones >> 1) >> rem;
     }
+    
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    if (V != AC_VAL_DC) { // Don't cares should not be tracked by VRA.
+      // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+      *this = *this;
+    }
+    #endif
+    
     return *this;
-  } 
+  }
 #if (defined(_MSC_VER) && !defined(__EDG__))
 #pragma warning( pop )
 #endif
@@ -1972,32 +2373,33 @@ public:
 #pragma GCC diagnostic pop
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic pop 
+#pragma clang diagnostic pop
 #endif
 
   // Explicit conversion functions to C built-in types -------------
   inline int to_int() const { return Base::v[0]; }
   inline unsigned to_uint() const { return Base::v[0]; }
-  inline long to_long() const { 
-    return ac_private::long_w == 32 ? (long) Base::v[0] : (long) Base::to_int64(); 
+  inline long to_long() const {
+    return ac_private::long_w == 32 ? (long) Base::v[0] : (long) Base::to_int64();
   }
-  inline unsigned long to_ulong() const { 
+  inline unsigned long to_ulong() const {
     return ac_private::long_w == 32 ? (unsigned long) Base::v[0] : (unsigned long) Base::to_uint64();
   }
-  inline Slong to_int64() const { return Base::to_int64(); } 
-  inline Ulong to_uint64() const { return Base::to_uint64(); } 
-  inline double to_double() const { return Base::to_double(); } 
+  inline Slong to_int64() const { return Base::to_int64(); }
+  inline Ulong to_uint64() const { return Base::to_uint64(); }
+  inline double to_double() const { return Base::to_double(); }
 
   inline int length() const { return W; }
-  
-  inline std::string to_string(ac_base_mode base_rep, bool sign_mag = false) const {
-    // base_rep == AC_DEC => sign_mag == don't care (always print decimal in sign magnitude) 
+
+  inline std::string to_string(ac_base_mode base_rep, bool sign_mag = false, bool pad_to_width = false) const {
+    // base_rep == AC_DEC => sign_mag == don't care (always print decimal in sign magnitude)
+    // base_rep == AC_DEC => pad_to_width == don't care
     char r[N*32+4] = {0};
     int i = 0;
     if(sign_mag)
       r[i++] = is_neg() ? '-' : '+';
     else if (base_rep == AC_DEC && is_neg())
-      r[i++] = '-'; 
+      r[i++] = '-';
     if(base_rep != AC_DEC) {
       r[i++] = '0';
       r[i++] = base_rep == AC_BIN ? 'b' : (base_rep == AC_OCT ? 'o' : 'x');
@@ -2005,10 +2407,13 @@ public:
     int str_w;
     if( (base_rep == AC_DEC || sign_mag) && is_neg() ) {
       ac_int<W, false>  mag = operator -();
-      str_w = ac_private::to_string(mag.v, W+1, sign_mag, base_rep, false, r+i); 
+      str_w = ac_private::to_string(mag.v, W+!pad_to_width, sign_mag, base_rep, false, pad_to_width, r+i);
+    } else if(pad_to_width) {
+      ac_int<W,false> tmp = *this;
+      str_w = ac_private::to_string(tmp.v, W, sign_mag, base_rep, false, true, r+i);
     } else {
       ac_int<W,S> tmp = *this;
-      str_w = ac_private::to_string(tmp.v, W+!S, sign_mag, base_rep, false, r+i); 
+      str_w = ac_private::to_string(tmp.v, W+!S, sign_mag, base_rep, false, false, r+i);
     }
     if(!str_w) {
       r[i] = '0';
@@ -2017,50 +2422,97 @@ public:
     return std::string(r);
   }
   inline static std::string type_name() {
-	const char *tf[] = {",false>", ",true>"};
-	std::string r = "ac_int<";
-	r += ac_int<32,true>(W).to_string(AC_DEC);
-	r += tf[S];
-	return r;
+    const char *tf[] = {",false>", ",true>"};
+    std::string r = "ac_int<";
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Avoid converting W to ac_int value to prevent infinite recursion from happening
+    // while constructing ac_int_numeric_base. std::to_string is only available since C++11
+    // but that's okay because ac_int VRA requires C++11 or later anyway.
+    r += std::to_string(W);
+    #else
+    r += ac_int<32,true>(W).to_string(AC_DEC);
+    #endif
+    r += tf[S];
+    return r;
   }
 
   // Arithmetic : Binary ----------------------------------------------------
   template<int W2, bool S2>
   typename rt<W2,S2>::mult operator *( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::mult r(AC_VRA_STACK_NOT_TRACED);
+    Base::mult(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::mult r;
     Base::mult(op2, r);
+    #endif
     return r;
   }
   template<int W2, bool S2>
   typename rt<W2,S2>::plus operator +( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::plus r(AC_VRA_STACK_NOT_TRACED);
+    Base::add(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::plus r;
     Base::add(op2, r);
+    #endif
     return r;
   }
   template<int W2, bool S2>
   typename rt<W2,S2>::minus operator -( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::minus r(AC_VRA_STACK_NOT_TRACED);
+    Base::sub(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::minus r;
     Base::sub(op2, r);
+    #endif
     return r;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wenum-compare"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
   template<int W2, bool S2>
   typename rt<W2,S2>::div operator /( const ac_int<W2,S2> &op2) const {
-    typename rt<W2,S2>::div r;
-    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N, 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::div r(AC_VRA_STACK_NOT_TRACED);
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
           num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = rt<W2,S2>::div::N };
     Base::template div<num_s, N2, den_s, Nr>(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
+    typename rt<W2,S2>::div r;
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
+          num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = rt<W2,S2>::div::N };
+    Base::template div<num_s, N2, den_s, Nr>(op2, r);
+    #endif
     return r;
   }
   template<int W2, bool S2>
   typename rt<W2,S2>::mod operator %( const ac_int<W2,S2> &op2) const {
-    typename rt<W2,S2>::mod r;
-    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N, 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::mod r(AC_VRA_STACK_NOT_TRACED);
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
           num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = rt<W2,S2>::mod::N };
     Base::template rem<num_s, N2, den_s, Nr>(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
+    typename rt<W2,S2>::mod r;
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
+          num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = rt<W2,S2>::mod::N };
+    Base::template rem<num_s, N2, den_s, Nr>(op2, r);
+    #endif
     return r;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
@@ -2069,50 +2521,76 @@ public:
   // Arithmetic assign  ------------------------------------------------------
   template<int W2, bool S2>
   ac_int &operator *=( const ac_int<W2,S2> &op2) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator *(op2);
+    #else
     Base r;
     Base::mult(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2, bool S2>
   ac_int &operator +=( const ac_int<W2,S2> &op2) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator +(op2);
+    #else
     Base r;
     Base::add(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2, bool S2>
   ac_int &operator -=( const ac_int<W2,S2> &op2) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator -(op2);
+    #else
     Base r;
     Base::sub(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wenum-compare"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
   template<int W2, bool S2>
   ac_int &operator /=( const ac_int<W2,S2> &op2) {
-    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N, 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator /(op2);
+    #else
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
           num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = N };
     Base r;
     Base::template div<num_s, N2, den_s, Nr>(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2, bool S2>
   ac_int &operator %=( const ac_int<W2,S2> &op2) {
-    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N, 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator %(op2);
+    #else
+    enum {Nminus = ac_int<W+S,S>::N, N2 = ac_int<W2,S2>::N, N2minus = ac_int<W2+S2,S2>::N,
           num_s = S + (Nminus > N), den_s = S2 + (N2minus > N2), Nr = N };
     Base r;
     Base::template rem<num_s, N2, den_s, Nr>(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
@@ -2120,160 +2598,307 @@ public:
 #endif
   // Arithmetic prefix increment, decrement ----------------------------------
   ac_int &operator ++() {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Conduct intermediate calculations with temporary ac_int variables instead of using
+    // the base class increment function, so as to facilitate VRA instrumentation.
+    ac_int<1, false> q(AC_VRA_STACK_NOT_TRACED);
+    q.template set_val<AC_VAL_QUANTUM>();
+    operator += (q);
+    #else
     Base::increment();
     bit_adjust();
+    #endif
     return *this;
   }
   ac_int &operator --() {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Conduct intermediate calculations with temporary ac_int variables instead of using
+    // the base class decrement function, so as to facilitate VRA instrumentation.
+    ac_int<1, false> q(AC_VRA_STACK_NOT_TRACED);
+    q.template set_val<AC_VAL_QUANTUM>();
+    operator -= (q);
+    #else
     Base::decrement();
     bit_adjust();
+    #endif
     return *this;
   }
   // Arithmetic postfix increment, decrement ---------------------------------
   const ac_int operator ++(int) {
     ac_int t = *this;
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Conduct intermediate calculations with temporary ac_int variables instead of using
+    // the base class increment function, so as to facilitate VRA instrumentation.
+    ac_int<1, false> q(AC_VRA_STACK_NOT_TRACED);
+    q.template set_val<AC_VAL_QUANTUM>();
+    operator += (q);
+    #else
     Base::increment();
     bit_adjust();
+    #endif
     return t;
   }
   const ac_int operator --(int) {
     ac_int t = *this;
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Conduct intermediate calculations with temporary ac_int variables instead of using
+    // the base class decrement function, so as to facilitate VRA instrumentation.
+    ac_int<1, false> q(AC_VRA_STACK_NOT_TRACED);
+    q.template set_val<AC_VAL_QUANTUM>();
+    operator -= (q);
+    #else
     Base::decrement();
     bit_adjust();
+    #endif
     return t;
   }
   // Arithmetic Unary --------------------------------------------------------
-  ac_int operator +() {
+  ac_int operator +() const {
     return *this;
   }
   typename rt_unary::neg operator -() const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt_unary::neg r(AC_VRA_STACK_NOT_TRACED);
+    Base::neg(r);
+    r.bit_adjust();
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt_unary::neg r;
     Base::neg(r);
     r.bit_adjust();
+    #endif
     return r;
   }
   // ! ------------------------------------------------------------------------
   bool operator ! () const {
-    return Base::equal_zero(); 
+    return Base::equal_zero();
   }
 
   // Bitwise (arithmetic) unary: complement  -----------------------------
   ac_int<W+!S, true> operator ~() const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<W+!S, true> r(AC_VRA_STACK_NOT_TRACED);
+    Base::bitwise_complement(r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     ac_int<W+!S, true> r;
     Base::bitwise_complement(r);
+    #endif
     return r;
   }
   // Bitwise (non-arithmetic) bit_complement  -----------------------------
   ac_int<W, false> bit_complement() const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<W, false> r(AC_VRA_STACK_NOT_TRACED);
+    Base::bitwise_complement(r);
+    r.bit_adjust();
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     ac_int<W, false> r;
     Base::bitwise_complement(r);
     r.bit_adjust();
+    #endif
     return r;
   }
   // Bitwise (arithmetic): and, or, xor ----------------------------------
   template<int W2, bool S2>
   typename rt<W2,S2>::logic operator & ( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    Base::bitwise_and(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::logic r;
     Base::bitwise_and(op2, r);
+    #endif
     return r;
   }
   template<int W2, bool S2>
   typename rt<W2,S2>::logic operator | ( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    Base::bitwise_or(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::logic r;
     Base::bitwise_or(op2, r);
+    #endif
     return r;
   }
   template<int W2, bool S2>
   typename rt<W2,S2>::logic operator ^ ( const ac_int<W2,S2> &op2) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    typename rt<W2,S2>::logic r(AC_VRA_STACK_NOT_TRACED);
+    Base::bitwise_xor(op2, r);
+    // Extra update call makes sure VRA tracks the returned value regardless of what the target type is.
+    r.this_update();
+    #else
     typename rt<W2,S2>::logic r;
     Base::bitwise_xor(op2, r);
+    #endif
     return r;
   }
   // Bitwise assign (not arithmetic): and, or, xor ----------------------------
   template<int W2, bool S2>
   ac_int &operator &= ( const ac_int<W2,S2> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator &(op2);
+    #else
     Base r;
     Base::bitwise_and(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2, bool S2>
   ac_int &operator |= ( const ac_int<W2,S2> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator |(op2);
+    #else
     Base r;
     Base::bitwise_or(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2, bool S2>
   ac_int &operator ^= ( const ac_int<W2,S2> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator ^(op2);
+    #else
     Base r;
     Base::bitwise_xor(op2, r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   // Shift (result constrained by left operand) -------------------------------
   template<int W2>
   ac_int operator << ( const ac_int<W2,true> &op2 ) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int r;
+    #endif
+    if (W2 > 32)
+      AC_ASSERT(((op2 < (long(1) << 31)) && (op2 >= (long(-1) << 31))) || (op2[W2-1] == op2[31]), "Attempting to shift by a value outside of the 32bit range. Such big values are not supported and may lead to Synthesis or Simulation mismatch.");
     Base::shift_l2(op2.to_int(), r);
     r.bit_adjust();
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_int operator << ( const ac_int<W2,false> &op2 ) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int r;
+    #endif
+    if (W2 > 32)
+      AC_ASSERT((op2 < unsigned(int(-1))), "Attempting to shift by a value outside of the 32bit range. Such big values are not supported and may lead to Synthesis or Simulation mismatch.");
     Base::shift_l(op2.to_uint(), r);
     r.bit_adjust();
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_int operator >> ( const ac_int<W2,true> &op2 ) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int r;
+    #endif
+    if (W2 > 32)
+      AC_ASSERT(((op2 < (long(1) << 31)) && (op2 >= (long(-1) << 31))) || (op2[W2-1] == op2[31]), "Attempting to shift by a value outside of the 32bit range. Such big values are not supported and may lead to Synthesis or Simulation mismatch.");
     Base::shift_r2(op2.to_int(), r);
     r.bit_adjust();
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   template<int W2>
   ac_int operator >> ( const ac_int<W2,false> &op2 ) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int r;
+    #endif
+    if (W2 > 32)
+      AC_ASSERT((op2 < unsigned(int(-1))), "Attempting to shift by a value outside of the 32bit range. Such big values are not supported and may lead to Synthesis or Simulation mismatch.");
     Base::shift_r(op2.to_uint(), r);
     r.bit_adjust();
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
     return r;
   }
   // Shift assign ------------------------------------------------------------
   template<int W2>
   ac_int &operator <<= ( const ac_int<W2,true> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator <<(op2);
+    #else
     Base r;
     Base::shift_l2(op2.to_int(), r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2>
   ac_int &operator <<= ( const ac_int<W2,false> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator <<(op2);
+    #else
     Base r;
     Base::shift_l(op2.to_uint(), r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2>
   ac_int &operator >>= ( const ac_int<W2,true> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator >>(op2);
+    #else
     Base r;
     Base::shift_r2(op2.to_int(), r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   template<int W2>
   ac_int &operator >>= ( const ac_int<W2,false> &op2 ) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // Explicit assignment from one ac_int type to the other is needed for VRA instrumentation.
+    *this = this->operator >>(op2);
+    #else
     Base r;
     Base::shift_r(op2.to_uint(), r);
     Base::operator=(r);
     bit_adjust();
+    #endif
     return *this;
   }
   // Relational ---------------------------------------------------------------
@@ -2283,7 +2908,7 @@ public:
   }
   template<int W2, bool S2>
   bool operator != ( const ac_int<W2,S2> &op2) const {
-    return !Base::equal(op2); 
+    return !Base::equal(op2);
   }
   template<int W2, bool S2>
   bool operator < ( const ac_int<W2,S2> &op2) const {
@@ -2291,7 +2916,7 @@ public:
   }
   template<int W2, bool S2>
   bool operator >= ( const ac_int<W2,S2> &op2) const {
-    return !Base::less_than(op2); 
+    return !Base::less_than(op2);
   }
   template<int W2, bool S2>
   bool operator > ( const ac_int<W2,S2> &op2) const {
@@ -2299,59 +2924,104 @@ public:
   }
   template<int W2, bool S2>
   bool operator <= ( const ac_int<W2,S2> &op2) const {
-    return !Base::greater_than(op2); 
+    return !Base::greater_than(op2);
   }
 
   // Bit and Slice Select -----------------------------------------------------
   template<int WS, int WX, bool SX>
-  inline ac_int<WS,S> slc(const ac_int<WX,SX> &index) const {
+  inline const ac_int<WS,S> slc(const ac_int<WX,SX> &index) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<WS,S> r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int<WS,S> r;
-    AC_ASSERT(index >= 0, "Attempting to read slc with negative indeces");
-    ac_int<WX-SX, false> uindex = index;
-    Base::shift_r(uindex.to_uint(), r);
+    #endif
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read slc with negative indeces");
+    unsigned uindex = ac_int<WX-SX, false>(index).to_uint();
+    Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
 
   template<int WS>
-  inline ac_int<WS,S> slc(signed index) const {
+  inline const ac_int<WS,S> slc(signed index) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<WS,S> r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int<WS,S> r;
+    #endif
     AC_ASSERT(index >= 0, "Attempting to read slc with negative indeces");
     unsigned uindex = index & ((unsigned)~0 >> 1);
     Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
   template<int WS>
-  inline ac_int<WS,S> slc(unsigned uindex) const {
+  inline const ac_int<WS,S> slc(unsigned uindex) const {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<WS,S> r(AC_VRA_STACK_NOT_TRACED);
+    #else
     ac_int<WS,S> r;
+    #endif
     Base::shift_r(uindex, r);
     r.bit_adjust();
-    return r; 
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    r.this_update();
+    #endif
+    return r;
   }
 
   template<int W2, bool S2, int WX, bool SX>
   inline ac_int &set_slc(const ac_int<WX,SX> lsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(lsb.to_int() + W2 <= W && lsb.to_int() >= 0, "Out of bounds set_slc");
-    ac_int<WX-SX, false> ulsb = lsb;
-    Base::set_slc(ulsb.to_uint(), W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else {
+      unsigned ulsb = ac_int<WX-SX, false>(lsb).to_uint();
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    }
+    bit_adjust();   // in case sign bit was assigned
+    
     return *this;
   }
   template<int W2, bool S2>
   inline ac_int &set_slc(signed lsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(lsb + W2 <= W && lsb >= 0, "Out of bounds set_slc");
-    unsigned ulsb = lsb & ((unsigned)~0 >> 1);
-    Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else {
+      unsigned ulsb = lsb & ((unsigned)~0 >> 1);
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    }
+    bit_adjust();   // in case sign bit was assigned
+    
     return *this;
   }
   template<int W2, bool S2>
   inline ac_int &set_slc(unsigned ulsb, const ac_int<W2,S2> &slc) {
     AC_ASSERT(ulsb + W2 <= W, "Out of bounds set_slc");
-    Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
-    bit_adjust();   // in case sign bit was assigned 
+    if(W == W2)
+      Base::operator =(slc);
+    else
+      Base::set_slc(ulsb, W2, (ac_int<W2,true>) slc);
+    bit_adjust();   // in case sign bit was assigned
+    
     return *this;
+  }
+
+  template<int Msb, int Lsb>
+  inline ac::sliceref<Msb-Lsb+1,Lsb,Msb==W-1,S> range() {
+    #if __cplusplus > 199711L
+    static_assert(Msb-Lsb+1 > 0, "Range length not positive: MSB < LSB");
+    static_assert(Lsb >= 0, "LSB is negative");
+    static_assert(Msb < W, "MSB >= W");
+    #endif
+    return ac::sliceref<Msb-Lsb+1,Lsb,Msb==W-1,S>(Base::v);
   }
 
   class ac_bitref {
@@ -2371,8 +3041,10 @@ public:
       // lsb of int (val&1) is written to bit
       if(d_index < W) {
         int *pval = &d_bv.v[d_index>>5];
-        *pval ^= (*pval ^ (val << (d_index&31) )) & 1 << (d_index&31);
-        d_bv.bit_adjust();   // in case sign bit was assigned 
+        int shift = d_index & 31;
+        unsigned int mask = 1u << shift;
+        *pval = (*pval & ~mask) | ((val & 1) << shift);
+        d_bv.bit_adjust();   // in case sign bit was assigned
       }
       return *this;
     }
@@ -2389,74 +3061,147 @@ public:
     AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     ac_bitref bvh( this, uindex );
     return bvh;
-  } 
+  }
   ac_bitref operator [] ( int index) {
     AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
     unsigned uindex = index & ((unsigned)~0 >> 1);
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     ac_bitref bvh( this, uindex );
     return bvh;
-  } 
+  }
   template<int W2, bool S2>
   ac_bitref operator [] ( const ac_int<W2,S2> &index) {
-    AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
-    ac_int<W2-S2,false> uindex = index;
-    ac_bitref bvh( this, uindex.to_uint() );
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read bit with negative index");
+    unsigned uindex = ac_int<W2-S2,false>(index).to_uint();
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
+    ac_bitref bvh( this, uindex );
     return bvh;
-  } 
+  }
   bool operator [] ( unsigned int uindex) const {
     AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     return (uindex < W) ? (Base::v[uindex>>5]>>(uindex&31) & 1) : 0;
-  } 
+  }
   bool operator [] ( int index) const {
     AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
     unsigned uindex = index & ((unsigned)~0 >> 1);
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
     return (uindex < W) ? (Base::v[uindex>>5]>>(uindex&31) & 1) : 0;
   }
   template<int W2, bool S2>
   bool operator [] ( const ac_int<W2,S2> &index) const {
-    AC_ASSERT(index >= 0, "Attempting to read bit with negative index");
-    AC_ASSERT(index < W, "Attempting to read bit beyond MSB");
-    ac_int<W2-S2,false> uindex = index;
-    return (uindex < W) ? (Base::v[uindex>>5]>>(uindex.to_uint()&31) & 1) : 0;
+    AC_ASSERT(index.to_int() >= 0, "Attempting to read bit with negative index");
+    unsigned uindex = ac_int<W2-S2,false>(index).to_uint();
+    AC_ASSERT(uindex < W, "Attempting to read bit beyond MSB");
+    return (uindex < W) ? (Base::v[uindex>>5]>>(uindex&31) & 1) : 0;
   }
-#if 0
-  unsigned int leading_bits(bool bit) const {
-    return Base::leading_bits(bit) - (32*N - W); 
+
+  void reverse() {
+    if(W > 32) {
+      typedef ac_int<W,true> intW_t;
+      typename intW_t::Base r0(*this);
+      #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+      intW_t r(AC_VRA_STACK_NOT_TRACED);
+      #else
+      intW_t r;
+      #endif
+      r0.reverse(r);
+      r.template const_shift_r<intW_t::N,(32-W)&31>(r);
+      *this=ac_int<W,false>(r);
+    } else {
+      *this=ac_int<W,false>(ac_private::reverse_u<W>((unsigned)Base::v[0]));
+    }
   }
-#endif
+
+  ac_int<W,false> reversed() const {
+    if(W > 32) {
+      typedef ac_int<W,true> intW_t;
+      typename intW_t::Base r0(*this);
+      #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+      intW_t r(AC_VRA_STACK_NOT_TRACED);
+      #else
+      intW_t r;
+      #endif
+      r0.reverse(r);
+      r.template const_shift_r<intW_t::N,(32-W)&31>(r);
+      return ac_int<W,false>(r);
+    } else {
+      return ac_int<W,false>(ac_private::reverse_u<W>((unsigned)Base::v[0]));
+    }
+  }
+
   typename rt_unary::leading_sign leading_sign() const {
-    unsigned ls = Base::leading_bits(S & (Base::v[N-1] < 0)) - (32*N - W)-S; 
+    unsigned ls = Base::leading_bits(S & (Base::v[N-1] < 0)) - (32*N - W)-S;
     return ls;
   }
   typename rt_unary::leading_sign leading_sign(bool &all_sign) const {
-    unsigned ls = Base::leading_bits(S & (Base::v[N-1] < 0)) - (32*N - W)-S; 
-    all_sign = (ls == W-S); 
+    unsigned ls = Base::leading_bits(S & (Base::v[N-1] < 0)) - (32*N - W)-S;
+    all_sign = (ls == W-S);
     return ls;
   }
   // returns false if number is denormal
   template<int WE, bool SE>
-  bool normalize(ac_int<WE,SE> &exp) { 
+  bool normalize(ac_int<WE,SE> &exp) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int m = *this;
+    bool r = m.normalize_private(exp);
+    // Assignment from temporary ac_int variable to final result facilitates VRA tracking.
+    *this = m;
+    return r;
+    #else
     return normalize_private(exp);
+    #endif
   }
   // returns false if number is denormal, minimum exponent is reserved (usually for encoding special values/errors)
   template<int WE, bool SE>
-  bool normalize_RME(ac_int<WE,SE> &exp) { 
+  bool normalize_RME(ac_int<WE,SE> &exp) {
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int m = *this;
+    bool r = m.normalize_private(exp, true);
+    // Assignment from temporary ac_int variable to final result facilitates VRA tracking.
+    *this = m;
+    return r;
+    #else
     return normalize_private(exp, true);
+    #endif
   }
+
+  inline void write_to_fs(std::ofstream &ofs) const {
+    write_to_fs_private(ofs);
+  }
+
+  inline void write_to_fs(std::fstream &fs) const {
+    write_to_fs_private(fs);
+  }
+
+  inline ac_int & read_from_fs(std::ifstream &ifs) {
+    read_from_fs_private(ifs);
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
+    return *this;
+  }
+
+  inline ac_int & read_from_fs(std::fstream &fs) {
+    read_from_fs_private(fs);
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    // This assignment is added to facilitate VRA tracking. It is redundant otherwise.
+    *this = *this;
+    #endif
+    return *this;
+  }
+
   bool and_reduce() const {
     return ac_private::iv_equal_ones_to<W,N>(Base::v);
   }
   bool or_reduce() const {
-    return !Base::equal_zero(); 
+    return !Base::equal_zero();
   }
   bool xor_reduce() const {
     unsigned r = Base::v[N-1];
     if(S) {
       const unsigned rem = (32-W)&31;
-      r = (r << rem) >> rem; 
+      r = (r << rem) >> rem;
     }
     if(N > 1)
       r ^= Base::v[N-2];
@@ -2480,8 +3225,13 @@ public:
   inline void bit_fill_hex(const char *str) {
     // Zero Pads if str is too short, throws ms bits away if str is too long
     // Asserts if anything other than 0-9a-fA-F is encountered
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<W,S> res(AC_VRA_STACK_NOT_TRACED);
+    res = 0;
+    #else
     ac_int<W,S> res = 0;
-    while(str) {
+    #endif
+    while(*str) {
       char c = *str;
       int h = 0;
       if(c >= '0' && c <= '9')
@@ -2494,8 +3244,8 @@ public:
         AC_ASSERT(!c, "Invalid hex digit");
         break;
       }
-      res <<= 4;
-      res |= h;
+      res <<= ac_int<3,false>(4);
+      res |= ac_int<4,false>(h);
       str++;
     }
     *this = res;
@@ -2506,11 +3256,16 @@ public:
     // bit_fill from integer vector
     //   if W > N*32, missing most significant bits are zeroed
     //   if W < N*32, additional bits in ivec are ignored (no overflow checking)
-    // Example:  
-    //   ac_int<80,false> x;    int vec[] = { 0xffffa987, 0x6543210f, 0xedcba987 };
-    //   x.bit_fill(vec);   // vec[0] fill bits 79-64 
+    // Example:
+    //   ac_int<80,false> x;    int vec[] = { 0x5fffa987, 0x6543210f, 0x7dcba987 };
+    //   x.bit_fill(vec);   // vec[0] fill bits 79-64
     enum { N0 = (W+31)/32, M = AC_MIN(N0,Na) };
+    #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+    ac_int<M*32,false> res(AC_VRA_STACK_NOT_TRACED);
+    res = 0;
+    #else
     ac_int<M*32,false> res = 0;
+    #endif
     for(int i=0; i < M; i++)
       res.set_slc(i*32, ac_int<32>(ivec[bigendian ? M-1-i : i]));
     *this = res;
@@ -2547,10 +3302,10 @@ namespace ac {
 }
 
 namespace ac_private {
-  template<int W2, bool S2> 
+  template<int W2, bool S2>
   struct rt_ac_int_T< ac_int<W2,S2> > {
     typedef ac_int<W2,S2> i2_t;
-    template<int W, bool S> 
+    template<int W, bool S>
     struct op1 {
       typedef ac_int<W,S> i_t;
       typedef typename i_t::template rt<W2,S2>::mult mult;
@@ -2585,7 +3340,10 @@ namespace ac_private {
   };
 }
 
-
+// Specialized constructors for bit_adjust bypass are disabled when using
+// ac_int VRA, which helps to reduce the number of instrumentation hooks
+// needed and simplifies the coding involved.
+#ifndef __AC_INT_NUMERICAL_ANALYSIS_BASE
 // Specializations for constructors on integers that bypass bit adjusting
 //  and are therefore more efficient
 template<> inline ac_int<1,true>::ac_int( bool b ) { v[0] = b ? -1 : 0; }
@@ -2634,13 +3392,20 @@ template<> inline ac_int<64,true>::ac_int( Slong b ) { v[0] = (int) b; v[1] = (i
 template<> inline ac_int<64,true>::ac_int( Ulong b ) { v[0] = (int) b; v[1] = (int) (b >> 32);}
 template<> inline ac_int<64,false>::ac_int( Slong b ) { v[0] = (int) b; v[1] = (int) ((Ulong) b >> 32); v[2] = 0; }
 template<> inline ac_int<64,false>::ac_int( Ulong b ) { v[0] = (int) b; v[1] = (int) (b >> 32); v[2] = 0; }
+#endif
 
 // Stream --------------------------------------------------------------------
 
 template<int W, bool S>
 inline std::ostream& operator << (std::ostream &os, const ac_int<W,S> &x) {
 #ifndef __SYNTHESIS__
-  os << x.to_string(AC_DEC);
+  if ((os.flags() & std::ios::hex) != 0) {
+    os << x.to_string(AC_HEX);
+  } else if ((os.flags() & std::ios::oct) != 0) {
+    os << x.to_string(AC_OCT);
+  } else {
+    os << x.to_string(AC_DEC);
+  }
 #endif
   return os;
 }
@@ -2703,26 +3468,34 @@ inline std::ostream& operator << (std::ostream &os, const ac_int<W,S> &x) {
   ASSIGN_OP_WITH_INT(|=, C_TYPE, WI, SI) \
   ASSIGN_OP_WITH_INT(^=, C_TYPE, WI, SI)
 
-// ------------------------------------- End of Macros for Binary Operators with Integers 
+// ------------------------------------- End of Macros for Binary Operators with Integers
 
+// for backward compatability with v3.9.0 and earlier define following macro
+#ifdef AC_INT_NS_FOR_MIXED_OPERATORS
 namespace ac {
   namespace ops_with_other_types {
-    //  Mixed Operators with Integers  -----------------------------------------------
-    OPS_WITH_INT(bool, 1, false)
-    OPS_WITH_INT(char, 8, true)
-    OPS_WITH_INT(signed char, 8, true)
-    OPS_WITH_INT(unsigned char, 8, false)
-    OPS_WITH_INT(short, 16, true)
-    OPS_WITH_INT(unsigned short, 16, false)
-    OPS_WITH_INT(int, 32, true)
-    OPS_WITH_INT(unsigned int, 32, false)
-    OPS_WITH_INT(long, ac_private::long_w, true)
-    OPS_WITH_INT(unsigned long, ac_private::long_w, false)
-    OPS_WITH_INT(Slong, 64, true)
-    OPS_WITH_INT(Ulong, 64, false)
-    // -----------------------------------------  End of Mixed Operators with Integers
+#endif
+//  Mixed Operators with Integers  -----------------------------------------------
+OPS_WITH_INT(bool, 1, false)
+OPS_WITH_INT(char, 8, true)
+OPS_WITH_INT(signed char, 8, true)
+OPS_WITH_INT(unsigned char, 8, false)
+OPS_WITH_INT(short, 16, true)
+OPS_WITH_INT(unsigned short, 16, false)
+OPS_WITH_INT(int, 32, true)
+OPS_WITH_INT(unsigned int, 32, false)
+OPS_WITH_INT(long, ac_private::long_w, true)
+OPS_WITH_INT(unsigned long, ac_private::long_w, false)
+OPS_WITH_INT(Slong, 64, true)
+OPS_WITH_INT(Ulong, 64, false)
+// -----------------------------------------  End of Mixed Operators with Integers
+#ifdef AC_INT_NS_FOR_MIXED_OPERATORS
   }  // ops_with_other_types namespace
+}
+using namespace ac::ops_with_other_types;
+#endif
 
+namespace ac {
   // Functions to fill bits
 
   template<typename T>
@@ -2733,7 +3506,7 @@ namespace ac {
   }
 
   // returns bit_fill for type
-  //   example:   
+  //   example:
   //   ac_int<80,false> x = ac::bit_fill< ac_int<80,false> > ((int [3]) {0xffffa987, 0x6543210f, 0xedcba987 });
   template<typename T, int N>
   inline T bit_fill(const int (&ivec)[N], bool bigendian=true) {
@@ -2749,20 +3522,18 @@ namespace ac {
 // Addition of ac_int and  pointer
 template<typename T, int W, bool S>
 T *operator +(T *ptr, const ac_int<W,S> &op2) {
-  return ptr + op2.to_int64(); 
+  return ptr + op2.to_int64();
 }
 template<typename T, int W, bool S>
 T *operator +(const ac_int<W,S> &op2, T *ptr) {
-  return ptr + op2.to_int64(); 
+  return ptr + op2.to_int64();
 }
 // Subtraction of ac_int from pointer
 template<typename T, int W, bool S>
 T *operator -(T *ptr, const ac_int<W,S> &op2) {
-  return ptr - op2.to_int64(); 
+  return ptr - op2.to_int64();
 }
-// -----------------------------------------  End of Mixed Operators with Pointers 
-
-using namespace ac::ops_with_other_types;
+// -----------------------------------------  End of Mixed Operators with Pointers
 
 namespace ac_intN {
   ///////////////////////////////////////////////////////////////////////////////
@@ -2906,19 +3677,26 @@ using namespace ac_intN;
 #pragma warning( disable: 4700 )
 #endif
 #if (defined(__GNUC__) && ( __GNUC__ == 4 && __GNUC_MINOR__ >= 6 || __GNUC__ > 4 ) && !defined(__EDG__))
-#pragma GCC diagnostic push 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 #if defined(__clang__)
-#pragma clang diagnostic push 
+#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
 #endif
 
 // Global templatized functions for easy initialization to special values
 template<ac_special_val V, int W, bool S>
 inline ac_int<W,S> value(ac_int<W,S>) {
+  #ifdef __AC_INT_NUMERICAL_ANALYSIS_BASE
+  // Accessing this private constructor is possible because the value()
+  // function is declared a friend to the ac_int class when VRA is enabled.
+  ac_int<W,S> r(AC_VRA_STACK_NOT_TRACED);
+  #else
   ac_int<W,S> r;
-  return r.template set_val<V>();
+  #endif
+  r.template set_val<V>();
+  return r;
 }
 // forward declaration, otherwise GCC errors when calling init_array
 template<ac_special_val V, int W, int I, bool S, ac_q_mode Q, ac_o_mode O>
@@ -2933,9 +3711,9 @@ template<ac_special_val val> inline C_TYPE value(C_TYPE); \
 template<> inline C_TYPE value<AC_VAL_0>(C_TYPE) { return (C_TYPE)0; } \
 SPECIAL_VAL_FOR_INTS_DC(C_TYPE, WI, SI) \
 template<> inline C_TYPE value<AC_VAL_QUANTUM>(C_TYPE) { return (C_TYPE)1; } \
-template<> inline C_TYPE value<AC_VAL_MAX>(C_TYPE) { return (C_TYPE)(SI ? ~((C_TYPE) -1 << (WI-1)) : (C_TYPE) -1); } \
-template<> inline C_TYPE value<AC_VAL_MIN>(C_TYPE) { return (C_TYPE)(SI ? (C_TYPE) 1 << (WI-1) : 0); }
-                                                                                           
+template<> inline C_TYPE value<AC_VAL_MAX>(C_TYPE) { return (C_TYPE)(SI ? ~(((C_TYPE) 1) << (WI-1)) : (C_TYPE) -1); } \
+template<> inline C_TYPE value<AC_VAL_MIN>(C_TYPE) { return (C_TYPE)(SI ? ((C_TYPE) 1) << (WI-1) : (C_TYPE) 0); }
+
 SPECIAL_VAL_FOR_INTS(bool, 1, false)
 SPECIAL_VAL_FOR_INTS(char, 8, true)
 SPECIAL_VAL_FOR_INTS(signed char, 8, true)
@@ -2952,18 +3730,19 @@ SPECIAL_VAL_FOR_INTS(Ulong, 64, false)
 #define INIT_ARRAY_SPECIAL_VAL_FOR_INTS(C_TYPE) \
   template<ac_special_val V> \
   inline bool init_array(C_TYPE *a, int n) { \
-    C_TYPE t = value<V>(*a); \
+    C_TYPE t = value<V>((C_TYPE) 0); \
     for(int i=0; i < n; i++) \
       a[i] = t; \
     return true; \
   }
 
 namespace ac {
-// PUBLIC FUNCTIONS 
-// function to initialize (or uninitialize) arrays 
+// PUBLIC FUNCTIONS
+  // function to initialize (or uninitialize) arrays with fixed value.
   template<ac_special_val V, int W, bool S>
   inline bool init_array(ac_int<W,S> *a, int n) {
-    ac_int<W,S> t = value<V>(*a);
+    ac_int<W,S> t;
+    t.template set_val<V>();
     for(int i=0; i < n; i++)
       a[i] = t;
     return true;
@@ -2981,6 +3760,34 @@ namespace ac {
   INIT_ARRAY_SPECIAL_VAL_FOR_INTS(unsigned long)
   INIT_ARRAY_SPECIAL_VAL_FOR_INTS(signed long long)
   INIT_ARRAY_SPECIAL_VAL_FOR_INTS(unsigned long long)
+
+  // functions to initialize array from filestream.
+
+  template<int W, bool S>
+  inline bool init_array(ac_int<W, S> *a, int n, std::ifstream &ifs) {
+    for (int i = 0; i < n; i++) { a[i].read_from_fs(ifs); }
+    return true;
+  }
+
+  template<int W, bool S>
+  inline bool init_array(ac_int<W, S> *a, int n, std::fstream &fs) {
+    for (int i = 0; i < n; i++) { a[i].read_from_fs(fs); }
+    return true;
+  }
+
+  // functions to dump array to filestream.
+
+  template<int W, bool S>
+  inline bool dump_array(const ac_int<W, S> *a, int n, std::ofstream &ofs) {
+    for (int i = 0; i < n; i++) { a[i].write_to_fs(ofs); }
+    return true;
+  }
+
+  template<int W, bool S>
+  inline bool dump_array(const ac_int<W, S> *a, int n, std::fstream &fs) {
+    for (int i = 0; i < n; i++) { a[i].write_to_fs(fs); }
+    return true;
+  }
 }
 
 #if (defined(_MSC_VER) && !defined(__EDG__))
@@ -2995,6 +3802,12 @@ namespace ac {
 
 #ifdef __AC_NAMESPACE
 }
+#endif
+
+#ifdef AC_INT_VRA
+// Note that the value range analysis feature of AC Int is only available with a full
+// Catapult installation.
+#include "vra_instr_int_fns.h"
 #endif
 
 #endif // __AC_INT_H

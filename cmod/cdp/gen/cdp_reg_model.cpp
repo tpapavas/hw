@@ -87,7 +87,7 @@ bool cdp_reg_model::CdpAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 cdp_register_group_0->SetWritable(offset, data);
                 if (cdp_register_group_0->rD_OP_ENABLE.uOP_EN()) {
-                    event_cdp_reg_group_0_operation_enable.notify(SC_ZERO_TIME);
+                    event_cdp_reg_group_0_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "cdp_reg_model::CdpAccessRegister, notified op_en for group 0.\x0A"));
                 }
             } else {
@@ -99,7 +99,7 @@ bool cdp_reg_model::CdpAccessRegister(uint32_t reg_addr, uint32_t & data, bool i
 #pragma CTC ENDSKIP
                 cdp_register_group_1->SetWritable(offset, data);
                 if (cdp_register_group_1->rD_OP_ENABLE.uOP_EN()) {
-                    event_cdp_reg_group_1_operation_enable.notify(SC_ZERO_TIME);
+                    event_cdp_reg_group_1_operation_enable.notify(sc_core::SC_ZERO_TIME);
                     cslDebug((30, "cdp_reg_model::CdpAccessRegister, notified op_en for group 1.\x0A"));
                 }
             }

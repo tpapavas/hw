@@ -19,56 +19,58 @@
 #include "nvdla_cc_credit_iface.h"
 #include "nvdla_mac2accu_if_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 
 SCSIM_NAMESPACE_START(cmod)
 
+
 // Base SystemC class for module NV_NVDLA_cacc
-class NV_NVDLA_cacc_base : public sc_module
+class NV_NVDLA_cacc_base : public sc_core::sc_module
 {
     public:
 
     // Constructor
-    NV_NVDLA_cacc_base(const sc_module_name name);
+    NV_NVDLA_cacc_base(const sc_core::sc_module_name name);
 
     // Target Socket (unrecognized protocol: NV_MSDEC_csb2xx_16m_secure_be_lvl_t): csb2cacc_req
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> csb2cacc_req;
-    virtual void csb2cacc_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void csb2cacc_req_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay) = 0;
+    virtual void csb2cacc_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void csb2cacc_req_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_mac2accu_data_if_t): mac_a2accu
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> mac_a2accu;
-    virtual void mac_a2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay) = 0;
+    virtual void mac_a2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void mac_a2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay) = 0;
 
     // Target Socket (unrecognized protocol: nvdla_mac2accu_data_if_t): mac_b2accu
     tlm_utils::multi_passthrough_target_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> mac_b2accu;
-    virtual void mac_b2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay);
-    virtual void mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_time& delay) = 0;
+    virtual void mac_b2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay);
+    virtual void mac_b2accu_b_transport(int ID, nvdla_mac2accu_data_if_t* payload, sc_core::sc_time& delay) = 0;
 
     // Initiator Socket (unrecognized protocol: nvdla_xx2csb_resp_t): cacc2csb_resp
     tlm::tlm_generic_payload cacc2csb_resp_bp;
     nvdla_xx2csb_resp_t cacc2csb_resp_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> cacc2csb_resp;
-    virtual void cacc2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay);
+    virtual void cacc2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_cc_credit_t): accu2sc_credit
     tlm::tlm_generic_payload accu2sc_credit_bp;
     nvdla_cc_credit_t accu2sc_credit_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> accu2sc_credit;
-    virtual void accu2sc_credit_b_transport(nvdla_cc_credit_t* payload, sc_time& delay);
+    virtual void accu2sc_credit_b_transport(nvdla_cc_credit_t* payload, sc_core::sc_time& delay);
 
     // Initiator Socket (unrecognized protocol: nvdla_accu2pp_if_t): cacc2sdp
     tlm::tlm_generic_payload cacc2sdp_bp;
     nvdla_accu2pp_if_t cacc2sdp_payload;
     tlm_utils::multi_passthrough_initiator_socket<NV_NVDLA_cacc_base, 32, tlm::tlm_base_protocol_types> cacc2sdp;
-    virtual void cacc2sdp_b_transport(nvdla_accu2pp_if_t* payload, sc_time& delay);
+    virtual void cacc2sdp_b_transport(nvdla_accu2pp_if_t* payload, sc_core::sc_time& delay);
 
     // Port has no flow: cacc2glb_done_intr
-    // sc_vector< sc_out<bool> > cacc2glb_done_intr;
+    // sc_core::sc_vector< sc_out<bool> > cacc2glb_done_intr;
 
     // Destructor
     virtual ~NV_NVDLA_cacc_base() {}
@@ -76,8 +78,8 @@ class NV_NVDLA_cacc_base : public sc_module
 };
 
 // Constructor for base SystemC class for module NV_NVDLA_cacc
-inline NV_NVDLA_cacc_base::NV_NVDLA_cacc_base(const sc_module_name name)
-    : sc_module(name),
+inline NV_NVDLA_cacc_base::NV_NVDLA_cacc_base(const sc_core::sc_module_name name)
+    : sc_core::sc_module(name),
     csb2cacc_req("csb2cacc_req"),
     mac_a2accu("mac_a2accu"),
     mac_b2accu("mac_b2accu"),
@@ -100,28 +102,28 @@ inline NV_NVDLA_cacc_base::NV_NVDLA_cacc_base(const sc_module_name name)
 }
 
 inline void
-NV_NVDLA_cacc_base::csb2cacc_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_cacc_base::csb2cacc_req_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload = (NV_MSDEC_csb2xx_16m_secure_be_lvl_t*) bp.get_data_ptr();
     csb2cacc_req_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_cacc_base::mac_a2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_cacc_base::mac_a2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_mac2accu_data_if_t* payload = (nvdla_mac2accu_data_if_t*) bp.get_data_ptr();
     mac_a2accu_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_cacc_base::mac_b2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_time& delay)
+NV_NVDLA_cacc_base::mac_b2accu_b_transport(int ID, tlm::tlm_generic_payload& bp, sc_core::sc_time& delay)
 {
     nvdla_mac2accu_data_if_t* payload = (nvdla_mac2accu_data_if_t*) bp.get_data_ptr();
     mac_b2accu_b_transport(ID, payload, delay);
 }
 
 inline void
-NV_NVDLA_cacc_base::cacc2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_cacc_base::cacc2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     cacc2csb_resp_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < cacc2csb_resp.size(); socket_id++) {
@@ -130,7 +132,7 @@ NV_NVDLA_cacc_base::cacc2csb_resp_b_transport(nvdla_xx2csb_resp_t* payload, sc_t
 }
 
 inline void
-NV_NVDLA_cacc_base::accu2sc_credit_b_transport(nvdla_cc_credit_t* payload, sc_time& delay)
+NV_NVDLA_cacc_base::accu2sc_credit_b_transport(nvdla_cc_credit_t* payload, sc_core::sc_time& delay)
 {
     accu2sc_credit_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < accu2sc_credit.size(); socket_id++) {
@@ -139,7 +141,7 @@ NV_NVDLA_cacc_base::accu2sc_credit_b_transport(nvdla_cc_credit_t* payload, sc_ti
 }
 
 inline void
-NV_NVDLA_cacc_base::cacc2sdp_b_transport(nvdla_accu2pp_if_t* payload, sc_time& delay)
+NV_NVDLA_cacc_base::cacc2sdp_b_transport(nvdla_accu2pp_if_t* payload, sc_core::sc_time& delay)
 {
     cacc2sdp_bp.set_data_ptr((unsigned char*) payload);
     for (uint8_t socket_id=0; socket_id < cacc2sdp.size(); socket_id++) {

@@ -11,7 +11,8 @@
 #ifndef _CACC_REG_MODEL_H_
 #define _CACC_REG_MODEL_H_
 
-#include <systemc.h>
+//#include "systemc/ext/systemc"
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"
@@ -35,8 +36,8 @@ class cacc_reg_model {
         CNVDLA_CACC_REGSET *cacc_register_group_0;
         CNVDLA_CACC_REGSET *cacc_register_group_1;
 
-        sc_event event_cacc_reg_group_0_operation_enable;
-        sc_event event_cacc_reg_group_1_operation_enable;
+        sc_core::sc_event event_cacc_reg_group_0_operation_enable;
+        sc_core::sc_event event_cacc_reg_group_1_operation_enable;
 
         //LUT_COMMENT NvdlaLut *cacc_lut;
         uint32_t cacc_lut_table_idx;  // 0: RAW, 1: DENSITY
@@ -66,7 +67,7 @@ class cacc_reg_model {
         uint32_t  cacc_cya_;
 
         // CSB request target socket
-        // void csb2cacc_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay);
+        // void csb2cacc_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay);
         // CSB response send function
         // void CaccSendCsbResponse(uint32_t date, uint8_t error_id);
         // Register accessing

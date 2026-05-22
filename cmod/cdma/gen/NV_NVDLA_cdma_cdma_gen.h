@@ -17,7 +17,7 @@ USING_SCSIM_NAMESPACE(cmod)
 USING_SCSIM_NAMESPACE(clib)
 
 inline void
-NV_NVDLA_cdma::csb2cdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay) {
+NV_NVDLA_cdma::csb2cdma_req_b_transport (int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay) {
     uint32_t addr;
     uint32_t data;
     uint8_t write;

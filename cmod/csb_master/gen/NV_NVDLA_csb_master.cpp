@@ -21,7 +21,7 @@ USING_SCSIM_NAMESPACE(clib)
 
 
 // Constructor
-NV_NVDLA_csb_master::NV_NVDLA_csb_master( sc_module_name module_name )
+NV_NVDLA_csb_master::NV_NVDLA_csb_master( sc_core::sc_module_name module_name )
     :NV_NVDLA_csb_master_base(module_name),
     csb2nvdla_wr_hack_bp(),
     csb2nvdla_wr_hack("csb2nvdla_wr"),
@@ -35,7 +35,7 @@ NV_NVDLA_csb_master::~NV_NVDLA_csb_master() {
 }
 
 inline void
-NV_NVDLA_csb_master::nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_time& delay) {
+NV_NVDLA_csb_master::nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be_lvl_t* payload, sc_core::sc_time& delay) {
     payload->pd.csb2xx_16m_secure_be_lvl.addr = payload->pd.csb2xx_16m_secure_be_lvl.addr << 2;
 
     if (0xFFFFFFFF!=serving_client_id) {
@@ -215,7 +215,7 @@ NV_NVDLA_csb_master::nvdla2csb_b_transport(int ID, NV_MSDEC_csb2xx_16m_secure_be
 
 // FIXME, hack for csb2nvdla write response initial socket
 inline void
-NV_NVDLA_csb_master::csb2nvdla_wr_hack_b_transport(NV_MSDEC_xx2csb_wr_erpt_t* payload, sc_time& delay) {
+NV_NVDLA_csb_master::csb2nvdla_wr_hack_b_transport(NV_MSDEC_xx2csb_wr_erpt_t* payload, sc_core::sc_time& delay) {
     uint8_t *csb2nvdla_wr_hack_bp_byte_enable_ptr;
     uint32_t payload_byte_size;
     payload_byte_size = sizeof(NV_MSDEC_xx2csb_wr_erpt_t);
@@ -234,7 +234,7 @@ NV_NVDLA_csb_master::csb2nvdla_wr_hack_b_transport(NV_MSDEC_xx2csb_wr_erpt_t* pa
 }
 
 inline void
-NV_NVDLA_csb_master::glb2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::glb2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -278,7 +278,7 @@ NV_NVDLA_csb_master::glb2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::gec2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::gec2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -322,7 +322,7 @@ NV_NVDLA_csb_master::gec2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::mcif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::mcif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -366,7 +366,7 @@ NV_NVDLA_csb_master::mcif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payl
 }
 
 inline void
-NV_NVDLA_csb_master::cvif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cvif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -410,7 +410,7 @@ NV_NVDLA_csb_master::cvif2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payl
 }
 
 inline void
-NV_NVDLA_csb_master::bdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::bdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -454,7 +454,7 @@ NV_NVDLA_csb_master::bdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payl
 }
 
 inline void
-NV_NVDLA_csb_master::cdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -498,7 +498,7 @@ NV_NVDLA_csb_master::cdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payl
 }
 
 inline void
-NV_NVDLA_csb_master::csc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::csc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -542,7 +542,7 @@ NV_NVDLA_csb_master::csc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::cmac_a2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cmac_a2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -586,7 +586,7 @@ NV_NVDLA_csb_master::cmac_a2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* pa
 }
 
 inline void
-NV_NVDLA_csb_master::cmac_b2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cmac_b2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -630,7 +630,7 @@ NV_NVDLA_csb_master::cmac_b2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* pa
 }
 
 inline void
-NV_NVDLA_csb_master::cacc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cacc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -674,7 +674,7 @@ NV_NVDLA_csb_master::cacc2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payl
 }
 
 inline void
-NV_NVDLA_csb_master::sdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::sdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -718,7 +718,7 @@ NV_NVDLA_csb_master::sdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* 
 }
 
 inline void
-NV_NVDLA_csb_master::sdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::sdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -762,7 +762,7 @@ NV_NVDLA_csb_master::sdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::pdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::pdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -806,7 +806,7 @@ NV_NVDLA_csb_master::pdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* 
 }
 
 inline void
-NV_NVDLA_csb_master::pdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::pdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -850,7 +850,7 @@ NV_NVDLA_csb_master::pdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::cdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -894,7 +894,7 @@ NV_NVDLA_csb_master::cdp_rdma2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* 
 }
 
 inline void
-NV_NVDLA_csb_master::cdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::cdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
@@ -938,7 +938,7 @@ NV_NVDLA_csb_master::cdp2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* paylo
 }
 
 inline void
-NV_NVDLA_csb_master::rbk2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_time& delay)
+NV_NVDLA_csb_master::rbk2csb_resp_b_transport(int ID, nvdla_xx2csb_resp_t* payload, sc_core::sc_time& delay)
 {
     // uint8_t bit_iter;
     // Check is nvdla waiting for a request
