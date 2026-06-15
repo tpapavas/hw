@@ -11,6 +11,7 @@
 #include "ac_int.h"
 #include "ac_channel.h"
 #include "opendla.h"
+#pragma message("OPENDLA HEADER FOUND")
 #include "log.h"
 #include "sdp_hls_wrapper.h"
 sdp_hls_wrapper::sdp_hls_wrapper() {
@@ -155,6 +156,17 @@ void sdp_hls_wrapper::write_lut(uint32_t tbl_id, uint32_t addr, uint16_t val)
         le_tbl[addr] = (int16_t)val;
     } else {
 #pragma CTC SKIP
+    printf("CDMA_DAIN_MAP = 0x%x\n",
+       NVDLA_CDMA_D_DAIN_MAP_0);
+        printf(
+    "\n[LUT WRITE]\n"
+    "addr      = 0x%x (%u)\n"
+    "value     = 0x%x\n"
+    "table_id  = %u\n",
+    addr,
+    addr,
+    val,
+    tbl_id);
         assert(addr < LO_TBL_ENTRY);
 #pragma CTC ENDSKIP
         lo_tbl[addr] = (int16_t)val;

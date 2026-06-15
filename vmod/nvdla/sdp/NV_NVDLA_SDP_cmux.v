@@ -128,6 +128,35 @@ assign cmux2dp_pvld = cmux_in_en & ((cfg_flying_mode_on) ? cacc_vld : sdp_mrdma2
 assign cacc_rdy             = cmux_in_en &   cfg_flying_mode_on  & cmux2dp_prdy;
 assign sdp_mrdma2cmux_ready = cmux_in_en & (!cfg_flying_mode_on) & cmux2dp_prdy;
 
+`ifndef SYNTHESIS
+reg cmux_in_en_d;
+reg cacc2sdp_ready_d;
+reg cmux2dp_prdy_d;
+reg cfg_flying_mode_on_d;
+
+always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+  if (!nvdla_core_rstn) begin
+    cmux_in_en_d <= 1'b0;
+    cacc2sdp_ready_d <= 1'b0;
+    cmux2dp_prdy_d <= 1'b0;
+    cfg_flying_mode_on_d <= 1'b0;
+  end else begin
+    if (cmux_in_en != cmux_in_en_d) begin
+      $display("%0t NV_NVDLA_SDP_cmux: cmux_in_en %b -> %b op_en_load=%b cfg_flying_mode_on=%b cacc2sdp_valid=%b cmux2dp_prdy=%b sdp_cmux2dp_ready=%b", $time, cmux_in_en_d, cmux_in_en, op_en_load, cfg_flying_mode_on, cacc2sdp_valid, cmux2dp_prdy, sdp_cmux2dp_ready);
+    end
+
+    if (cacc2sdp_valid) begin
+      $display("%0t NV_NVDLA_SDP_cmux: cacc2sdp_valid=%b cacc2sdp_ready=%b cacc_rdy=%b cmux_in_en=%b cfg_flying_mode_on=%b cmux2dp_prdy=%b sdp_cmux2dp_ready=%b op_en_load=%b", $time, cacc2sdp_valid, cacc2sdp_ready, cacc_rdy, cmux_in_en, cfg_flying_mode_on, cmux2dp_prdy, sdp_cmux2dp_ready, op_en_load);
+    end
+
+    cmux_in_en_d <= cmux_in_en;
+    cacc2sdp_ready_d <= cacc2sdp_ready;
+    cmux2dp_prdy_d <= cmux2dp_prdy;
+    cfg_flying_mode_on_d <= cfg_flying_mode_on;
+  end
+end
+`endif
+
 
 //===========================================
 // Layer Switch

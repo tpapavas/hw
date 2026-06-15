@@ -19,7 +19,7 @@
 #include "nvdla_cc_credit_iface.h"
 #include "nvdla_mac2accu_if_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>

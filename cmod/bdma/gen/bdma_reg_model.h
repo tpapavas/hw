@@ -11,9 +11,9 @@
 #ifndef _BDMA_REG_MODEL_H_
 #define _BDMA_REG_MODEL_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
-
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 #include "scsim_common.h"
 // #include "bdmacoreconfigclass.h"
 

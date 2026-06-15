@@ -109,7 +109,33 @@ wire   cacc2sdp_layer_end   = dbuf_rd_layer_end_latch&last_data&cacc2sdp_valid&c
 assign cacc2sdp_pd[CACC_SDP_DATA_WIDTH-1:0] =   cacc2sdp_pd_data;
 assign cacc2sdp_pd[CACC_SDP_WIDTH-2]        =   cacc2sdp_batch_end;
 assign cacc2sdp_pd[CACC_SDP_WIDTH-1]        =   cacc2sdp_layer_end;
+`ifndef SYNTHESIS
+reg cacc2sdp_valid_d;
+reg cacc2sdp_ready_d;
+reg dbuf_rd_ready_d;
 
+always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
+  if (!nvdla_core_rstn) begin
+    cacc2sdp_valid_d <= 1'b0;
+    cacc2sdp_ready_d <= 1'b0;
+    dbuf_rd_ready_d <= 1'b0;
+  end else begin
+    cacc2sdp_valid_d <= cacc2sdp_valid;
+    cacc2sdp_ready_d <= cacc2sdp_ready;
+    dbuf_rd_ready_d <= dbuf_rd_ready;
+
+    if (cacc2sdp_valid && cacc2sdp_ready) begin
+      $display("%0t NV_NVDLA_CACC_delivery_buffer: cacc2sdp handshake OK valid=%b ready=%b dbuf_rd_ready=%b dbuf_rd_en_new=%b data_left_mask=%b", $time, cacc2sdp_valid, cacc2sdp_ready, dbuf_rd_ready, dbuf_rd_en_new, data_left_mask);
+    end else if (cacc2sdp_valid && !cacc2sdp_ready) begin
+      $display("%0t NV_NVDLA_CACC_delivery_buffer: cacc2sdp blocked valid=%b ready=%b dbuf_rd_ready=%b dbuf_rd_en_new=%b data_left_mask=%b", $time, cacc2sdp_valid, cacc2sdp_ready, dbuf_rd_ready, dbuf_rd_en_new, data_left_mask);
+    end
+
+    if (dbuf_rd_ready != dbuf_rd_ready_d) begin
+      $display("%0t NV_NVDLA_CACC_delivery_buffer: dbuf_rd_ready changed %b -> %b data_left_mask=%b", $time, dbuf_rd_ready_d, dbuf_rd_ready, data_left_mask);
+    end
+  end
+end
+`endif
 
 // generate CACC done interrupt  
 wire [1:0] cacc_done_intr_w;

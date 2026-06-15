@@ -33,9 +33,9 @@ using namespace sc_core;
 NV_NVDLA_cmac::NV_NVDLA_cmac( sc_module_name module_name ):
     NV_NVDLA_cmac_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
     // weight_operand_shadow_  = new uint8_t [max( (WEIGHT_OPERAND_BIT_WIDTH_INT8+8-1)/8*2,(WEIGHT_OPERAND_BIT_WIDTH_INT16+8-1)/8 )*PARALLEL_CHANNEL_NUM*MAC_CELL_NUM];
@@ -83,6 +83,9 @@ void NV_NVDLA_cmac::CmacConsumerThread () {
         while(CmacAGetOpeartionEnable(cmac_a_register_group_0) != NVDLA_CMAC_A_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cmac_a_reg_group_0_operation_enable);
         }
+        gNvdlaStats.cmacStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CMAC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslDebug((50, "%s NV_NVDLA_cmac::CmacConsumerThread, group 0 opeartion start\n", basename()));
         cmac_a_reg_model::CmacAUpdateWorkingStatus(0,1);
         cmac_a_reg_model::CmacAUpdateVariables(cmac_a_register_group_0);
@@ -90,16 +93,27 @@ void NV_NVDLA_cmac::CmacConsumerThread () {
         cmac_a_reg_model::CmacAUpdateWorkingStatus(0,0);
         cmac_a_reg_model::CmacAClearOpeartionEnable(cmac_a_register_group_0);
         cslDebug((50, "%s NV_NVDLA_cmac::CmacConsumerThread, group 0 opeartion done\n", basename()));
+        sc_time elapsed = sc_time_stamp() - gNvdlaStats.cmacStartGrp0;
+        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        gNvdlaStats.cmacGrp0Cycles += cycles;
+        cslDebug((70,"[CMAC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
 
         while(CmacAGetOpeartionEnable(cmac_a_register_group_1) != NVDLA_CMAC_A_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cmac_a_reg_group_1_operation_enable);
         }
+        gNvdlaStats.cmacStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CMAC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslDebug((50, "%s NV_NVDLA_cmac::CmacConsumerThread, group 1 opeartion start\n", basename()));
         cmac_a_reg_model::CmacAUpdateWorkingStatus(1,1);
         cmac_a_reg_model::CmacAUpdateVariables(cmac_a_register_group_1);
         CmacHardwareLayerExecutionTrigger();
         cmac_a_reg_model::CmacAUpdateWorkingStatus(1,0);
         cmac_a_reg_model::CmacAClearOpeartionEnable(cmac_a_register_group_1);
+        elapsed = sc_time_stamp() - gNvdlaStats.cmacStartGrp1;
+        cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        gNvdlaStats.cmacGrp1Cycles += cycles;
+        cslDebug((70,"[CMAC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
         cslDebug((50, "%s NV_NVDLA_cmac::CmacConsumerThread, group 1 opeartion done\n", basename()));
     }
 }

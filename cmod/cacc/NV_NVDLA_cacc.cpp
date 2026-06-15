@@ -42,9 +42,9 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     NV_NVDLA_cacc_base(module_name),
     cacc2glb_done_intr("cacc2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
     // No matter which precision (int8, Int16 and FP16) is used, both assembly and delivery ram use the highest bit consumption precision which is Int16
@@ -63,6 +63,7 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     reshape_first_layer  = true;
     input_first_layer    = true;
     input_first_channel  = true;
+    is_assembly_working_ = false;
     deliver_prev_conv_mode_      = -1;
     reshape_prev_conv_mode_      = -1;
     deliver_prev_precision_      = -1;
@@ -71,6 +72,7 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     // Reset
     Reset();
 
+    cslDebug((90, "[NV_NVDLA_cacc] is_assembly_working_ = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     SC_THREAD(CaccConsumerThread)
     SC_THREAD(ReshapeSequenceThread)
     SC_THREAD(DeliverSequenceThread)
@@ -103,6 +105,9 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_0) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_0_operation_enable);
         }
+        gNvdlaStats.caccStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CACC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 0 opeartion start\n"));
         saturation_num_perlayer_ =0;
         cacc_reg_model::CaccUpdateWorkingStatus(0,1);
@@ -116,6 +121,9 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_1) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_1_operation_enable);
         }
+        gNvdlaStats.caccStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CACC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 1 opeartion start\n"));
         saturation_num_perlayer_ =0;
         cacc_reg_model::CaccUpdateWorkingStatus(1,1);
@@ -156,8 +164,10 @@ void NV_NVDLA_cacc::CaccHardwareLayerExecutionTrigger () {
         delivery_sram_group_idx_fetched_    = -1 * atom_per_mac_cell;
     }
 
+    cslDebug((90, "[CaccHardwareLayerExecutionTrigger] is_assembly_working_ = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (!is_assembly_working_) {
         is_assembly_working_ = true;
+        cslDebug((90, "[CaccHardwareLayerExecutionTrigger] is_assembly_working_ = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
 
 #pragma CTC SKIP
         if (cacc_clip_truncate_+ACCU_DELIVERY_BIT_WIDTH_INT16 > ACCU_ASSEMBLY_BIT_WIDTH_INT16) {
@@ -488,6 +498,24 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
             }
         }
     }
+    if(cacc_consumer == 0){
+
+        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp0;
+
+        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+        gNvdlaStats.caccGrp0Cycles += cycles;
+        cslDebug((70,"[CACC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+    }else if( cacc_consumer == 1){
+
+        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp1;
+
+        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+        gNvdlaStats.caccGrp1Cycles += cycles;
+        cslDebug((70,"[CACC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
+    }
     cacc2glb_done_intr[cacc_consumer].write(true);
 }
 
@@ -801,6 +829,7 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((70, "    mac2cacc payload[%d]: 0x%08x\n", i, (uint32_t)payload_data_ptr[i].to_int()));
 #endif
 
+    cslDebug((90, "[mac2accu_b_transport] is_assembly_working_ = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (is_assembly_working_ == false) {
         wait(cacc_kickoff_);
         // cacc should be kicked off before other cc sub-units

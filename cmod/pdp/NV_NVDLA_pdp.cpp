@@ -57,9 +57,9 @@ enum PDP_OPERATION_MODE_ALIAS {
 NV_NVDLA_pdp::NV_NVDLA_pdp( sc_module_name module_name ):
     NV_NVDLA_pdp_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     sdp2pdp_fifo_ = new sc_core::sc_fifo <uint8_t *> (SDP2PDP_FIFO_ENTRY_NUM);
     rdma_buffer_  = new sc_fifo <uint8_t *> (PDP_RDMA_BUFFER_ENTRY_NUM);
@@ -125,9 +125,19 @@ void NV_NVDLA_pdp::PdpIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(gNvdlaStats.nvdlaClockPeriod);
         pdp2glb_done_intr[ack->group_id].write(true);
-
+        if(ack->group_id == 0){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.pdpStartGrp0;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.pdpGrp0Cycles += cycles;
+            cslDebug((70,"[PDP][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        }else if ( ack->group_id == 1){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.pdpStartGrp1;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.pdpGrp1Cycles += cycles;
+            cslDebug((70,"[PDP][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        }
         delete ack;
     }
 }
@@ -137,6 +147,9 @@ void NV_NVDLA_pdp::PdpRdmaConsumerThread() {
         while(PdpRdmaGetOpeartionEnable(pdp_rdma_register_group_0) != NVDLA_PDP_RDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_pdp_rdma_reg_group_0_operation_enable);
         }
+        gNvdlaStats.pdpStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[PDP][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         pdp_rdma_reg_model::PdpRdmaUpdateWorkingStatus(0,1);
         PdpRdmaConfigEvaluation(pdp_rdma_register_group_0);
         PdpRdmaHardwareLayerExecutionTrigger();
@@ -146,6 +159,9 @@ void NV_NVDLA_pdp::PdpRdmaConsumerThread() {
         while(PdpRdmaGetOpeartionEnable(pdp_rdma_register_group_1) != NVDLA_PDP_RDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_pdp_rdma_reg_group_1_operation_enable);
         }
+        gNvdlaStats.pdpStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[PDP][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         pdp_rdma_reg_model::PdpRdmaUpdateWorkingStatus(1,1);
         PdpRdmaConfigEvaluation(pdp_rdma_register_group_1);
         PdpRdmaHardwareLayerExecutionTrigger();
@@ -1115,12 +1131,12 @@ void NV_NVDLA_pdp::Reset()
     PdpRdmaRegReset();
     is_there_ongoing_csb2pdp_response_      = false;
     is_there_ongoing_csb2pdp_rdma_response_ = false;
-    dma_delay_ = SC_ZERO_TIME;
-    csb_delay_ = SC_ZERO_TIME;
+    dma_delay_ = gNvdlaStats.nvdlaClockPeriod;;
+    csb_delay_ = gNvdlaStats.nvdlaClockPeriod;;
     pdp_rdma_operation_mode_                = SPLIT_WIDTH_DIS_COMMON;
     pdp_operation_mode_                     = SPLIT_WIDTH_DIS_COMMON;
     pdp_ready_to_receive_data_              = false;
-    b_transport_delay_ = SC_ZERO_TIME;
+    b_transport_delay_ = gNvdlaStats.nvdlaClockPeriod;;
     //PDP interrupt wires to GLB
     pdp2glb_done_intr[0].initialize(false);
     pdp2glb_done_intr[1].initialize(false);

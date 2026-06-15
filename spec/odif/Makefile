@@ -21,7 +21,7 @@ $(OUT_ODIF_FILES) : $(OUT_DIR)/% : % $(PROJ_HEAD) $(VCP) Makefile
 ifeq (,$(wildcard $(OUT_DIR)))
 	@mkdir -p $(OUT_DIR)
 endif
-	$(AT)$(VCP) -i $< -o $@ -imacros $(PROJ_HEAD) -cpp $(CPP)
+	$(AT)$(VCP) -i $< -o $@ -imacros $(PROJ_HEAD) -cpp cpp
 
 $(OUT_ODIF_TOP) : $(OUT_ODIF_FILES) $(PATH_SPEC_ODIF)/ODIF2others.pl
 	$(AT)$(PERL) $(PATH_SPEC_ODIF)/ODIF2others.pl -o $(OUT_DIR) -f $@ -c -sv -v -m

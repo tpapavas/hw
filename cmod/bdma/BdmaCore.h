@@ -17,11 +17,13 @@
 #include "nvdla_dma_rd_rsp_iface.h"
 #include "nvdla_dma_wr_req_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>
 // #include "bdmacoreconfigclass.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 
 #define BDMA_CONFIG_FIFO_DEPTH 40
 #define DMA_ATOM_SIZE 32

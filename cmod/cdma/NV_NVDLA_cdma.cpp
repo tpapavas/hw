@@ -50,9 +50,9 @@ enum CDMA_WT_DATA_MODE_ALIAS {
 NV_NVDLA_cdma::NV_NVDLA_cdma( sc_module_name module_name ):
     NV_NVDLA_cdma_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
     dma_act_rd_req_payload_ = new nvdla_dma_rd_req_t;
@@ -191,22 +191,35 @@ void NV_NVDLA_cdma::CdmaConsumerThread () {
         while(CdmaGetOpeartionEnable(cdma_register_group_0) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_0_operation_enable);
         }
+        gNvdlaStats.cdmaStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CDMA][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cdma_reg_model::CdmaUpdateWorkingStatus(0,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_0);
         CdmaHardwareLayerExecutionTrigger();
         cdma_reg_model::CdmaUpdateStatRegisters(0, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(0,0);
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_0);    // Update COMSUMER Pointer too
+        sc_time elapsed_0 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp0;
+        gNvdlaStats.cdmaGrp0Cycles += elapsed_0.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
+        cslDebug((70,"[CDMA][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
 
         while(CdmaGetOpeartionEnable(cdma_register_group_1) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_1_operation_enable);
         }
+        gNvdlaStats.cdmaStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CDMA][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cdma_reg_model::CdmaUpdateWorkingStatus(1,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_1);
         CdmaHardwareLayerExecutionTrigger();
         cdma_reg_model::CdmaUpdateStatRegisters(1, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(1,0);
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_1);    // Update COMSUMER Pointer too
+        sc_time elapsed_1 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp1;
+        gNvdlaStats.cdmaGrp1Cycles += elapsed_1.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
+        cslDebug((70,"[CDMA][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
     }
 }
 
@@ -941,6 +954,11 @@ void NV_NVDLA_cdma::WtReadRequestThread () {
         cdma_wt_info = new cdma_wt_info_t();
         cdma_wt_info->cdma_source = source_id;
         cdma_wt_info->payload_size = payload.pd.dma_read_cmd.size + 1;
+
+        gNvdlaStats.cdmaWeightReadReqs++;
+
+        gNvdlaStats.cdmaWeightReadBytes += payload.pd.dma_read_cmd.size + 1;
+
         cdma_wt_info_fifo_->write(cdma_wt_info);
 
         if (RAM_ID_MC == cdma_weight_ram_type_) {
@@ -1290,6 +1308,17 @@ void NV_NVDLA_cdma::DirectConvDataResponseSequencerCommon() {
     is_line_packed  = cdma_line_packed_;
     is_surf_packed  = cdma_surf_packed_;
 #pragma CTC SKIP
+    cslDebug((50, "NV_NVDLA_cdma::DirectConvDataResponseSequencerCommon, is_line_packed%d, line_stride is %d, is_surf_packed%d atom_size is %d\n", is_line_packed, line_stride, is_surf_packed, atom_size));
+
+    cslDebug((50, "cube_width=%d\n", cube_width));
+    cslDebug((50, "line_stride=%d\n", line_stride));
+    cslDebug((50, "atom_size=%d\n", atom_size));
+    cslDebug((50, "fetch_slice_grain=%d\n", fetch_slice_grain));
+    cslDebug((50, "cdma_line_packed_=%d\n", cdma_line_packed_));
+    cslDebug((50, "is_line_packed=%d\n", is_line_packed));
+    cslDebug((50, "cdma_datain_format_=%d\n", cdma_datain_format_));
+    cslDebug((50, "cdma_conv_mode_=%d\n", cdma_conv_mode_));
+    
     if (is_line_packed != (line_stride == atom_size * cube_width)) {
         FAIL(("NV_NVDLA_cdma::DirectConvDataResponseSequencerCommon, invalid configuration of cdma_line_packed_, cdma_line_packed_ is %d, line_stride == atom_size * cube_width is %d.", cdma_line_packed_, (line_stride == atom_size * cube_width)));
     }
@@ -3301,6 +3330,9 @@ void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t c
         NV_NVDLA_cdma_base::cdma_dat2cvif_rd_req_b_transport(payload, dma_delay_);
     }
     cslDebug((50, "NV_NVDLA_cdma::SendActDmaReadRequest, end.\n"));
+    gNvdlaStats.cdmaDataReadReqs++;
+    gNvdlaStats.cdmaDataReadBytes += payload->pd.dma_read_cmd.size + 1;
+
 }
 
 // Send weight DMA read request

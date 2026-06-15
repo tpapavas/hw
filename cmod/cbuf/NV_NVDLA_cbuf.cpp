@@ -24,9 +24,9 @@ using namespace sc_core;
 NV_NVDLA_cbuf::NV_NVDLA_cbuf( sc_module_name module_name ):
     NV_NVDLA_cbuf_base(module_name),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    // csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    // csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
     cbuf_ram_ = new uint8_t [NVDLA_CBUF_BANK_NUMBER * NVDLA_CBUF_BANK_DEPTH * CBUF_ENTRY_CMOD_GRAN_PER_ENTRY];
@@ -79,6 +79,9 @@ void NV_NVDLA_cbuf::cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_
 #ifdef DEBUG_DUMP
     fprintf(fp_cdma2cbuf_data, "\n");
 #endif
+    gNvdlaStats.cbufDataWrites++;
+    gNvdlaStats.cbufDataWriteBytes += NVDLA_CBUF_BANK_WIDTH + payload->hsel * payload->size;
+
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, payload->size);
 }
 
@@ -107,6 +110,8 @@ void NV_NVDLA_cbuf::cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_1
 #ifdef DEBUG_DUMP
     fprintf(fp_cdma2cbuf_weight, "\n");
 #endif
+    gNvdlaStats.cbufWeightWrites++;
+    gNvdlaStats.cbufWeightWriteBytes += NVDLA_CBUF_BANK_WIDTH + payload->hsel * payload->size;
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, payload->size);
 }
 
@@ -128,6 +133,9 @@ void NV_NVDLA_cbuf::sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RA
     for (idx = 0; idx < NVDLA_CBUF_BANK_WIDTH; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (cbuf_ram_[cbuf_ram_byte_addr + idx])));
     }
+    gNvdlaStats.cbufDataReads++;
+    gNvdlaStats.cbufDataReadBytes += NVDLA_CBUF_BANK_WIDTH;
+
 }
 
 void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay){
@@ -151,6 +159,9 @@ void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RAD
     for (idx = 0; idx < NVDLA_CBUF_BANK_WIDTH; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (cbuf_ram_[cbuf_ram_byte_addr + idx])));
     }
+    gNvdlaStats.cbufWeightReads++;
+    gNvdlaStats.cbufWeightReadBytes += NVDLA_CBUF_BANK_WIDTH;
+
 }
 
 #pragma CTC SKIP

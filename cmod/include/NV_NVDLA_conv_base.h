@@ -20,7 +20,7 @@
 #include "nvdla_ram_rd_addr_iface.h"
 #include "nvdla_ram_rd_data_128B_iface.h"
 #include "scsim_common.h"
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include <tlm_utils/multi_passthrough_initiator_socket.h>
 #include <tlm_utils/multi_passthrough_target_socket.h>

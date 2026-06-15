@@ -21,7 +21,7 @@ typedef unsigned short                BUS_DATA_TYPE_16;
 typedef unsigned int                  BUS_DATA_TYPE_32;
 typedef unsigned long long            BUS_DATA_TYPE_64;
 
-// #include <systemc.h>
+// #include "systemc.h"
 // #include <tlm.h>
 
 // Dummy namespace to reserve namespace

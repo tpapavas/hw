@@ -11,7 +11,7 @@
 #ifndef _DLA_B_TRANSPORT_PAYLOAD_H_
 #define _DLA_B_TRANSPORT_PAYLOAD_H_
 
-#include <systemc>
+#include "systemc.h"
 #include <tlm.h>
 #include "scsim_common.h"
 #include "nvdla_dbb_extension.h"

@@ -12,19 +12,20 @@
 #define _NV_NVDLA_GLB_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
 
 #include "scsim_common.h"
 #include "nvdla_dma_wr_req_iface.h"
-#include <systemc.h>
+#include "systemc.h"
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_glb_base.h"
 #include "glb_reg_model.h"
 #include "gec_reg_model.h"
 #include "NvdlaDataFormatConvertor.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 // class NvdlaDataFormatConvertor;
 SCSIM_NAMESPACE_START(clib)

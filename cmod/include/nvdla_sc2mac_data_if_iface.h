@@ -11,7 +11,7 @@
 #if !defined(_nvdla_sc2mac_data_if_iface_H_)
 #define _nvdla_sc2mac_data_if_iface_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <stdint.h>
 #ifndef _nvdla_stripe_info_struct_H_
 #include "nvdla_stripe_info_struct.h"

@@ -48,9 +48,9 @@ NV_NVDLA_cdp::NV_NVDLA_cdp( sc_module_name module_name ):
     NV_NVDLA_cdp_base(module_name),
     cdp2glb_done_intr("cdp2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     int i, j;
     // Memory allocation
@@ -157,6 +157,9 @@ void NV_NVDLA_cdp::CdpConsumerThread () {
         while(CdpGetOpeartionEnable(cdp_register_group_0) != NVDLA_CDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdp_reg_group_0_operation_enable);
         }
+        gNvdlaStats.cdpStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CDP][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cdp_reg_model::CdpUpdateWorkingStatus(0,1);
         cdp_reg_model::CdpUpdateVariables(cdp_register_group_0);
         CdpHardwareLayerExecutionTrigger();
@@ -166,6 +169,9 @@ void NV_NVDLA_cdp::CdpConsumerThread () {
         while(CdpGetOpeartionEnable(cdp_register_group_1) != NVDLA_CDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdp_reg_group_1_operation_enable);
         }
+        gNvdlaStats.cdpStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CDP][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cdp_reg_model::CdpUpdateWorkingStatus(1,1);
         cdp_reg_model::CdpUpdateVariables(cdp_register_group_1);
         CdpHardwareLayerExecutionTrigger();
@@ -193,7 +199,23 @@ void NV_NVDLA_cdp::CdpIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(gNvdlaStats.nvdlaClockPeriod);
+        if(ack->group_id == 0){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.cdpStartGrp0;
+
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+            gNvdlaStats.cdpGrp0Cycles += cycles;
+            cslDebug((70,"[CDP][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
+        }else if (ack->group_id == 1){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.cdpStartGrp1;
+
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+            gNvdlaStats.cdpGrp1Cycles += cycles;
+            cslDebug((70,"[CDP][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        }
         cdp2glb_done_intr[ack->group_id].write(true);
 
         delete ack;

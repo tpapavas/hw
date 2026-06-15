@@ -12,7 +12,7 @@
 #define _NV_NVDLA_PDP_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -26,6 +26,7 @@
 #include "pdp_rdma_reg_model.h"
 #include "NvdlaDataFormatConvertor.h"
 #include "nvdla_config.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define SDP2PDP_ELEMENT_NUM     8
 #define SDP2PDP_ELEMENT_BIT_WIDTH   16

@@ -11,7 +11,7 @@
 #if !defined(_nvdla_container_number_8_bit_width_32_iface_H_)
 #define _nvdla_container_number_8_bit_width_32_iface_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <stdint.h>
 
 typedef struct nvdla_container_number_8_bit_width_32_s {

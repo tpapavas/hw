@@ -202,8 +202,19 @@ void NV_NVDLA_rbk::RbkIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(gNvdlaStats.nvdlaClockPeriod);
         rbk2glb_done_intr[ack->group_id].write(true);
+        if(ack->group_id == 0){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.rubikStartGrp0;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.rubikGrp0Cycles += cycles;
+            cslDebug((70,"[RUBIK][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        }else if(ack->group_id == 1){
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.rubikStartGrp1;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.rubikGrp1Cycles += cycles;
+            cslDebug((70,"[RUBIK][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        }
 
         delete ack;
     }
@@ -229,6 +240,9 @@ void NV_NVDLA_rbk::RubikConsumerThread() {
         while(RbkGetOpeartionEnable(rbk_register_group_0) != NVDLA_RBK_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_rbk_reg_group_0_operation_enable);
         }
+        gNvdlaStats.rubikStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[RUBIK][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslDebug((50, "NV_NVDLA_rbk::RubikConsumerThread, group 0 opeartion start\n"));
         rbk_reg_model::RbkUpdateWorkingStatus(0,1);
         RubikConfigEvaluation(rbk_register_group_0);
@@ -240,6 +254,8 @@ void NV_NVDLA_rbk::RubikConsumerThread() {
         while(RbkGetOpeartionEnable(rbk_register_group_1) != NVDLA_RBK_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_rbk_reg_group_1_operation_enable);
         }
+        gNvdlaStats.rubikStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[RUBIK][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
         cslDebug((50, "NV_NVDLA_rbk::RubikConsumerThread, group 1 opeartion start\n"));
         rbk_reg_model::RbkUpdateWorkingStatus(1,1);
         RubikConfigEvaluation(rbk_register_group_1);

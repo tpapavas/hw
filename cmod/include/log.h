@@ -12,7 +12,7 @@
 #define __LOG_H__
 
 #include <string.h>
-#include <systemc.h>
+#include "systemc.h"
 
 #if defined(__cplusplus)
 // some c++ headers for csl

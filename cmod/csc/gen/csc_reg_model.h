@@ -11,7 +11,7 @@
 #ifndef _CSC_REG_MODEL_H_
 #define _CSC_REG_MODEL_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"

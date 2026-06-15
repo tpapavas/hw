@@ -11,7 +11,7 @@
 #if !defined(_nvdla_mac2accu_data_monitor_H_)
 #define _nvdla_mac2accu_data_monitor_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <stdint.h>
 #ifndef _nvdla_stripe_info_struct_H_
 #include "nvdla_stripe_info_struct.h"

@@ -10,3 +10,4 @@ outdir/
 .nvprojectname
 tree.make
 .cleaned
+*.o

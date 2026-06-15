@@ -33,7 +33,7 @@ $(VCP_OUT_FILES) : $(OUT_DIR)/% : % $(PROJ_HEAD) $(VCP)
 ifeq (,$(wildcard $(OUT_DIR)))
 	@mkdir -p $(OUT_DIR)
 endif
-	$(VCP) -i $< -o $@ -imacros $(PROJ_HEAD) -cpp $(CPP)
+	$(VCP) -i $< -o $@ -imacros $(PROJ_HEAD) -cpp cpp
 
 .phony OUT_FILES: $(PATH_SPEC_MANUAL)/RDLMerge.pl $(OUT_DIR)/nvdla.rdl $(RDL_FILES) Makefile
 	$(AT)$(PERL) $(PATH_SPEC_MANUAL)/RDLMerge.pl $(OUT_DIR)/nvdla.rdl $(JAVA) $(PERL) $(OUT_DIR)

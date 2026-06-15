@@ -11,7 +11,7 @@
 #ifndef _CDMA_REG_MODEL_H_
 #define _CDMA_REG_MODEL_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 
 #include "scsim_common.h"

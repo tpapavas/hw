@@ -47,9 +47,9 @@ NV_NVDLA_sdp::NV_NVDLA_sdp( sc_module_name module_name ):
     NV_NVDLA_sdp_base(module_name),
     sdp2glb_done_intr("sdp2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    b_transport_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
 #if 0
@@ -196,6 +196,9 @@ void NV_NVDLA_sdp::SdpConsumerThread() {
         while(SdpGetOpeartionEnable(sdp_register_group_0) != NVDLA_SDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_sdp_reg_group_0_operation_enable);
         }
+        gNvdlaStats.sdpStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[SDP][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslInfo(( "NV_NVDLA_sdp::SdpConsumerThread, group 0 opeartion start\n"));
         sdp_reg_model::SdpUpdateWorkingStatus(0,1);
         sdp_reg_model::SdpUpdateVariables(sdp_register_group_0);
@@ -207,6 +210,9 @@ void NV_NVDLA_sdp::SdpConsumerThread() {
         while(SdpGetOpeartionEnable(sdp_register_group_1) != NVDLA_SDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_sdp_reg_group_1_operation_enable);
         }
+        gNvdlaStats.sdpStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[SDP][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
         cslInfo(( "NV_NVDLA_sdp::SdpConsumerThread, group 1 opeartion start\n"));
         sdp_reg_model::SdpUpdateWorkingStatus(1,1);
         sdp_reg_model::SdpUpdateVariables(sdp_register_group_1);
@@ -239,7 +245,7 @@ void NV_NVDLA_sdp::SdpIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(gNvdlaStats.nvdlaClockPeriod);
         cslInfo(( "%s: trigger interrupt on %d group\n", __FUNCTION__, (uint32_t)ack->group_id));
         sdp2glb_done_intr[ack->group_id].write(true);
 

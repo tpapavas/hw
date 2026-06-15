@@ -64,7 +64,7 @@ BdmaCore::BdmaCore(sc_module_name name)
     wr_req_data_payload         = new nvdla_dma_wr_req_t;
     wr_req_cmd_payload->tag     = TAG_CMD;
     wr_req_data_payload->tag    = TAG_DATA;
-    dma_delay_                  = SC_ZERO_TIME;
+    dma_delay_                  = gNvdlaStats.nvdlaClockPeriod;;
     src_ram_type_next_          = NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC;
     src_ram_type_curr_          = NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC;
     //read_credit_                = BDMA_MAX_ONGOING_READ_REQUEST;
@@ -463,7 +463,7 @@ void BdmaCore::BdmaIntrThread() {
             is_cv_ack_done_ = false;
         }
 
-        wait(1, SC_NS);
+        wait(gNvdlaStats.nvdlaClockPeriod);
         interrupt[ack->group_id].write(true);
     
         cslInfo(("BdmaCore::group %d interrupt %s\n", ack->group_id, ack->is_mc? "MC":"CV"));
@@ -518,6 +518,9 @@ void BdmaCore::PrepareWriteDataPayload(nvdla_dma_wr_req_t * payload, uint8_t num
 
 // Send DMA read request
 void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type) {
+    gNvdlaStats.bdmaReadReqs++;
+    gNvdlaStats.bdmaReadBytes += (payload->pd.dma_read_cmd.size + 1) * 32;
+
     if ( NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC == src_ram_type ) {
         cslDebug((50, "BdmaCore::SendDmaReadRequest, send read request to MC Address=0x%lx Size=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size));
         bdma2mcif_rd_req_b_transport(payload, dma_delay_);

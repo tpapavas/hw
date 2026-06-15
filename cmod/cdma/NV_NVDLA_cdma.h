@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CDMA_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -23,6 +23,7 @@
 #include "systemc.h"
 #include "nvdla_config.h"
 #include "cdma_hls_wrapper.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define MEM_BUS_WIDTH               (max(max(NVDLA_PRIMARY_MEMIF_WIDTH/8, NVDLA_SECONDARY_MEMIF_WIDTH/8), NVDLA_MEMORY_ATOMIC_SIZE*ELEMENT_SIZE_INT8))
 #define MAX_MEM_TRANSACTION_NUM     8

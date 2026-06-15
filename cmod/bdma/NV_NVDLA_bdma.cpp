@@ -105,11 +105,25 @@ void NV_NVDLA_bdma::Reset() {
 }
 
 void NV_NVDLA_bdma::ClearInt0Flag() {
+    sc_time elapsed = sc_time_stamp() - gNvdlaStats.bdmaStartGrp0;
+
+    uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+    gNvdlaStats.bdmaGrp0Cycles += cycles;
+    cslDebug((70,"[BDMA][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
     int0_op_running = false;
     bdma_reg_model::BdmaClearGrp0Int();
 }
 
 void NV_NVDLA_bdma::ClearInt1Flag() {
+    sc_time elapsed = sc_time_stamp() - gNvdlaStats.bdmaStartGrp1;
+
+    uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+    gNvdlaStats.bdmaGrp1Cycles += cycles;
+    cslDebug((70,"[BDMA][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+
     int1_op_running = false;
     bdma_reg_model::BdmaClearGrp1Int();
 }
@@ -118,6 +132,8 @@ void NV_NVDLA_bdma::LaunchGroup0TriggerThread() {
     BdmaCoreInt     bdma_int;
     while (true) {
         wait(launch_grp0_event_);
+        gNvdlaStats.bdmaStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[BDMA][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
 
         bdma_int.int_enable = true;
         bdma_int.int_ptr    = 0;
@@ -137,6 +153,8 @@ void NV_NVDLA_bdma::LaunchGroup1TriggerThread() {
     BdmaCoreInt     bdma_int;
     while (true) {
         wait(launch_grp1_event_);
+        gNvdlaStats.bdmaStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[BDMA][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
 
         bdma_int.int_enable = true;
         bdma_int.int_ptr    = 1;

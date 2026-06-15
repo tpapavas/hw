@@ -12,7 +12,7 @@
 #define _NV_NVDLA_RBK_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -22,6 +22,7 @@
 #include "NV_NVDLA_rbk_base.h"
 #include "rbk_reg_model.h"
 // #include "rbkoreconfigclass.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 
 #define RUBIK_FEATURE_CUBE_IN_FIFO_DEPTH    1024

@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CVIF_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -23,6 +23,7 @@
 #include "dla_b_transport_payload.h"
 #include "systemc.h"
 #include "nvdla_config.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #include "NV_NVDLA_cvif_base.h"
 

@@ -102,6 +102,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := \
+	/data/ngiannopoulos/Phd/NVDLA/systemC_integration/gem5/src \
 	$(PROJECT_DIR)/spec/defs \
 	$(PROJECT_DIR)/spec/manual \
 	./include \

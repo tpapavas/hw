@@ -12,7 +12,7 @@
 #define _BDMACORECONFIGCLASS_H_
 
 #include <iomanip>
-#include <systemc.h>
+#include "systemc.h"
 
 #include "scsim_common.h"
 

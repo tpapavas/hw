@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CDP_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -27,6 +27,7 @@
 // #include "NvdlaLut.h"
 #include "systemc.h"
 #include "nvdla_config.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define CDP_RDMA_SIZE                       2048
 #define CDP_PRE_CALC_BUFFER_ATOM_NUM        8

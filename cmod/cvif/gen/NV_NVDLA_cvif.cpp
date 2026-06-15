@@ -36,9 +36,9 @@ NV_NVDLA_cvif::NV_NVDLA_cvif( sc_module_name module_name, bool headless_ntb_env_
     cvif2ext_rd_req ("cvif2ext_rd_req"),
     ext2cvif_wr_rsp ("ext2cvif_wr_rsp"),
     ext2cvif_rd_rsp ("ext2cvif_rd_rsp"),
-    dma_delay_(SC_ZERO_TIME),
-    csb_delay_(SC_ZERO_TIME),
-    axi_delay_(SC_ZERO_TIME)
+    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
+    axi_delay_(gNvdlaStats.nvdlaClockPeriod)
 {
     // Memory allocation
 

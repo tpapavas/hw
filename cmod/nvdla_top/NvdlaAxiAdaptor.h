@@ -23,6 +23,8 @@
 #include "tlm_utils/peq_with_get.h"
 #include "systemc.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 #define NVDLA_AXI_ADAPTOR_OUT_STANDING_REQUEST_NUM 1024
 
 SCSIM_NAMESPACE_START(cmod)

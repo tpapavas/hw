@@ -11,7 +11,7 @@
 #if !defined(_nvdla_accu2pp_if_iface_H_)
 #define _nvdla_accu2pp_if_iface_H_
 
-#include <systemc.h>
+#include "systemc.h"
 #include <stdint.h>
 #include "nvdla_config.h"
 

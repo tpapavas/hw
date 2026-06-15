@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CMAC_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -27,6 +27,7 @@
 #include "nvdla_config.h"
 #include "log.h"
 #include "math.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define DATA_OPERAND_BIT_WIDTH_INT8         8
 #define DATA_OPERAND_BIT_WIDTH_INT16        16

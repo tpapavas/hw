@@ -44,7 +44,7 @@ void NvdlaAxiAdaptor::nb_resp_thread()
         tlm_generic_payload* gp = 0;
         while( (gp = m_peq.get_next_transaction()) != 0 ) {
             tlm_phase phase = tlm::END_RESP;
-            sc_time delay = sc_time(1, SC_NS);
+            sc_time delay = gNvdlaStats.nvdlaClockPeriod;
             standard_axi->nb_transport_fw( *gp, phase, delay);
             done_request( *gp, delay );
             cslDebug(( 50, "%s send END_RESP, tran = %p\n", basename(), gp ));
@@ -70,7 +70,7 @@ static void free_gp(tlm_generic_payload *gp)
 void NvdlaAxiAdaptor::axi_rd_wr_thread()
 {
     tlm_generic_payload *tlm_gp;
-    sc_time delay = sc_core::SC_ZERO_TIME;
+    sc_time delay = gNvdlaStats.nvdlaClockPeriod;
     while (true) {
         if((axi_rd_req_fifo_->num_available()==0) && (axi_wr_req_fifo_->num_available()==0)) {
             cslDebug((50, "NvdlaAxiAdaptor::axi_rd_wr_thread, no pending request, waiting.\n"));
@@ -128,7 +128,7 @@ tlm_sync_enum NvdlaAxiAdaptor::axi_nb_transport_bw_cb(int ID, tlm_generic_payloa
             break;
         default: FAIL(( "Illegal TLM phase transition!" ));
     }
-    m_end_req.notify( SC_ZERO_TIME ); // MC doesn't send END_REQ
+    m_end_req.notify( gNvdlaStats.nvdlaClockPeriod ); // MC doesn't send END_REQ
     return tlm::TLM_ACCEPTED;
 }
 
@@ -167,7 +167,7 @@ static void deep_copy_gp( tlm_generic_payload& copied, const tlm_generic_payload
 
 void NvdlaAxiAdaptor::axi_nb_transport_fw(tlm_generic_payload& tran, sc_time& delay)
 {
-    delay = sc_core::SC_ZERO_TIME;
+    delay = gNvdlaStats.nvdlaClockPeriod;
     tlm_phase phase = tlm::BEGIN_REQ;
     tlm_generic_payload* tlm_gp = m_mm->allocate();
     deep_copy_gp(*tlm_gp, tran);

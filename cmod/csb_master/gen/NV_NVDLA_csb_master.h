@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CSB_MASTER_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -20,6 +20,8 @@
 #include "NV_MSDEC_xx2csb_wr_erpt_iface.h"
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_csb_master_base.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 
 #define CFGROM_BASE 0x0
 #define GLB_BASE 0x1000

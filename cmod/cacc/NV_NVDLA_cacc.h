@@ -12,7 +12,7 @@
 #define _NV_NVDLA_CACC_H_
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include <systemc.h>
+#include "systemc.h"
 #include <tlm.h>
 #include "tlm_utils/multi_passthrough_initiator_socket.h"
 #include "tlm_utils/multi_passthrough_target_socket.h" 
@@ -26,6 +26,9 @@
 #include "NV_NVDLA_cacc_base.h"
 #include "cacc_reg_model.h"
 #include "nvdla_config.h"
+
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 
 //stepheng add cacc FP39 define.20170329
 //#define CACC_FP39
