@@ -8,6 +8,7 @@
 
 // File Name: nvdla_config.h
 
+// #define NVDLA_CONFIG_SMALL
 #define NVDLA_CONFIG_LARGE
 
 #define NVDLA_FEATURE_DATA_TYPE_BINARY  (1<<0)
