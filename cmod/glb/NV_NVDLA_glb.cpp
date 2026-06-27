@@ -214,6 +214,7 @@ void NV_NVDLA_glb::UpdateCaccIntrStatus_0() {
     if(cacc2glb_done_intr[0]==true) {
         glb_reg_model::GlbUpdateCaccIntrStatus_0(true);
         cslInfo(("Generating Cacc interrupt0\n"));
+        cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -221,6 +222,7 @@ void NV_NVDLA_glb::UpdateCaccIntrStatus_1() {
     if(cacc2glb_done_intr[1]==true) {
         glb_reg_model::GlbUpdateCaccIntrStatus_1(true);
         cslInfo(("Generating Cacc interrupt1\n"));
+        cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -229,6 +231,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_bdma_0() {
     if(bdma2glb_done_intr[0] && !s_intr_mask_bdma_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating BDMA interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -237,6 +240,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_bdma_1() {
     if(bdma2glb_done_intr[1] && !s_intr_mask_bdma_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating BDMA interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -245,6 +249,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_pdp_0() {
     if(pdp2glb_done_intr[0] && !s_intr_mask_pdp_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating PDP interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -253,6 +258,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_pdp_1() {
     if(pdp2glb_done_intr[1] && !s_intr_mask_pdp_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating PDP interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -261,6 +267,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_sdp_0() {
     if(sdp2glb_done_intr[0] && !s_intr_mask_sdp_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating SDP interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -269,6 +276,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_sdp_1() {
     if(sdp2glb_done_intr[1] && !s_intr_mask_sdp_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating SDP interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -277,6 +285,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdp_0() {
     if(cdp2glb_done_intr[0] && !s_intr_mask_cdp_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDP interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -285,6 +294,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdp_1() {
     if(cdp2glb_done_intr[1] && !s_intr_mask_cdp_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDP interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -293,6 +303,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_rbk_0() {
     if(rbk2glb_done_intr[0] && !s_intr_mask_rubik_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating RBK interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -301,6 +312,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_rbk_1() {
     if(rbk2glb_done_intr[1] && !s_intr_mask_rubik_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating RBK interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -309,6 +321,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdma_dat_0() {
     if(cdma_dat2glb_done_intr[0] && !s_intr_mask_cdma_dat_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDMA_DAT interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -317,6 +330,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdma_dat_1() {
     if(cdma_dat2glb_done_intr[1] && !s_intr_mask_cdma_dat_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDMA_DAT interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -325,6 +339,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdma_wt_0() {
     if(cdma_wt2glb_done_intr[0] && !s_intr_mask_cdma_wt_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDMA_WT interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -333,6 +348,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cdma_wt_1() {
     if(cdma_wt2glb_done_intr[1] && !s_intr_mask_cdma_wt_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CDMA_WT interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value()));
     }
 }
 
@@ -341,6 +357,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cacc_0() {
     if(cacc2glb_done_intr[0] && !s_intr_mask_cacc_done_mask0_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CACC interrupt0\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
@@ -349,6 +366,7 @@ void NV_NVDLA_glb::Update_nvdla_intr_cacc_1() {
     if(cacc2glb_done_intr[1] && !s_intr_mask_cacc_done_mask1_) {
        nvdla_intr.write(true);
        cslInfo(("Generating CACC interrupt1\n"));
+       cslDebug((50, "@%llu \n",  sc_core::sc_time_stamp().value() ));
     }
 }
 
