@@ -20,7 +20,11 @@ NvdlaAxiAdaptor::NvdlaAxiAdaptor( sc_module_name module_name )
 	: sc_module(module_name),
       m_peq(module_name)
 {
-    m_perf = 1;
+    /**
+     * NOTE: set m_perf to 1 for non-blocking transport
+     * We have not validated non-blocking behavior
+     */
+    m_perf = 0;
 
     m_mm = gp_mm::getGPMemManager();
     assert( m_mm );
