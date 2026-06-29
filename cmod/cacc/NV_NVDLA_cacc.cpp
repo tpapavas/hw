@@ -104,6 +104,8 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_0) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_0_operation_enable);
         }
+        gNvdlaStats.caccStartGrp0 = sc_time_stamp();
+
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 0 opeartion start\n"));
         saturation_num_perlayer_ =0;
         cacc_reg_model::CaccUpdateWorkingStatus(0,1);
@@ -117,6 +119,7 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_1) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_1_operation_enable);
         }
+        gNvdlaStats.caccStartGrp1 = sc_time_stamp();
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 1 opeartion start\n"));
         saturation_num_perlayer_ =0;
         cacc_reg_model::CaccUpdateWorkingStatus(1,1);
@@ -309,6 +312,7 @@ void NV_NVDLA_cacc::SendToSDPThread () {
 }
 
 void NV_NVDLA_cacc::SendToSDPCommon () {
+    //std::cout << "[CACC->SDP] ENTER SendToSDPCommon @" << sc_time_stamp() << std::endl;
     // Config variables, they have corresponding value in registers
     uint32_t    precision;
     uint32_t    cube_width;
@@ -346,8 +350,11 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.batch_end = 0;
     cacc2sdp_payload.pd.nvdla_cc2pp_pkg.layer_end = 0;
 
+    //std::cout << "[CACC->SDP] BEFORE config FIFO READ"<< sc_time_stamp() << std::end;
+    //cslDebug((70, "before read assembly2send_config_fifo_\n"));
     assembly2send_config_fifo_->read(cacc_config);
     cslDebug((70, "after read assembly2send_config_fifo_\n"));
+    //std::cout << "[CACC->SDP] AFTER config FIFO READ"<< sc_time_stamp() << std::end;
 
     precision    = cacc_config->cacc_proc_precision_;
     cube_width   = cacc_config->cacc_dataout_width_ + 1;
@@ -511,6 +518,20 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
             }
         }
     }
+    if (cacc_consumer == 0) {
+        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp0;
+
+        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+        gNvdlaStats.caccGrp0Cycles += cycles;
+    } else if (cacc_consumer == 1) {
+        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp1;
+
+        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+
+        gNvdlaStats.caccGrp1Cycles += cycles;
+    }
+
     cacc2glb_done_intr[cacc_consumer].write(true);
 }
 
@@ -958,6 +979,7 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((70, "    mac2cacc payload[%d]: 0x%08x\n", i, (uint32_t)payload_data_ptr[i].to_int()));
 #endif
 
+    ////std::cout << "[NV_NVDLA_cacc::mac2accu_b_transport] is_assembly_working_ are " <<  (is_assembly_working_ ? "true" : "false" ) << " @ "<< sc_time_stamp() << std::end; 
     cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
     if (is_assembly_working_ == false) {
         wait(cacc_kickoff_);
@@ -1205,6 +1227,7 @@ void NV_NVDLA_cacc::mac2accu_b_transport(nvdla_mac2accu_data_concat_if_t* payloa
         cslDebug((50, "NV_NVDLA_cacc::mac2accu_b_transport, end of layer, assembly_sram_group_idx_working_=0x%x\n", assembly_sram_group_idx_working_));
 
         is_assembly_working_ = false;
+        //std::cout << "[mac2accu_b_transport] is_assembly_working_ are " <<  (is_assembly_working_ ? "true" : "false" ) << " @ "<< sc_time_stamp() << std::end;
         cslDebug((50, "is_assembly_working_ are = %s\n", (is_assembly_working_ ? "true" : "false" ) ));
         input_first_channel  = true;    // For next layer
         input_first_layer    = false;

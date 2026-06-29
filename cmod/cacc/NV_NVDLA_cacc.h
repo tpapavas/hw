@@ -26,6 +26,9 @@
 #include "NV_NVDLA_cacc_base.h"
 #include "cacc_reg_model.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
+
 //stepheng add cacc FP39 define.20170329
 //#define CACC_FP39
 //#define NVDLA_GENERIC_CACC_USE_39_BIT_FP_ADDER

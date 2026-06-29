@@ -196,6 +196,7 @@ void NV_NVDLA_sdp::SdpConsumerThread() {
         while(SdpGetOpeartionEnable(sdp_register_group_0) != NVDLA_SDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_sdp_reg_group_0_operation_enable);
         }
+        gNvdlaStats.sdpStartGrp0 = sc_time_stamp();
         cslInfo(( "NV_NVDLA_sdp::SdpConsumerThread, group 0 opeartion start\n"));
         sdp_reg_model::SdpUpdateWorkingStatus(0,1);
         sdp_reg_model::SdpUpdateVariables(sdp_register_group_0);
@@ -207,6 +208,7 @@ void NV_NVDLA_sdp::SdpConsumerThread() {
         while(SdpGetOpeartionEnable(sdp_register_group_1) != NVDLA_SDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_sdp_reg_group_1_operation_enable);
         }
+        gNvdlaStats.sdpStartGrp1 = sc_time_stamp();
         cslInfo(( "NV_NVDLA_sdp::SdpConsumerThread, group 1 opeartion start\n"));
         sdp_reg_model::SdpUpdateWorkingStatus(1,1);
         sdp_reg_model::SdpUpdateVariables(sdp_register_group_1);
@@ -246,6 +248,15 @@ void NV_NVDLA_sdp::SdpIntrThread() {
         cslInfo(( "%s: trigger interrupt on %d group\n", __FUNCTION__, (uint32_t)ack->group_id));
         sdp2glb_done_intr[ack->group_id].write(true);
 
+        if (ack->group_id == 0) {
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.sdpStartGrp0;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.sdpGrp0Cycles += cycles;
+        } else if (ack->group_id == 1) {
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.sdpStartGrp1;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.sdpGrp1Cycles += cycles;
+        }
         delete ack;
     }
 #pragma CTC SKIP

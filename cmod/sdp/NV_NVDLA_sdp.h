@@ -29,6 +29,8 @@
 
 #include "sdp_hls_wrapper.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 #define MEM_BUSWIDTH_IN_BIT 64
 #define ATOM_CUBE_SIZE   32
 #define SDP_RDMA_BUFFER_SIZE 9*256

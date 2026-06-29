@@ -27,7 +27,9 @@
 #include "cdp_reg_model.h"
 #include "cdp_rdma_reg_model.h"
 // #include "NvdlaLut.h"
-#include "systemc.h"
+//#include "systemc.h"
+
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define MEM_BUSWIDTH_IN_BIT                 64
 #define PADDING_NONE                        0

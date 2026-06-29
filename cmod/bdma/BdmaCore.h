@@ -28,6 +28,8 @@
 #include "systemc.h"
 // #include "bdmacoreconfigclass.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 #define BDMA_CONFIG_FIFO_DEPTH 20
 #define DMA_ATOM_SIZE 32
 #define DMA_ATOM_CMOD_ENTRY_GRANULARITY 8

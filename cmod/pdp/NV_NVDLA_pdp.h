@@ -26,6 +26,7 @@
 #include "pdp_reg_model.h"
 #include "pdp_rdma_reg_model.h"
 #include "NvdlaDataFormatConvertor.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define PDP_RDMA_TRANSACTION_SIZE_GRANULARITY   32
 #define PDP_RDMA_BUFFER_CMOD_ENTRY_GRANULARITY  4

@@ -22,7 +22,9 @@
 #include "nvdla_xx2csb_resp_iface.h"
 #include "NV_NVDLA_cdma_base.h"
 #include "cdma_reg_model.h"
-#include "systemc.h"
+//#include "systemc.h"
+
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #include "cdma_hls_wrapper.h"
 

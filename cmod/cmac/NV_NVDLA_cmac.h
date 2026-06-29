@@ -27,6 +27,7 @@
 #include "arnvdla.h"
 #include "log.h"
 #include "math.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define DATA_OPERAND_BIT_WIDTH_INT8         8
 #define DATA_OPERAND_BIT_WIDTH_INT16        16

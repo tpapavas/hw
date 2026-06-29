@@ -22,6 +22,8 @@
 // #include "nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_iface.h"
 #include "NV_NVDLA_cbuf_base.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
+
 // FIXME, add buswidth define
 #define CBUF_BANK_NUM                       16
 #define CBUF_ENTRY_PER_BANK                 256

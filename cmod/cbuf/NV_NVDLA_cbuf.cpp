@@ -63,6 +63,8 @@ void NV_NVDLA_cbuf::cdma2buf_dat_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_
     for (idx = 0; idx < CBUF_HALF_ENTRY_SIZE; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (payload_data_ptr[idx])));
     } 
+    gNvdlaStats.cbufDataWrites++;
+    gNvdlaStats.cbufDataWriteBytes += CBUF_HALF_ENTRY_SIZE;
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, CBUF_HALF_ENTRY_SIZE);
 }
 
@@ -85,6 +87,8 @@ void NV_NVDLA_cbuf::cdma2buf_wt_wr_b_transport(int ID, nvdla_ram_wr_port_WADDR_1
     for (idx = 0; idx < CBUF_HALF_ENTRY_SIZE; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (payload_data_ptr[idx])));
     } 
+    gNvdlaStats.cbufWeightWrites++;
+    gNvdlaStats.cbufWeightWriteBytes += CBUF_HALF_ENTRY_SIZE;
     memcpy(&cbuf_ram_[cbuf_ram_byte_addr], payload_data_ptr, CBUF_HALF_ENTRY_SIZE);
 }
 
@@ -106,6 +110,8 @@ void NV_NVDLA_cbuf::sc2buf_dat_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RA
     for (idx = 0; idx < CBUF_ENTRY_SIZE; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (cbuf_ram_[cbuf_ram_byte_addr + idx])));
     }
+    gNvdlaStats.cbufDataReads++;
+    gNvdlaStats.cbufDataReadBytes += CBUF_ENTRY_SIZE;
 }
 
 void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RADDR_12_RDATA_1024_t* payload, sc_time& delay){
@@ -129,6 +135,8 @@ void NV_NVDLA_cbuf::sc2buf_wt_rd_b_transport(int ID, nvdla_ram_rd_valid_port_RAD
     for (idx = 0; idx < CBUF_ENTRY_SIZE; idx ++) {
         cslDebug((70, "    0x%02x\n", uint32_t (cbuf_ram_[cbuf_ram_byte_addr + idx])));
     }
+    gNvdlaStats.cbufWeightReads++;
+    gNvdlaStats.cbufWeightReadBytes += CBUF_ENTRY_SIZE;
 }
 
 #pragma CTC SKIP

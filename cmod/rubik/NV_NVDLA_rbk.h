@@ -24,6 +24,7 @@
 #include "rbk_reg_model.h"
 // #include "rbkoreconfigclass.h"
 
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #define RUBIK_FEATURE_CUBE_IN_FIFO_DEPTH    1024
 #define RUBIK_FEATURE_CUBE_OUT_FIFO_DEPTH   64

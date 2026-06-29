@@ -141,6 +141,17 @@ void NV_NVDLA_pdp::PdpIntrThread() {
         wait(1, SC_NS);
         pdp2glb_done_intr[ack->group_id].write(true);
 
+        if (ack->group_id == 0) {
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.pdpStartGrp0;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.pdpGrp0Cycles += cycles;
+
+        } else if (ack->group_id == 1) {
+            sc_time elapsed = sc_time_stamp() - gNvdlaStats.pdpStartGrp1;
+            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            gNvdlaStats.pdpGrp1Cycles += cycles;
+        }
+
         delete ack;
     }
 }
@@ -150,6 +161,8 @@ void NV_NVDLA_pdp::PdpRdmaConsumerThread() {
         while(PdpRdmaGetOpeartionEnable(pdp_rdma_register_group_0) != NVDLA_PDP_RDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_pdp_rdma_reg_group_0_operation_enable);
         }
+        gNvdlaStats.pdpStartGrp0 = sc_time_stamp();
+
         pdp_rdma_reg_model::PdpRdmaUpdateWorkingStatus(0,1);
         PdpRdmaConfigEvaluation(pdp_rdma_register_group_0);
         PdpRdmaHardwareLayerExecutionTrigger();
@@ -159,6 +172,7 @@ void NV_NVDLA_pdp::PdpRdmaConsumerThread() {
         while(PdpRdmaGetOpeartionEnable(pdp_rdma_register_group_1) != NVDLA_PDP_RDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_pdp_rdma_reg_group_1_operation_enable);
         }
+        gNvdlaStats.pdpStartGrp1 = sc_time_stamp();
         pdp_rdma_reg_model::PdpRdmaUpdateWorkingStatus(1,1);
         PdpRdmaConfigEvaluation(pdp_rdma_register_group_1);
         PdpRdmaHardwareLayerExecutionTrigger();

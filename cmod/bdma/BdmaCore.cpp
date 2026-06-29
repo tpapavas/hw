@@ -518,6 +518,9 @@ void BdmaCore::PrepareWriteDataPayload(nvdla_dma_wr_req_t * payload, uint8_t num
 
 // Send DMA read request
 void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, uint8_t src_ram_type) {
+    gNvdlaStats.bdmaReadReqs++;
+    gNvdlaStats.bdmaReadBytes += (payload->pd.dma_read_cmd.size + 1) * 32;
+
     if ( NVDLA_BDMA_CFG_CMD_0_SRC_RAM_TYPE_MC == src_ram_type ) {
         cslDebug((50, "BdmaCore::SendDmaReadRequest, send read request to MC Address=0x%lx Size=0x%x\n", payload->pd.dma_read_cmd.addr, payload->pd.dma_read_cmd.size));
         bdma2mcif_rd_req_b_transport(payload, dma_delay_);
@@ -529,6 +532,8 @@ void BdmaCore::SendDmaReadRequest(nvdla_dma_rd_req_t* payload, sc_time& delay, u
 
 // Send DMA write request
 void BdmaCore::SendDmaWriteRequest(nvdla_dma_wr_req_t* payload, sc_time& delay, uint8_t dst_ram_type) {
+    gNvdlaStats.bdmaWriteReqs++;
+    gNvdlaStats.bdmaWriteBytes += (payload->pd.dma_write_cmd.size + 1) * 32;
     if (NVDLA_BDMA_CFG_CMD_0_DST_RAM_TYPE_MC == dst_ram_type) {
         if(TAG_CMD == payload->tag) {
             cslDebug((50, "BdmaCore::SendDmaWriteRequest, send write request to MC command. Address=0x%lx Size=0x%x\n", payload->pd.dma_write_cmd.addr, payload->pd.dma_write_cmd.size));

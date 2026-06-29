@@ -22,6 +22,7 @@
 // #include "nvdla_ram_data_valid_DATA_WIDTH_1024_ECC_SIZE_1_iface.h"
 #include "NV_NVDLA_csc_base.h"
 #include "csc_reg_model.h"
+#include "systemC_NVDLA/sc_nvdla_stats.hh"
 
 #include "csc_hls_wrapper.h"
 
