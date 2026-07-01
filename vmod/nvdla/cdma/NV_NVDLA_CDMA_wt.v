@@ -1278,6 +1278,9 @@ always @(posedge nvdla_core_clk or negedge nvdla_core_rstn) begin
     //end else if(wt_cbuf_wr_vld_w & sc_wt_updt) begin
     //    wt_wr_dmatx_cnt <= wt_wr_dmatx_cnt + 1'b1 - sc_wt_entries;
     end
+    else if (layer_st) begin
+        wt_wr_dmatx_cnt <= 17'd0;
+    end
 end
 //: my $bank_depth = int( log(NVDLA_CBUF_BANK_DEPTH)/log(2) );
 //: print qq(
