@@ -94,7 +94,8 @@ public:
 		op.addr = addr;
 		op.mask = mask;
 		op.data = data;
-		op.tries = 10;
+		if (addr == 0xffff0403 || addr == 0xffff0003) op.tries = 0xffffffff;
+		else op.tries = 10;
 		op.reading = 0;
 	
 		opq.push(op);
