@@ -65,6 +65,24 @@
 -v ../../outdir/nv_small/vmod/rams/model/RAMDP_16X64_GL_M1_E2.v
 -v ../../outdir/nv_small/vmod/rams/model/RAMPDP_512X64_GL_M4_D2.v
 -v ../../outdir/nv_small/vmod/rams/model/RAMPDP_256X64_GL_M2_D2.v
+-I../../outdir/nv_small/vmod/rams/model 
+-I../../outdir/nv_small/vmod/fifos 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_NRDMA_cq_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_BRDMA_cq_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_MRDMA_cq_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_PDP_WDMA_DAT_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_PDP_RDMA_lat_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_PDP_RDMA_ro_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_DP_intpinfo_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_DP_data_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_DP_sumpd_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_RDMA_lat_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_NRDMA_lat_fifo_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_BRDMA_lat_fifo_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_SDP_MRDMA_EG_lat_fifo_lib.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_RDMA_ro_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDMA_WT_8ATMM_fifo.v 
+-v ../../outdir/nv_small/vmod/fifos/NV_NVDLA_CDP_WDMA_dat_fifo.v 
 
 -DNO_PLI_OR_EMU
 -DNO_PLI
