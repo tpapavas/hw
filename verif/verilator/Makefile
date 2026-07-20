@@ -13,7 +13,7 @@ default: $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla
 
 VERILATOR_PARAMS ?= \
         --compiler clang \
-		--output-split 250000000
+		--output-split 250000000 \
         --timescale 1ps/1ps \
         -Wno-TIMESCALEMOD \
         -O1 \
