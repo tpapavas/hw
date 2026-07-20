@@ -11,7 +11,17 @@ include $(DEPTH)/tools/make/common.make
 
 default: $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla
 
-VERILATOR_PARAMS ?= --compiler clang --output-split 250000000
+VERILATOR_PARAMS ?= \
+        --compiler clang \
+		--output-split 250000000
+        --timescale 1ps/1ps \
+        -Wno-TIMESCALEMOD \
+        -O1 \
+        -CFLAGS "-DVL_DEBUG=1" \
+        -CFLAGS "-O1" \
+        -CFLAGS "-fPIC" \
+        -LDFLAGS "--static"
+
 # Perhaps you need to trace?
 #   VERILATOR_PARAMS += --trace --trace-depth 7 --trace-max-array 8
 
