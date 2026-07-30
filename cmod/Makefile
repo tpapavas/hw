@@ -7,6 +7,8 @@ ifeq ($(SYSTEMC),)
 $(error SYSTEMC variable must be defined in tree.make to build Cmodel)
 endif
 
+GEM5_SRC_DIR ?= $(DEPTH)/$(DEPTH)/$(DEPTH)/$(DEPTH)/
+
 TARGET ?= libnvdla_cmod.so
 
 PROJECT_DIR ?= $(DEPTH)/$(OUTDIR)/$(PROJECT)
@@ -102,7 +104,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := \
-	/data/ngiannopoulos/Phd/NVDLA/systemC_integration/gem5/src \
+	$(GEM5_SRC_DIR) \
 	$(PROJECT_DIR)/spec/defs \
 	$(PROJECT_DIR)/spec/manual \
 	./include \
