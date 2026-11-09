@@ -11,24 +11,34 @@ include $(DEPTH)/tools/make/common.make
 
 default: $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla
 
-VERILATOR_PARAMS ?= --compiler clang --output-split 250000000
+VERILATOR_PARAMS ?= --compiler clang \
+                    --output-split 30000 \
+                    --output-split-cfuncs 90000 \
+                    --noassert \
+                    -Wno-TIMESCALEMOD \
+                    -O3 \
+                    -UVL_DEBUG \
+                    -CFLAGS "-fPIC -DNDEBUG -O3 -Ofast" \
+                    -LDFLAGS "--static"    # without profiling-guided optimization
+# VERILATOR_PARAMS ?= --compiler clang --output-split 30000 --output-split-cfuncs 90000 --noassert -O3 -UVL_DEBUG -CFLAGS "-fPIC -DNDEBUG -O3 -Ofast -fprofile-generate" -LDFLAGS "--static -fprofile-generate"    # perform first-round profiling data collection
+# VERILATOR_PARAMS ?= --compiler clang --output-split 30000 --output-split-cfuncs 90000 --noassert -O3 -UVL_DEBUG -CFLAGS "-fPIC -DNDEBUG -O3 -Ofast -fprofile-use=/usr/local/nvdla/LAG.profdata" -LDFLAGS "--static"    # after collecting data with "llvm-profdata merge xxx", use this command
 # Perhaps you need to trace?
 #   VERILATOR_PARAMS += --trace --trace-depth 7 --trace-max-array 8
 
 # We end up hardcoding this, because the .f file applies only to nv_full,
 # living in outdir, right now.  Otherwise, you're on your own...
 $(DEPTH)/outdir/nv_full/verilator/VNV_nvdla.mk: verilator.f ../../outdir/nv_full/vmod # and a lot of RTL...
-	$(VERILATOR) --cc --exe -f verilator.f --Mdir ../../outdir/nv_full/verilator/ nvdla.cpp --compiler clang --output-split 250000000
+	$(VERILATOR) --cc --exe -f verilator.f --Mdir ../../outdir/nv_full/verilator/ nvdla.cpp $(VERILATOR_PARAMS)
 
 $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla: $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla.mk nvdla.cpp
 	rm -f $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/nvdla.cpp
 	cp nvdla.cpp $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/nvdla.cpp
-	make -C $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator -f VNV_nvdla.mk CC=$(CLANG) CXX=$(CLANG)++ VM_PARALLEL_BUILDS=1
+	make -C $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator -j24 -f VNV_nvdla.mk CC=$(CLANG) CXX=$(CLANGPP) VM_PARALLEL_BUILDS=1
 
 $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/test/%/trace.bin: $(DEPTH)/verif/traces/traceplayer/% input_txn_to_verilator.pl
 	rm -rf $@
 	mkdir -p $(dir $@)
-	$(PERL) input_txn_to_verilator.pl $< $@
+	$(PERL) input_txn_to_verilator.pl $</input.txn $@
 
 run: $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/test/$(TEST)/trace.bin $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/VNV_nvdla
 	cd $(DEPTH)/$(OUTDIR)/$(PROJECT)/verilator/test/$(TEST) && ../../VNV_nvdla trace.bin

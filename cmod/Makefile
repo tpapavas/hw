@@ -6,6 +6,7 @@ DEPTH := ..
 ifeq ($(SYSTEMC),)
 $(error SYSTEMC variable must be defined in tree.make to build Cmodel)
 endif
+GEM5_SRC_DIR ?= $(DEPTH)/$(DEPTH)/$(DEPTH)/$(DEPTH)/
 
 TARGET ?= libnvdla_cmod.so
 
@@ -21,7 +22,6 @@ PREFIX ?=$(BUILD_DIR)/release
 
 # define SYSTEMC env variable before building
 # e.g. export SYSTEMC=/home/youruser/systemc/build
-SYSTEMC = $(SYSTEMC)
 SYSTEMC_INC_DIR = $(SYSTEMC)/include
 SYSTEMC_LIB_DIR = $(SYSTEMC)/lib
 
@@ -107,6 +107,7 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := \
+	$(GEM5_SRC_DIR) \
 	./include \
 	$(SRC_DIR)/include/nvdla_ness_header \
 	$(SRC_DIR)/include \
@@ -161,7 +162,7 @@ LD_FLAGS  := $(addprefix -L,$(LD_DIRS))
 #CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=c++11
 #LDFLAGS ?= -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=gnu++14 -O3 -Ofast
+CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -fPIC -Wall -Werror -DSC_INCLUDE_DYNAMIC_PROCESSES -Wp,-w -std=gnu++11 -O3 -Ofast
 LDFLAGS ?= -O3 -shared
 
 #LDFLAGS ?= -O3 -shared $(addprefix -l,$($(notdir $(SYSTEMC_LIBRARIES)):lib%.so=%)) $(LD_FLAGS)

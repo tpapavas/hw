@@ -1,11 +1,13 @@
 #!/usr/bin/env perl
 
 use strict;
+use <a href="File://:Basename">File::Basename</a>;
 
 # Configurable parameters
 my $read_reg_poll_retries = 50000;
 my $test_dir = '.';
-$test_dir = $ARGV[0];
+$test_dir = dirname($ARGV[0]);
+
 
 # Creating a hash for the above - command - hex val
 my %command_hash = (
@@ -19,7 +21,7 @@ my %command_hash = (
 );
 
 
-my $input_file = "$test_dir/input.txn";
+my $input_file = $ARGV[0];
 my $output_file = $ARGV[1];
 
 my $inf;
@@ -82,6 +84,16 @@ while(<$inf>)
     if ($values[0] =~ /wait/) {
       print $ouf pack("C", 1);
     }
+
+    if ($values[0] =~ /until/) {
+      if($size != 3) { die "\nERROR: in write_reg command: $input_line\n" };
+
+      my $addr = $values[1];
+      my $data = $values[2];
+
+      print $ouf pack("CLL", 6, hex($addr), hex($data));
+    }
+
     elsif($values[0] =~ /write_reg/) {
       if($size != 3) { die "\nERROR: in write_reg command: $input_line\n" };
 
@@ -103,7 +115,7 @@ while(<$inf>)
       $address = $values[1];
       $bitmask = $values[2];
       $exp_data = $values[3];
-      
+  
       print $ouf pack("CLLL", 3, hex($address), hex($bitmask), hex($exp_data));
     } elsif ($values[0] =~ /(load|dump)_mem/) {
       my $addr = $values[1];
@@ -113,15 +125,15 @@ while(<$inf>)
       my $mem_out;
       my $minf, my $mouf;
       my $cmd;
-      
+  
       $cmd = 5 if ($values[0] =~ /load_mem/);
       $cmd = 4 if ($values[0] =~ /dump_mem/);
-      
+  
       print $ouf pack("CLL", $cmd, hex($addr), hex($offset));
       open $minf, "<". "$test_dir/$mem_in";
 
       print "File $load_file_counter $addr $offset\n";
-      
+  
       my $totbytes = 0;
 
       if ($mem_in =~ m/\.dat$/) {
@@ -149,9 +161,9 @@ while(<$inf>)
       else {
         die "only .dat files supported in this tool so far";
       }
-      
+  
       close $minf;
-      
+  
       if ($values[0] =~ /dump_mem/) {
        print $ouf pack("L", length($mem_in)) . $mem_in;
       }
@@ -169,4 +181,3 @@ close $inf;
 close $ouf;
 
 1;
-

@@ -620,10 +620,12 @@ module SDP_Y_CORE_mgc_out_fifo_wait_core_v9 (clk, en, arst, srst, ld, vd, d, lz,
         else 
           count_t = n_elem[31:0];
         count = count_t;
+`ifndef VERILATOR
         // synopsys translate_off
         if ( peak < count )
           peak = count;
         // synopsys translate_on
+`endif
       end
 
       if (ph_en) begin: PH_EN_HI
