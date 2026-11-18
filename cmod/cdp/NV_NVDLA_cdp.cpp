@@ -142,7 +142,7 @@ void NV_NVDLA_cdp::CdpConsumerThread () {
         while(CdpGetOpeartionEnable(cdp_register_group_0) != NVDLA_CDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdp_reg_group_0_operation_enable);
         }
-        gNvdlaStats.cdpStartGrp0 = sc_time_stamp();
+        nvdlaStatsFor(this).cdpStartGrp0 = sc_time_stamp();
 
         cdp_reg_model::CdpUpdateWorkingStatus(0,1);
         cdp_reg_model::CdpUpdateVariables(cdp_register_group_0);
@@ -153,7 +153,7 @@ void NV_NVDLA_cdp::CdpConsumerThread () {
         while(CdpGetOpeartionEnable(cdp_register_group_1) != NVDLA_CDP_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdp_reg_group_1_operation_enable);
         }
-        gNvdlaStats.cdpStartGrp1 = sc_time_stamp();
+        nvdlaStatsFor(this).cdpStartGrp1 = sc_time_stamp();
 
         cdp_reg_model::CdpUpdateWorkingStatus(1,1);
         cdp_reg_model::CdpUpdateVariables(cdp_register_group_1);
@@ -184,17 +184,17 @@ void NV_NVDLA_cdp::CdpIntrThread() {
 
         wait(1, SC_NS);
         if (ack->group_id == 0) {
-            sc_time elapsed = sc_time_stamp() - gNvdlaStats.cdpStartGrp0;
+            sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).cdpStartGrp0;
 
-            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            uint64_t cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
 
-            gNvdlaStats.cdpGrp0Cycles += cycles;
+            nvdlaStatsFor(this).cdpGrp0Cycles += cycles;
         } else if (ack->group_id == 1) {
-            sc_time elapsed = sc_time_stamp() - gNvdlaStats.cdpStartGrp1;
+            sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).cdpStartGrp1;
 
-            uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+            uint64_t cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
 
-            gNvdlaStats.cdpGrp1Cycles += cycles;
+            nvdlaStatsFor(this).cdpGrp1Cycles += cycles;
         }
         cdp2glb_done_intr[ack->group_id].write(true);
 
