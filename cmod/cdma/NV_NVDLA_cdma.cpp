@@ -190,29 +190,29 @@ void NV_NVDLA_cdma::CdmaConsumerThread () {
         while(CdmaGetOpeartionEnable(cdma_register_group_0) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_0_operation_enable);
         }
-        gNvdlaStats.cdmaStartGrp0 = sc_time_stamp();
+        nvdlaStatsFor(this).cdmaStartGrp0 = sc_time_stamp();
 
         cdma_reg_model::CdmaUpdateWorkingStatus(0,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_0);
         CdmaHardwareLayerExecutionTrigger();
         cdma_reg_model::CdmaUpdateStatRegisters(0, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(0,0);
-        sc_time elapsed_0 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp0;
-        gNvdlaStats.cdmaGrp0Cycles += elapsed_0.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
+        sc_time elapsed_0 = sc_time_stamp() - nvdlaStatsFor(this).cdmaStartGrp0;
+        nvdlaStatsFor(this).cdmaGrp0Cycles += elapsed_0.to_seconds() /  nvdlaStatsFor(this).nvdlaClockPeriod.to_seconds();
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_0);    // Update COMSUMER Pointer too
 
         while(CdmaGetOpeartionEnable(cdma_register_group_1) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_1_operation_enable);
         }
-        gNvdlaStats.cdmaStartGrp1 = sc_time_stamp();
+        nvdlaStatsFor(this).cdmaStartGrp1 = sc_time_stamp();
 
         cdma_reg_model::CdmaUpdateWorkingStatus(1,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_1);
         CdmaHardwareLayerExecutionTrigger();
         cdma_reg_model::CdmaUpdateStatRegisters(1, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(1,0);
-        sc_time elapsed_1 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp1;
-        gNvdlaStats.cdmaGrp1Cycles += elapsed_1.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
+        sc_time elapsed_1 = sc_time_stamp() - nvdlaStatsFor(this).cdmaStartGrp1;
+        nvdlaStatsFor(this).cdmaGrp1Cycles += elapsed_1.to_seconds() /  nvdlaStatsFor(this).nvdlaClockPeriod.to_seconds();
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_1);    // Update COMSUMER Pointer too
     }
 }
@@ -942,9 +942,9 @@ void NV_NVDLA_cdma::WtReadRequestThread () {
         cdma_wt_info->cdma_source = source_id;
         cdma_wt_info->payload_size = payload.pd.dma_read_cmd.size + 1;
 
-        gNvdlaStats.cdmaWeightReadReqs++;
+        nvdlaStatsFor(this).cdmaWeightReadReqs++;
 
-        gNvdlaStats.cdmaWeightReadBytes += payload.pd.dma_read_cmd.size + 1;
+        nvdlaStatsFor(this).cdmaWeightReadBytes += payload.pd.dma_read_cmd.size + 1;
 
         cdma_wt_info_fifo_->write(cdma_wt_info);
 
@@ -1570,7 +1570,7 @@ void NV_NVDLA_cdma::DirectConvDataResponseSequencerCommon() {
             }
         }
     }
-    //gNvdlaStats.cbufDataWriteBytes += payload_size;
+    //nvdlaStatsFor(this).cbufDataWriteBytes += payload_size;
 }
 
 void NV_NVDLA_cdma::ConvWGSRequestSequencerCommon() {
@@ -2117,7 +2117,7 @@ void NV_NVDLA_cdma::DirectConvWeightResponseSequencerCommon() {
 
     if (wt_entries_fetched!=(weight_total_bytes/CBUF_ENTRY_SIZE))
         FAIL(("The total size of weight should be multiple of CBUF_ENTRY_SIZE\n"));
-    //gNvdlaStats.cbufDataWriteBytes += weight_total_bytes;
+    //nvdlaStatsFor(this).cbufDataWriteBytes += weight_total_bytes;
 }
 
 void NV_NVDLA_cdma::ImageConvDataRequestSequencerCommon() {
@@ -3274,8 +3274,8 @@ void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t c
         NV_NVDLA_cdma_base::cdma_dat2cvif_rd_req_b_transport(payload, dma_delay_);
     }
     cslDebug((50, "NV_NVDLA_cdma::SendActDmaReadRequest, end.\n"));
-    gNvdlaStats.cdmaDataReadReqs++;
-    gNvdlaStats.cdmaDataReadBytes += payload->pd.dma_read_cmd.size + 1;
+    nvdlaStatsFor(this).cdmaDataReadReqs++;
+    nvdlaStatsFor(this).cdmaDataReadBytes += payload->pd.dma_read_cmd.size + 1;
 
 }
 

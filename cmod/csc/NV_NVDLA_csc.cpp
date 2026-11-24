@@ -152,21 +152,21 @@ void NV_NVDLA_csc::CscConsumerThread () {
         while(CscGetOpeartionEnable(csc_register_group_0) != NVDLA_CSC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_csc_reg_group_0_operation_enable);
         }
-        gNvdlaStats.cscStartGrp0 = sc_time_stamp();
+        nvdlaStatsFor(this).cscStartGrp0 = sc_time_stamp();
         csc_reg_model::CscUpdateWorkingStatus(0,1);
         csc_reg_model::CscUpdateVariables(csc_register_group_0);
         cslDebug((50, "CSC group 0 trigger\n"));
         CscHardwareLayerExecutionTrigger();
         csc_reg_model::CscUpdateWorkingStatus(0,0);
         csc_reg_model::CscClearOpeartionEnable(csc_register_group_0);
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.cscStartGrp0;
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
-        gNvdlaStats.cscGrp0Cycles += cycles;
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).cscStartGrp0;
+        uint64_t cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
+        nvdlaStatsFor(this).cscGrp0Cycles += cycles;
 
         while(CscGetOpeartionEnable(csc_register_group_1) != NVDLA_CSC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_csc_reg_group_1_operation_enable);
         }
-        gNvdlaStats.cscStartGrp1 = sc_time_stamp();
+        nvdlaStatsFor(this).cscStartGrp1 = sc_time_stamp();
 
         csc_reg_model::CscUpdateWorkingStatus(1,1);
         csc_reg_model::CscUpdateVariables(csc_register_group_1);
@@ -174,9 +174,9 @@ void NV_NVDLA_csc::CscConsumerThread () {
         CscHardwareLayerExecutionTrigger();
         csc_reg_model::CscUpdateWorkingStatus(1,0);
         csc_reg_model::CscClearOpeartionEnable(csc_register_group_1);
-        elapsed = sc_time_stamp() - gNvdlaStats.cscStartGrp1;
-        cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
-        gNvdlaStats.cscGrp1Cycles += cycles;
+        elapsed = sc_time_stamp() - nvdlaStatsFor(this).cscStartGrp1;
+        cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
+        nvdlaStatsFor(this).cscGrp1Cycles += cycles;
 
     }
 }

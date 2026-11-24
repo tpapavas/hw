@@ -104,7 +104,7 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_0) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_0_operation_enable);
         }
-        gNvdlaStats.caccStartGrp0 = sc_time_stamp();
+        nvdlaStatsFor(this).caccStartGrp0 = sc_time_stamp();
 
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 0 opeartion start\n"));
         saturation_num_perlayer_ =0;
@@ -119,7 +119,7 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_1) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_1_operation_enable);
         }
-        gNvdlaStats.caccStartGrp1 = sc_time_stamp();
+        nvdlaStatsFor(this).caccStartGrp1 = sc_time_stamp();
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 1 opeartion start\n"));
         saturation_num_perlayer_ =0;
         cacc_reg_model::CaccUpdateWorkingStatus(1,1);
@@ -519,17 +519,17 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
         }
     }
     if (cacc_consumer == 0) {
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp0;
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).caccStartGrp0;
 
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        uint64_t cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
 
-        gNvdlaStats.caccGrp0Cycles += cycles;
+        nvdlaStatsFor(this).caccGrp0Cycles += cycles;
     } else if (cacc_consumer == 1) {
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp1;
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).caccStartGrp1;
 
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        uint64_t cycles = elapsed / nvdlaStatsFor(this).nvdlaClockPeriod;
 
-        gNvdlaStats.caccGrp1Cycles += cycles;
+        nvdlaStatsFor(this).caccGrp1Cycles += cycles;
     }
 
     cacc2glb_done_intr[cacc_consumer].write(true);
