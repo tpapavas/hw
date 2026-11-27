@@ -63,9 +63,9 @@ enum CSC_WEIGHT_LOAD_MODE_ALIAS {
 NV_NVDLA_csc::NV_NVDLA_csc( sc_module_name module_name ):
     NV_NVDLA_csc_base(module_name),
     // Delay setup
-    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
-    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
-    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
+    dma_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats[0].nvdlaClockPeriod)
 {
     // Memory allocation
     // csc2cbuf_data_payload_ = new nvdla_ram_wr_port_WADDR_12_WDATA_512_BE_1_t;
@@ -150,8 +150,8 @@ void NV_NVDLA_csc::CscConsumerThread () {
         while(CscGetOpeartionEnable(csc_register_group_0) != NVDLA_CSC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_csc_reg_group_0_operation_enable);
         }
-        gNvdlaStats.cscStartGrp0 = sc_time_stamp();
-        cslDebug((70,"[CSC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).cscStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CSC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         csc_reg_model::CscUpdateWorkingStatus(0,1);
         csc_reg_model::CscUpdateVariables(csc_register_group_0);
@@ -159,27 +159,27 @@ void NV_NVDLA_csc::CscConsumerThread () {
         CscHardwareLayerExecutionTrigger();
         csc_reg_model::CscUpdateWorkingStatus(0,0);
         csc_reg_model::CscClearOpeartionEnable(csc_register_group_0);
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.cscStartGrp0;
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
-        gNvdlaStats.cscGrp0Cycles += cycles;
-        cslDebug((70,"[CSC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).cscStartGrp0;
+        uint64_t cycles = elapsed / gNvdlaStats[0].nvdlaClockPeriod;
+        nvdlaStatsFor(this).cscGrp0Cycles += cycles;
+        cslDebug((70,"[CSC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
 
         while(CscGetOpeartionEnable(csc_register_group_1) != NVDLA_CSC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_csc_reg_group_1_operation_enable);
         }
-        gNvdlaStats.cscStartGrp1 = sc_time_stamp();
-        cslDebug((70,"[CSC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).cscStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CSC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
         csc_reg_model::CscUpdateWorkingStatus(1,1);
         csc_reg_model::CscUpdateVariables(csc_register_group_1);
         cslDebug((50, "CSC group 1 trigger\n"));
         CscHardwareLayerExecutionTrigger();
         csc_reg_model::CscUpdateWorkingStatus(1,0);
         csc_reg_model::CscClearOpeartionEnable(csc_register_group_1);
-        elapsed = sc_time_stamp() - gNvdlaStats.cscStartGrp1;
-        cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
-        gNvdlaStats.cscGrp1Cycles += cycles;
-        cslDebug((70,"[CSC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        elapsed = sc_time_stamp() - nvdlaStatsFor(this).cscStartGrp1;
+        cycles = elapsed / gNvdlaStats[0].nvdlaClockPeriod;
+        nvdlaStatsFor(this).cscGrp1Cycles += cycles;
+        cslDebug((70,"[CSC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
     }
 }
 
