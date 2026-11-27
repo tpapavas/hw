@@ -42,9 +42,9 @@ NV_NVDLA_cacc::NV_NVDLA_cacc( sc_module_name module_name ):
     NV_NVDLA_cacc_base(module_name),
     cacc2glb_done_intr("cacc2glb_done_intr", 2),
     // Delay setup
-    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
-    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
-    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
+    dma_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats[0].nvdlaClockPeriod)
 {
     // Memory allocation
     // No matter which precision (int8, Int16 and FP16) is used, both assembly and delivery ram use the highest bit consumption precision which is Int16
@@ -105,8 +105,8 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_0) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_0_operation_enable);
         }
-        gNvdlaStats.caccStartGrp0 = sc_time_stamp();
-        cslDebug((70,"[CACC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).caccStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CACC][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 0 opeartion start\n"));
         saturation_num_perlayer_ =0;
@@ -121,8 +121,8 @@ void NV_NVDLA_cacc::CaccConsumerThread () {
         while(CaccGetOpeartionEnable(cacc_register_group_1) != NVDLA_CACC_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cacc_reg_group_1_operation_enable);
         }
-        gNvdlaStats.caccStartGrp1 = sc_time_stamp();
-        cslDebug((70,"[CACC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).caccStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CACC][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         cslInfo(("NV_NVDLA_cacc::CaccConsumerThread, group 1 opeartion start\n"));
         saturation_num_perlayer_ =0;
@@ -500,20 +500,20 @@ void NV_NVDLA_cacc::SendToSDPCommon () {
     }
     if(cacc_consumer == 0){
 
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp0;
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).caccStartGrp0;
 
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        uint64_t cycles = elapsed / gNvdlaStats[0].nvdlaClockPeriod;
 
-        gNvdlaStats.caccGrp0Cycles += cycles;
-        cslDebug((70,"[CACC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).caccGrp0Cycles += cycles;
+        cslDebug((70,"[CACC][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
     }else if( cacc_consumer == 1){
 
-        sc_time elapsed = sc_time_stamp() - gNvdlaStats.caccStartGrp1;
+        sc_time elapsed = sc_time_stamp() - nvdlaStatsFor(this).caccStartGrp1;
 
-        uint64_t cycles = elapsed / gNvdlaStats.nvdlaClockPeriod;
+        uint64_t cycles = elapsed / gNvdlaStats[0].nvdlaClockPeriod;
 
-        gNvdlaStats.caccGrp1Cycles += cycles;
-        cslDebug((70,"[CACC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).caccGrp1Cycles += cycles;
+        cslDebug((70,"[CACC][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
     }
     cacc2glb_done_intr[cacc_consumer].write(true);

@@ -32,8 +32,8 @@ using namespace sc_core;
 NV_NVDLA_glb::NV_NVDLA_glb( sc_module_name module_name ):
     NV_NVDLA_glb_base(module_name),
     // Delay setup
-    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
-    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
+    csb_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats[0].nvdlaClockPeriod)
 {
     Reset();
     is_there_ongoing_csb2glb_response_ = false;

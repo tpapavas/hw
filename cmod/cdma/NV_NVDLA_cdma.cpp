@@ -50,9 +50,9 @@ enum CDMA_WT_DATA_MODE_ALIAS {
 NV_NVDLA_cdma::NV_NVDLA_cdma( sc_module_name module_name ):
     NV_NVDLA_cdma_base(module_name),
     // Delay setup
-    dma_delay_(gNvdlaStats.nvdlaClockPeriod),
-    csb_delay_(gNvdlaStats.nvdlaClockPeriod),
-    b_transport_delay_(gNvdlaStats.nvdlaClockPeriod)
+    dma_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    csb_delay_(gNvdlaStats[0].nvdlaClockPeriod),
+    b_transport_delay_(gNvdlaStats[0].nvdlaClockPeriod)
 {
     // Memory allocation
     dma_act_rd_req_payload_ = new nvdla_dma_rd_req_t;
@@ -191,8 +191,8 @@ void NV_NVDLA_cdma::CdmaConsumerThread () {
         while(CdmaGetOpeartionEnable(cdma_register_group_0) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_0_operation_enable);
         }
-        gNvdlaStats.cdmaStartGrp0 = sc_time_stamp();
-        cslDebug((70,"[CDMA][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).cdmaStartGrp0 = sc_time_stamp();
+        cslDebug((70,"[CDMA][G0 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         cdma_reg_model::CdmaUpdateWorkingStatus(0,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_0);
@@ -200,15 +200,15 @@ void NV_NVDLA_cdma::CdmaConsumerThread () {
         cdma_reg_model::CdmaUpdateStatRegisters(0, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(0,0);
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_0);    // Update COMSUMER Pointer too
-        sc_time elapsed_0 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp0;
-        gNvdlaStats.cdmaGrp0Cycles += elapsed_0.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
-        cslDebug((70,"[CDMA][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        sc_time elapsed_0 = sc_time_stamp() - nvdlaStatsFor(this).cdmaStartGrp0;
+        nvdlaStatsFor(this).cdmaGrp0Cycles += elapsed_0.to_seconds() /  gNvdlaStats[0].nvdlaClockPeriod.to_seconds();
+        cslDebug((70,"[CDMA][G0 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         while(CdmaGetOpeartionEnable(cdma_register_group_1) != NVDLA_CDMA_D_OP_ENABLE_0_OP_EN_ENABLE) {
             wait(event_cdma_reg_group_1_operation_enable);
         }
-        gNvdlaStats.cdmaStartGrp1 = sc_time_stamp();
-        cslDebug((70,"[CDMA][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        nvdlaStatsFor(this).cdmaStartGrp1 = sc_time_stamp();
+        cslDebug((70,"[CDMA][G1 START] time=%s nvdla_cycles=%llu\n",sc_time_stamp().to_string().c_str(), (uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
         cdma_reg_model::CdmaUpdateWorkingStatus(1,1);
         cdma_reg_model::CdmaUpdateVariables(cdma_register_group_1);
@@ -216,9 +216,9 @@ void NV_NVDLA_cdma::CdmaConsumerThread () {
         cdma_reg_model::CdmaUpdateStatRegisters(1, data_nan_num_perlayer_, weight_nan_num_perlayer_, data_inf_num_perlayer_, weight_inf_num_perlayer_);
         cdma_reg_model::CdmaUpdateWorkingStatus(1,0);
         cdma_reg_model::CdmaClearOpeartionEnable(cdma_register_group_1);    // Update COMSUMER Pointer too
-        sc_time elapsed_1 = sc_time_stamp() - gNvdlaStats.cdmaStartGrp1;
-        gNvdlaStats.cdmaGrp1Cycles += elapsed_1.to_seconds() /  gNvdlaStats.nvdlaClockPeriod.to_seconds();
-        cslDebug((70,"[CDMA][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats.nvdlaClockPeriod)));
+        sc_time elapsed_1 = sc_time_stamp() - nvdlaStatsFor(this).cdmaStartGrp1;
+        nvdlaStatsFor(this).cdmaGrp1Cycles += elapsed_1.to_seconds() /  gNvdlaStats[0].nvdlaClockPeriod.to_seconds();
+        cslDebug((70,"[CDMA][G1 END] time=%s nvdla_cycles=%llu\n", sc_time_stamp().to_string().c_str(),(uint64_t)(sc_time_stamp() / gNvdlaStats[0].nvdlaClockPeriod)));
 
     }
 }
@@ -955,9 +955,9 @@ void NV_NVDLA_cdma::WtReadRequestThread () {
         cdma_wt_info->cdma_source = source_id;
         cdma_wt_info->payload_size = payload.pd.dma_read_cmd.size + 1;
 
-        gNvdlaStats.cdmaWeightReadReqs++;
+        nvdlaStatsFor(this).cdmaWeightReadReqs++;
 
-        gNvdlaStats.cdmaWeightReadBytes += payload.pd.dma_read_cmd.size + 1;
+        nvdlaStatsFor(this).cdmaWeightReadBytes += payload.pd.dma_read_cmd.size + 1;
 
         cdma_wt_info_fifo_->write(cdma_wt_info);
 
@@ -3330,8 +3330,8 @@ void NV_NVDLA_cdma::SendActDmaReadRequest(nvdla_dma_rd_req_t* payload, uint8_t c
         NV_NVDLA_cdma_base::cdma_dat2cvif_rd_req_b_transport(payload, dma_delay_);
     }
     cslDebug((50, "NV_NVDLA_cdma::SendActDmaReadRequest, end.\n"));
-    gNvdlaStats.cdmaDataReadReqs++;
-    gNvdlaStats.cdmaDataReadBytes += payload->pd.dma_read_cmd.size + 1;
+    nvdlaStatsFor(this).cdmaDataReadReqs++;
+    nvdlaStatsFor(this).cdmaDataReadBytes += payload->pd.dma_read_cmd.size + 1;
 
 }
 
